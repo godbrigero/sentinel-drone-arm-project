@@ -19,10 +19,11 @@ package = false
 pythonpath = ["."]
 addopts = [
     "-p", "no:cacheprovider",
+    "-p", "airtruck.testing_util.pytest_plugin",
     "--import-mode=importlib",
-    "airtruck/raw_controls/so101/tests/test_hardware.py",
-    "airtruck/raw_controls/so101/tests/test_simulation.py",
 ]
+
+testpaths = ["airtruck"]
 
 [tool.mypy]
 python_version = "3.12"
@@ -33,6 +34,7 @@ files = [
     "airtruck/raw_controls/so101/controller.py",
     "airtruck/raw_controls/so101/io.py",
     "typings/smoke.py",
+    "airtruck/testing_util",
 ]
 check_untyped_defs = true
 disallow_untyped_defs = true

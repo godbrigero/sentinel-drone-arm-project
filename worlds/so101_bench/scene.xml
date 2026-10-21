@@ -1,0 +1,9 @@
+<mujoco model="so101_bench">
+  <compiler angle="radian" inertiafromgeom="false"/>
+  <option timestep="0.001" integrator="implicitfast" gravity="0 0 -9.81"/>
+  <worldbody>
+    <light pos="0 -0.2 1" dir="0 0 -1" diffuse=".8 .8 .8"/>
+    <geom name="floor_visual" type="plane" size="1 1 .1" rgba=".17 .20 .24 1" contype="0" conaffinity="0"/>
+  </worldbody>
+  <visual><global offwidth="1280" offheight="960"/><quality shadowsize="2048"/></visual>
+</mujoco>

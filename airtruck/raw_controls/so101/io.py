@@ -5,16 +5,21 @@ Angles are radians in the arm's calibrated CAD coordinate system.
 
 from collections.abc import Mapping, Sequence
 from abc import ABC, abstractmethod
-from typing import Protocol
+from typing import Protocol, Literal, TypeAlias
+import numpy as np
+from numpy.typing import NDArray
 
-from numpy.typing import ArrayLike
+JointName: TypeAlias = Literal[
+    "shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"
+]
+PositionCommand: TypeAlias = Mapping[JointName, float] | Sequence[float] | NDArray[np.float64]
 
 
 class ArmController(ABC):
     """Transport-independent interface; time stepping belongs to simulation only."""
 
     @abstractmethod
-    def set_positions(self, positions: Mapping[str, float] | ArrayLike) -> None:
+    def set_positions(self, positions: PositionCommand) -> None:
         """Command joint targets in radians, clamping to calibrated limits.
 
         A mapping selects joints by name. A six-element vector uses the default
@@ -24,19 +29,19 @@ class ArmController(ABC):
 
     @property
     @abstractmethod
-    def positions(self) -> dict[str, float]:
+    def positions(self) -> dict[JointName, float]:
         """Read joint feedback in radians."""
         ...
 
     @property
     @abstractmethod
-    def targets(self) -> dict[str, float]:
+    def targets(self) -> dict[JointName, float]:
         """Return the last commanded targets in radians."""
         ...
 
     @property
     @abstractmethod
-    def limits(self) -> dict[str, tuple[float, float]]:
+    def limits(self) -> dict[JointName, tuple[float, float]]:
         """Return calibrated joint travel in radians."""
         ...
 
@@ -64,3 +69,29 @@ class ServoTransport(Protocol):
     def write_positions(self, positions: Mapping[int, int]) -> None: ...
 
     def set_torque_enabled(self, servo_ids: Sequence[int], enabled: bool) -> None: ...
+
+
+class SimulatedArmController(ArmController):
+    """Simulation-only motor experiments; voltage is not a hardware command."""
+
+    @abstractmethod
+    def set_motor_voltages(self, voltages: Mapping[JointName, float]) -> None:
+        """Override selected position loops with motor voltage, within supply limits."""
+        ...
+
+    @abstractmethod
+    def use_position_control(self) -> None:
+        """Clear voltage overrides; hold the currently measured joint positions."""
+        ...
+
+    @property
+    @abstractmethod
+    def motor_voltages(self) -> dict[JointName, float]:
+        """Last applied motor commands in volts."""
+        ...
+
+    @property
+    @abstractmethod
+    def motor_torques_nm(self) -> dict[JointName, float]:
+        """Current actuator output torque, including the configured limits."""
+        ...

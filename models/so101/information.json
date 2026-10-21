@@ -196,10 +196,10 @@
   },
   "_sources": {
     "CAD_geometry_record": "../sentinel-quad/information.json#/so101",
-    "CAD_export": "config/cad-export.json",
-    "servo_reference": "config/servos.json",
+    "CAD_export": "source/cad-manifest.json",
+    "servo_reference": "runtime/servo-model.json",
     "manufacturer": "https://www.feetechrc.com/Data/feetechrc/upload/file/20200611/6372749961523760249976542.pdf",
     "simulation_reference_mass": "https://raw.githubusercontent.com/TheRobotStudio/SO-ARM100/main/Simulation/SO101/so101_new_calib.urdf",
-    "electrical_approximation": "config/electrical-fit.json"
+    "electrical_approximation": "so101.xml#custom"
   }
 }

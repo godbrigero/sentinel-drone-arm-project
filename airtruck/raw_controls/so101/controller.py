@@ -7,10 +7,15 @@ from dataclasses import dataclass
 from collections.abc import Mapping
 from typing import TypedDict
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 import mujoco
 
-from airtruck.raw_controls.so101.io import ArmController, ServoTransport
+from airtruck.raw_controls.so101.io import (
+    ArmController,
+    ServoTransport,
+    JointName,
+    PositionCommand,
+)
 
 
 class ServoDatasheet(TypedDict):
@@ -45,33 +50,39 @@ class SimSO101(ArmController):
         data: mujoco.MjData,
         *,
         servo_spec: ServoSpec,
+        prefix: str = "",
     ) -> None:
-        if model.nq != 6 or model.nv != 6 or model.nu != 6:
-            raise ValueError("SO101 requires six hinge joints and six actuators")
-        mujoco.mj_forward(model, data)
-        self.model: mujoco.MjModel = model
-        self.data: mujoco.MjData = data
-        self.names: list[str] = []
-        for i in range(model.njnt):
-            name = model.joint(i).name
-            if name is None:
-                raise ValueError("SO101 joints must have names")
-            self.names.append(name)
+        self.model = model
+        self.data = data
+        self.names = list(JOINTS)
+        self._joints = np.array([model.joint(prefix + n).id for n in JOINTS])
+        self._actuators = np.array([model.actuator(prefix + n).id for n in JOINTS])
+        if any(model.jnt_type[j] != mujoco.mjtJoint.mjJNT_HINGE for j in self._joints):
+            raise ValueError("SO101 requires six hinge joints")
+        if any(
+            model.actuator_trnid[a, 0] != j
+            or model.actuator_trntype[a] != mujoco.mjtTrn.mjTRN_JOINT
+            for a, j in zip(self._actuators, self._joints, strict=True)
+        ):
+            raise ValueError("SO101 actuators must drive their corresponding joints")
+        self._qpos = model.jnt_qposadr[self._joints].copy()
+        self._qvel = model.jnt_dofadr[self._joints].copy()
         self.spec: ServoSpec = {
             "datasheet": servo_spec["datasheet"].copy(),
             "controller_demo_tuning": servo_spec["controller_demo_tuning"].copy(),
         }
         self.tune: ControllerTuning = self.spec["controller_demo_tuning"]
         self.resolution: int = self.spec["datasheet"]["encoder_counts"]
-        self.target: NDArray[np.float64] = np.array(data.qpos)
+        self.target: NDArray[np.float64] = data.qpos[self._qpos].copy()
         self.profile: NDArray[np.float64] = self.target.copy()
         self.speed: NDArray[np.float64] = np.zeros(6)
         self.integral: NDArray[np.float64] = np.zeros(6)
+        self._voltage_commands: dict[JointName, float] = {}
         self._enabled: bool = True
-        self._gain: NDArray[np.float64] = model.actuator_gainprm.copy()
-        self._bias: NDArray[np.float64] = model.actuator_biasprm.copy()
+        self._gain: NDArray[np.float64] = model.actuator_gainprm[self._actuators].copy()
+        self._bias: NDArray[np.float64] = model.actuator_biasprm[self._actuators].copy()
 
-    def sync_write(self, register: str, values: Mapping[str, float]) -> None:
+    def sync_write(self, register: str, values: Mapping[JointName, float]) -> None:
         if register != "Goal_Position":
             raise ValueError(
                 "Supported register: Goal_Position (virtual calibrated encoder ticks)"
@@ -81,36 +92,30 @@ class SimSO101(ArmController):
             if not np.isfinite(ticks):
                 raise ValueError("Target must be finite")
             # Virtual offset places the midpoint of each CAD range at tick 2048.
-            mid = np.mean(self.model.jnt_range[i])
+            mid = np.mean(self.model.jnt_range[self._joints[i]])
             q = (
                 np.clip(round(ticks), 0, 4095) - 2048
             ) * 2 * np.pi / self.resolution + mid
-            self.target[i] = np.clip(q, *self.model.jnt_range[i])
+            self.target[i] = np.clip(q, *self.model.jnt_range[self._joints[i]])
 
-    def command_radians(self, name: str, radians: float) -> None:
+    def command_radians(self, name: JointName, radians: float) -> None:
         i = self.names.index(name)
-        mid = np.mean(self.model.jnt_range[i])
+        mid = np.mean(self.model.jnt_range[self._joints[i]])
         self.sync_write(
             "Goal_Position",
-            {
-                name: float(
-                    2048 + (radians - mid) * self.resolution / (2 * np.pi)
-                )
-            },
+            {name: float(2048 + (radians - mid) * self.resolution / (2 * np.pi))},
         )
 
     def observation(self) -> dict[str, float]:
         q = (
-            np.round(self.data.qpos * self.resolution / (2 * np.pi))
+            np.round(self.data.qpos[self._qpos] * self.resolution / (2 * np.pi))
             * 2
             * np.pi
             / self.resolution
         )
-        return {
-            name + ".pos": float(q[i]) for i, name in enumerate(self.names)
-        }
+        return {name + ".pos": float(q[i]) for i, name in enumerate(self.names)}
 
-    def _step(self) -> None:
+    def update_control(self) -> None:
         dt = self.model.opt.timestep
         t = self.tune
         remaining = self.target - self.profile
@@ -128,7 +133,7 @@ class SimSO101(ArmController):
         self.profile += np.where(cross, remaining, delta)
         self.speed[cross] = 0
         sensed = (
-            np.round(self.data.qpos * self.resolution / (2 * np.pi))
+            np.round(self.data.qpos[self._qpos] * self.resolution / (2 * np.pi))
             * 2
             * np.pi
             / self.resolution
@@ -137,7 +142,7 @@ class SimSO101(ArmController):
         raw = (
             t["kp_V_per_rad"] * error
             + t["ki_V_per_rad_s"] * self.integral
-            - t["kd_V_s_per_rad"] * self.data.qvel
+            - t["kd_V_s_per_rad"] * self.data.qvel[self._qvel]
         )
         vmax = self.spec["datasheet"]["voltage_V"]
         # Anti-windup: only integrate when it will not deepen saturation.
@@ -146,18 +151,39 @@ class SimSO101(ArmController):
         self.integral = np.clip(
             self.integral, -vmax / t["ki_V_per_rad_s"], vmax / t["ki_V_per_rad_s"]
         )
+        for name, voltage in self._voltage_commands.items():
+            raw[self.names.index(name)] = voltage
         if self.enabled:
-            self.model.actuator_gainprm[:] = self._gain
-            self.model.actuator_biasprm[:] = self._bias
-            self.data.ctrl[:] = np.clip(raw, -vmax, vmax)
+            self.model.actuator_gainprm[self._actuators] = self._gain
+            self.model.actuator_biasprm[self._actuators] = self._bias
+            self.data.ctrl[self._actuators] = np.clip(raw, -vmax, vmax)
         else:
-            self.data.ctrl[:] = 0
+            self.data.ctrl[self._actuators] = 0
             self.integral[:] = 0
-            self.model.actuator_gainprm[:] = 0
-            self.model.actuator_biasprm[:] = 0
-        mujoco.mj_step(self.model, self.data)
+            self.model.actuator_gainprm[self._actuators] = 0
+            self.model.actuator_biasprm[self._actuators] = 0
 
-    def set_positions(self, positions: Mapping[str, float] | ArrayLike) -> None:
+    def set_motor_voltages(self, voltages: Mapping[JointName, float]) -> None:
+        vmax = self.spec["datasheet"]["voltage_V"]
+        for name, voltage in voltages.items():
+            if (
+                name not in self.names
+                or not math.isfinite(voltage)
+                or abs(voltage) > vmax
+            ):
+                raise ValueError(
+                    "Motor voltage must name a joint and be within supply limits"
+                )
+        self._voltage_commands.update(voltages)
+
+    def use_position_control(self) -> None:
+        self._voltage_commands.clear()
+        self.target[:] = self.data.qpos[self._qpos]
+        self.profile[:] = self.target
+        self.speed[:] = 0
+        self.integral[:] = 0
+
+    def set_positions(self, positions: PositionCommand) -> None:
         """Set joint targets in CAD radians.
 
         A mapping names joints and leaves other joints unchanged. A six-element
@@ -174,32 +200,25 @@ class SimSO101(ArmController):
             self.command_radians(name, radians)
 
     @property
-    def positions(self) -> dict[str, float]:
+    def positions(self) -> dict[JointName, float]:
         """Actual unquantized joint positions in CAD radians."""
-        return dict(zip(self.names, map(float, self.data.qpos)))
+        return dict(zip(self.names, map(float, self.data.qpos[self._qpos])))
 
     @property
-    def targets(self) -> dict[str, float]:
+    def targets(self) -> dict[JointName, float]:
         """Copy of commanded joint positions in CAD radians."""
         return dict(zip(self.names, map(float, self.target)))
 
     @property
-    def limits(self) -> dict[str, tuple[float, float]]:
+    def limits(self) -> dict[JointName, tuple[float, float]]:
         """Joint travel limits in CAD radians."""
         return {
             name: (
-                float(self.model.jnt_range[i, 0]),
-                float(self.model.jnt_range[i, 1]),
+                float(self.model.jnt_range[self._joints[i], 0]),
+                float(self.model.jnt_range[self._joints[i], 1]),
             )
             for i, name in enumerate(self.names)
         }
-
-    def step(self, steps: int = 1) -> None:
-        """Advance a positive integer number of physics steps; does not sleep."""
-        if isinstance(steps, bool) or not isinstance(steps, int) or steps < 1:
-            raise ValueError("steps must be a positive integer")
-        for _ in range(steps):
-            self._step()
 
     @property
     def enabled(self) -> bool:
@@ -214,20 +233,19 @@ class SimSO101(ArmController):
         """Enable/disable powered torque on the next simulation step."""
         self.enabled = enabled
 
-    def reset(self) -> None:
-        """Restore the saved CAD pose and clear controller state."""
-        mujoco.mj_resetData(self.model, self.data)
-        self.target[:] = self.data.qpos
-        self.profile[:] = self.data.qpos
+    def reset_control(self) -> None:
+        """Reset only this controller after the world restores physics state."""
+        self._voltage_commands.clear()
+        self.target[:] = self.data.qpos[self._qpos]
+        self.profile[:] = self.data.qpos[self._qpos]
         self.speed[:] = 0
         self.integral[:] = 0
         self.enabled = True
-        self.model.actuator_gainprm[:] = self._gain
-        self.model.actuator_biasprm[:] = self._bias
-        mujoco.mj_forward(self.model, self.data)
+        self.model.actuator_gainprm[self._actuators] = self._gain
+        self.model.actuator_biasprm[self._actuators] = self._bias
 
 
-JOINTS = (
+JOINTS: tuple[JointName, ...] = (
     "shoulder_pan",
     "shoulder_lift",
     "elbow_flex",
@@ -271,7 +289,10 @@ class JointCalibration:
         if not 0 <= ticks < self.counts_per_revolution:
             raise ValueError("Encoder feedback is outside its calibrated range")
         return (
-            self.direction * (ticks - self.zero_tick) * math.tau / self.counts_per_revolution
+            self.direction
+            * (ticks - self.zero_tick)
+            * math.tau
+            / self.counts_per_revolution
         )
 
     def to_ticks(self, radians: float) -> int:
@@ -286,12 +307,13 @@ class JointCalibration:
         ]
         minimum, maximum = math.ceil(min(end_ticks)), math.floor(max(end_ticks))
         tick = round(
-            self.zero_tick + self.direction * angle * self.counts_per_revolution / math.tau
+            self.zero_tick
+            + self.direction * angle * self.counts_per_revolution / math.tau
         )
         return min(maximum, max(minimum, tick))
 
 
-def joint_positions(values: Mapping[str, float] | ArrayLike) -> Mapping[str, float]:
+def joint_positions(values: PositionCommand) -> Mapping[JointName, float]:
     """Map a command onto ``JOINTS`` order.
 
     A mapping is left unchanged, so named commands stay available. A vector of
@@ -319,7 +341,9 @@ class RealSO101(ArmController):
     """
 
     def __init__(
-        self, transport: ServoTransport, calibration: Mapping[str, JointCalibration]
+        self,
+        transport: ServoTransport,
+        calibration: Mapping[JointName, JointCalibration],
     ) -> None:
         if set(calibration) != set(JOINTS):
             raise ValueError("Provide calibration for all six SO-101 joints")
@@ -328,11 +352,11 @@ class RealSO101(ArmController):
             raise ValueError("Each joint must use a unique servo ID")
         self._transport = transport
         self._calibration = dict(calibration)
-        self._targets: dict[str, float] = {}
+        self._targets: dict[JointName, float] = {}
         self._enabled = False
 
     @property
-    def limits(self) -> dict[str, tuple[float, float]]:
+    def limits(self) -> dict[JointName, tuple[float, float]]:
         return {name: c.limits_rad for name, c in self._calibration.items()}
 
     @property
@@ -340,7 +364,7 @@ class RealSO101(ArmController):
         return self._enabled
 
     @property
-    def positions(self) -> dict[str, float]:
+    def positions(self) -> dict[JointName, float]:
         raw = self._transport.read_positions(
             [self._calibration[n].servo_id for n in JOINTS]
         )
@@ -350,17 +374,17 @@ class RealSO101(ArmController):
         }
 
     @property
-    def targets(self) -> dict[str, float]:
+    def targets(self) -> dict[JointName, float]:
         return self._targets.copy()
 
-    def set_positions(self, positions: Mapping[str, float] | ArrayLike) -> None:
+    def set_positions(self, positions: PositionCommand) -> None:
         if not self.enabled:
             raise RuntimeError(
                 "Enable the hardware controller before commanding positions"
             )
         positions = joint_positions(positions)
         ticks: dict[int, int] = {}
-        targets: dict[str, float] = {}
+        targets: dict[JointName, float] = {}
         for name, angle in positions.items():
             if name not in self._calibration:
                 raise ValueError(f"Unknown SO-101 joint: {name}")

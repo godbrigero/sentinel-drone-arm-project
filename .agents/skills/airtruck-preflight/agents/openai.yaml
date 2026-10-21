@@ -1,0 +1,4 @@
+interface:
+  display_name: "Airtruck Preflight"
+  short_description: "Audit Airtruck changes and explain them visually"
+  default_prompt: "Use $airtruck-preflight to review this project before a commit, run its checks, and explain the changes with visuals and code examples."

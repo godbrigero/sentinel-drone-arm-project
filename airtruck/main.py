@@ -1,4 +1,4 @@
-from constants import *
+from airtruck.constants import *
 
 
 def main() -> None:

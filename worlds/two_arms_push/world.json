@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "scene": "scene.xml",
+  "systems": [
+    {
+      "name": "weak",
+      "model": "../../models/so101/so101.xml",
+      "root_body": "base",
+      "controller": "so101",
+      "controller_config": "../../models/so101/runtime/servo-model.json",
+      "placement": "fixed",
+      "pose": {
+        "position_m": [
+          -0.08,
+          0,
+          0
+        ]
+      },
+      "initial_joint_positions_rad": {
+        "elbow_flex": -3.14
+      }
+    },
+    {
+      "name": "strong",
+      "model": "../../models/so101/so101.xml",
+      "root_body": "base",
+      "controller": "so101",
+      "controller_config": "../../models/so101/runtime/servo-model.json",
+      "placement": "fixed",
+      "pose": {
+        "position_m": [
+          0.08,
+          0,
+          0
+        ]
+      },
+      "initial_joint_positions_rad": {
+        "elbow_flex": -3.14
+      }
+    }
+  ],
+  "entities": [
+    {
+      "name": "weak_hand",
+      "body": "weak/hand",
+      "placement": "fixed"
+    },
+    {
+      "name": "strong_hand",
+      "body": "strong/hand",
+      "placement": "fixed"
+    }
+  ],
+  "inter_system_collisions": true
+}

@@ -14,7 +14,7 @@ Provide all six joint calibrations: actual servo ID, measured encoder tick at CA
 from airtruck.raw_controls.so101.controller import RealSO101 as SO101
 
 # transport: your configured driver implementing ServoTransport
-# calibration: dict[str, JointCalibration], measured for all six joints
+# calibration: dict[JointName, JointCalibration], measured for all six joints
 arm = SO101(transport, calibration)  # No I/O on construction
 arm.set_enabled(True)              # Read pose, queue matching targets, enable torque
 arm.set_positions({"shoulder_pan": 0.0872665})

@@ -16,7 +16,14 @@
 
 ## Workspace hygiene
 
-- Keep only `information.json`, `AGENTS.md`, `.gitignore`, the global `requirements.txt`, `pyrightconfig.json`, `pyproject.toml`, and `uv.lock` as root files. Store model-specific configuration under its model directory.
+- Keep only `information.json`, `AGENTS.md`, `.gitignore`, an optional compatibility export `requirements.txt`, `pyrightconfig.json`, `pyproject.toml`, and `uv.lock` as root files. Store model-specific configuration under its model directory.
 - Onshape is the CAD source of truth. Do not retain local STEP/ZIP exports, images, HTML previews, temporary scripts, virtual environments or caches after verification unless the user requests them. Use temporary storage during work and remove it afterward. Preserve version-control metadata if present.
 
-- The user-requested `.venv/` is the persistent uv project environment; keep it ignored by Git. Manage dependencies in `pyproject.toml`, lock them in `uv.lock`, and export the global `requirements.txt` for compatibility.
+- The user-requested `.venv/` is the persistent uv project environment; keep it ignored by Git. Manage dependencies in `pyproject.toml` and lock them in `uv.lock`. These are the dependency sources of truth for this uv project. `requirements.txt` is optional: generate it from the lockfile only when a compatibility workflow needs it. Do not require it or flag its absence as a preflight error.
+
+## Documentation maintenance
+
+- Keep documentation clean, accurate, and up to date. After every major change, review all files under `docs/` and other project documentation for relevance, including paths, imports, commands, examples, behavior, and limitations. Update or remove stale or duplicated material rather than only appending new notes.
+- Record implemented changes in the relevant existing documentation so it describes the current project. Keep narrative and change notes out of `information.json`.
+- Whenever the user requests a commit, review all project documentation before committing anything. Complete needed documentation corrections and verify documented paths and commands before creating the commit.
+- Inspect generated diagnostics such as `MUJOCO_LOG.TXT` when they appear, fix their cause where applicable, and remove stale logs after verification. Do not commit generated logs or suppress useful warnings merely to keep the workspace clean.

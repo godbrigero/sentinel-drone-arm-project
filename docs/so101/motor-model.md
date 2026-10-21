@@ -29,6 +29,11 @@ The outer controller is an approximate PI-D voltage controller, with virtual enc
 
 Native Onshape assembly revision: `39f0987c444b49d7bde72b28`. Part Studio geometry revision: `eaf0660831e6ce2c01dcb7b8`. Export preserves 257 parts, seven groups, 12 connector frames and six joint axes/ranges. Parent connector Z is negated for the child's positive angle, matching Onshape's mate-angle convention. XML geometry transforms use the folded saved pose as zero.
 
-The source CAD has no assigned mass. Reference link masses/COMs/inertias come from [TheRobotStudio's SO-101 URDF](https://raw.githubusercontent.com/TheRobotStudio/SO-ARM100/main/Simulation/SO101/so101_new_calib.urdf), aligned to the CAD using printed-part frame fits; the final reference inertias are retained in `models/so101/config/cad-export.json`. They are approximations for this detailed model, not measured properties. All seven masses and principal inertias are positive; inertia triangle inequalities are checked. Explicit inertias prevent visual mesh shell settings from changing link mass.
+The source CAD has no assigned mass. Reference link masses/COMs/inertias come from [TheRobotStudio's SO-101 URDF](https://raw.githubusercontent.com/TheRobotStudio/SO-ARM100/main/Simulation/SO101/so101_new_calib.urdf), aligned to the CAD using printed-part frame fits; the final reference inertias are retained in `models/so101/source/cad-manifest.json`. They are approximations for this detailed model, not measured properties. All seven masses and principal inertias are positive; inertia triangle inequalities are checked. Explicit inertias prevent visual mesh shell settings from changing link mass.
 
 Full contact travel and hardware-identical behavior are outside this demo's validation. To improve fidelity, measure installed supply voltage, current versus torque/speed, powered/unpowered friction, response to position steps, backlash, rotor inertia and each assembled link's inertial properties. Do not treat a successful 0.0872665-radian demonstration as validation for payload prediction or hardware control.
+
+The two-arm push regression additionally verifies force transfer using convex-hull
+contacts and a collision-disabled control run. Its normal-force and penetration
+checks validate the configured simulation, not measured contact stiffness or
+hardware force. See the [push-test guide](README.md#two-arm-physical-push-test).

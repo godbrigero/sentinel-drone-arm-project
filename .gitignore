@@ -19,3 +19,6 @@ build/
 # Python tooling caches
 .ruff_cache/
 .mypy_cache/
+
+# Generated MuJoCo diagnostics (inspect warnings before cleanup)
+MUJOCO_LOG.TXT

@@ -1,6 +1,7 @@
 """Fresh-load checks for CAD export, motor constants, and individual servo motion."""
 
 import sys, json, hashlib
+import xml.etree.ElementTree as ET
 from pathlib import Path
 import numpy as np
 import mujoco
@@ -8,10 +9,16 @@ import mujoco
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 ROOT = Path(__file__).resolve().parents[2] / "models" / "so101"
 from airtruck.raw_controls.so101.controller import SimSO101
+from airtruck.testing_util.mujoco_world import MujocoWorld
+from airtruck.testing_util.adapters import SO101Adapter
 
-c = json.loads((ROOT / "config/cad-export.json").read_text())
-s = json.loads((ROOT / "config/servos.json").read_text())
-fit = json.loads((ROOT / "config/electrical-fit.json").read_text())
+c = json.loads((ROOT / "source/cad-manifest.json").read_text())
+s = json.loads((ROOT / "runtime/servo-model.json").read_text())
+# Derived parameters live in the generated model, not a second JSON copy.
+fit = {
+    node.attrib["name"]: float(node.attrib["data"])
+    for node in ET.parse(ROOT / "so101.xml").findall("custom/numeric")
+}
 m = mujoco.MjModel.from_xml_path(str(ROOT / "so101.xml"))
 d = mujoco.MjData(m)
 mujoco.mj_forward(m, d)
@@ -41,16 +48,16 @@ b = fit["estimated_viscous_Nm_s_rad"]
 w = fit["no_load_speed_rad_s"]
 assert abs(Kt * V / R - fc - 19.5 * 0.0980665) < 1e-10
 assert abs(Kt * (V - Ke * w) / R - fc - b * w) < 1e-10
+bus = SimSO101(m, d, servo_spec=s)
+world = MujocoWorld(m, d, {"arm": SO101Adapter(bus)}, {})
 for idx in range(6):
-    mujoco.mj_resetData(m, d)
-    mujoco.mj_forward(m, d)
-    bus = SimSO101(m, d, servo_spec=s)
+    world.reset()
     for _ in range(5000):
-        bus.step()
+        world.step()
     baseline = d.qpos.copy()
     bus.command_radians(bus.names[idx], np.pi / 36)
     for _ in range(3000):
-        bus.step()
+        world.step()
     error = float(abs(d.qpos[idx] - np.pi / 36))
     other = float(max(np.abs(np.delete(d.qpos - baseline, idx))))
     errors.append(
@@ -99,3 +106,5 @@ report = {
     ],
 }
 print(json.dumps(report, indent=2))
+
+world.close()

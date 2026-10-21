@@ -1,7 +1,0 @@
-{
-  "robot_name": "so101",
-  "document_id": "31c7cfca8b01a8e37454827d",
-  "output_format": "mujoco",
-  "assets_directory": "assets",
-  "processors": []
-}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Commit"
+  short_description: "Verify current changes and create a local commit"
+  default_prompt: "Use $commit to review the current changes, reuse valid checks from this thread, run missing checks, and commit."

@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import sys
+from tempfile import TemporaryDirectory
 import json, math, xml.etree.ElementTree as ET
 import numpy as np
 from onshape_to_robot.robot import Robot, Link, Part, Joint
@@ -14,8 +15,8 @@ ROOT = Path(__file__).resolve().parents[2] / "models" / "so101"
 
 
 def build():
-    c = json.loads((ROOT / "config/cad-export.json").read_text())
-    s = json.loads((ROOT / "config/servos.json").read_text())
+    c = json.loads((ROOT / "source/cad-manifest.json").read_text())
+    s = json.loads((ROOT / "runtime/servo-model.json").read_text())
     d = s["datasheet"]
     V = d["voltage_V"]
     R = d["terminal_resistance_ohm"]
@@ -38,22 +39,18 @@ def build():
         "stall_current_A": Is,
         "no_load_speed_rad_s": w,
     }
-    (ROOT / "config/electrical-fit.json").write_text(
-        json.dumps(params, indent=2) + "\n"
-    )
-    cfgfile = ROOT / "config.json"
-    cfgfile.write_text(
-        json.dumps(
-            {
-                "robot_name": "so101",
-                "document_id": "31c7cfca8b01a8e37454827d",
-                "output_format": "mujoco",
-                "assets_directory": "assets",
-                "processors": [],
-            }
-        )
-    )
-    cfg = Config(str(cfgfile))
+    # The exporter requires a file; this adapter configuration is disposable.
+    with TemporaryDirectory(prefix="so101-export-") as temporary:
+        cfgfile = Path(temporary) / "config.json"
+        cfgfile.write_text(json.dumps({
+            "robot_name": "so101",
+            "document_id": c["cad_url"].split("/documents/", 1)[1].split("/", 1)[0],
+            "output_format": "mujoco",
+            "assets_directory": "assets",
+            "processors": [],
+        }))
+        cfg = Config(str(cfgfile))
+    cfg.output_directory = str(ROOT)
     robot = Robot("so101")
     links = {}
     for l in c["links"]:

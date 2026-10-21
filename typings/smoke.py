@@ -31,3 +31,21 @@ def check_api(model: mujoco.MjModel, data: mujoco.MjData,
 
 def controller(model: mujoco.MjModel, data: mujoco.MjData) -> None:
     data.ctrl[:] = 0.0
+
+
+from airtruck.testing_util import WorldControl, Pose, EntityHandle, Sample
+from airtruck.raw_controls.so101.io import ArmController, JointName
+
+
+def check_world_api(world: WorldControl) -> None:
+    arm = world.system("arm", ArmController)
+    assert_type(arm, ArmController)
+    assert_type(arm.positions, dict[JointName, float])
+    assert_type(world.entity("arm"), EntityHandle)
+    assert_type(world.pose(world.entity("arm")), Pose)
+    assert_type(world.record(lambda: arm.positions, 1.0), list[Sample[dict[JointName, float]]])
+    arm.set_positions({"shoulder_pan": 0.1})
+    # Negative static contracts: these ignores must remain necessary.
+    arm.set_positions({"not_a_joint": 0.1})  # type: ignore[dict-item]
+    arm.step()  # type: ignore[attr-defined]
+    world.data.qpos[:] = 0  # type: ignore[attr-defined]

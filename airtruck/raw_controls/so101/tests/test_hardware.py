@@ -111,3 +111,8 @@ def test_radian_encoder_conversion(direction) -> None:
     assert calibration.to_radians(2048 + direction * 1024) == pytest.approx(math.pi / 2)
     assert calibration.to_ticks(-math.pi / 2) == 2048 - direction * 1024
     assert calibration.to_radians(2048) == 0
+
+
+def test_coupled_fixtures_require_explicit_opt_in(request) -> None:
+    with pytest.raises(pytest.fail.Exception, match="require @simulation"):
+        request.getfixturevalue("world")

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "scene": "scene.xml",
+  "systems": [
+    {
+      "name": "arm",
+      "model": "../../models/so101/so101.xml",
+      "root_body": "base",
+      "controller": "so101",
+      "controller_config": "../../models/so101/runtime/servo-model.json",
+      "placement": "fixed"
+    }
+  ]
+}
