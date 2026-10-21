@@ -1,0 +1,21 @@
+
+# Regenerable CAD assets and caches
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv*/
+build/
+.cache/
+*.step
+*.STEP
+*.stp
+*.stl
+*.zip
+*.png
+*.jpg
+*.jpeg
+*.html
+
+# Python tooling caches
+.ruff_cache/
+.mypy_cache/

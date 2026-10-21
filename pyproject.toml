@@ -1,0 +1,40 @@
+[project]
+name = "airtruck"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "mujoco==3.16.0",
+    "onshape-to-robot==1.8.3",
+    "numpy==2.5.4",
+    "Pillow==13.0.0",
+]
+
+[dependency-groups]
+dev = ["mypy==1.18.2", "pytest==8.4.2"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+addopts = [
+    "-p", "no:cacheprovider",
+    "--import-mode=importlib",
+    "airtruck/raw_controls/so101/tests/test_hardware.py",
+    "airtruck/raw_controls/so101/tests/test_simulation.py",
+]
+
+[tool.mypy]
+python_version = "3.12"
+namespace_packages = true
+explicit_package_bases = true
+mypy_path = "$MYPY_CONFIG_FILE_DIR/typings"
+files = [
+    "airtruck/raw_controls/so101/controller.py",
+    "airtruck/raw_controls/so101/io.py",
+    "typings/smoke.py",
+]
+check_untyped_defs = true
+disallow_untyped_defs = true
+warn_unused_ignores = true
+show_error_codes = true

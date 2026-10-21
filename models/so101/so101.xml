@@ -1,0 +1,255 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mujoco model="so101">
+  <!--Native CAD geometry; reference inertias; datasheet motor constants plus explicitly estimated electrical/loss fit. Use scripts/run.py for servo position commands.-->
+  <compiler angle="radian" meshdir="assets" autolimits="true" inertiafromgeom="false" />
+  <default>
+    <default class="so101">
+      <joint frictionloss="0.04903324999999992" armature="0" damping="0.012606274336967262" />
+      <default class="visual">
+        <geom type="mesh" contype="0" conaffinity="0" group="2" />
+      </default>
+      <default class="collision">
+        <geom group="3" />
+      </default>
+    </default>
+  </default>
+  <worldbody>
+    <body name="base" pos="0 0 0" quat="1 0 0 0" childclass="so101">
+      <inertial pos="-5.20866e-05 0.0178401 0.0362787" mass="0.147" fullinertia="0.000136117 0.000114686 0.000130364 4.59703e-07 9.7512e-08 -4.97123e-06" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_00" material="base_00_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_01" material="base_01_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_02" material="base_02_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_03" material="base_03_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_07" material="base_07_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_08" material="base_08_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_11" material="base_11_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_12" material="base_12_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_13" material="base_13_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_16" material="base_16_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_17" material="base_17_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_22" material="base_22_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_23" material="base_23_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_24" material="base_24_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_29" material="base_29_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_30" material="base_30_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_36" material="base_36_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_38" material="base_38_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_40" material="base_40_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_41" material="base_41_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_42" material="base_42_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_43" material="base_43_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_45" material="base_45_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_48" material="base_48_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_49" material="base_49_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_50" material="base_50_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_53" material="base_53_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_54" material="base_54_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_55" material="base_55_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_56" material="base_56_material" />
+      <geom type="mesh" class="visual" pos="0 0 0" quat="1 0 0 0" mesh="base_57" material="base_57_material" />
+      <body name="shoulder" pos="-9.94325e-05 -0.00756157 0.0645314" quat="0.99999 0.00436331 -0 0">
+        <joint axis="0 0 -1" name="shoulder_pan" type="hinge" range="-1.9198621771937625 1.9198621771937625" />
+        <inertial pos="-4.27674e-05 -0.0309592 0.0265201" mass="0.100006" fullinertia="8.10403e-05 8.3759e-05 2.39783e-05 7.5487e-08 -1.49927e-07 1.16317e-06" />
+        <geom type="mesh" class="visual" pos="9.94325e-05 0.00699814 -0.064595" quat="0.99999 -0.00436331 0 -0" mesh="shoulder_14" material="shoulder_14_material" />
+        <geom type="mesh" class="visual" pos="9.94325e-05 0.00699814 -0.064595" quat="0.99999 -0.00436331 0 -0" mesh="shoulder_20" material="shoulder_20_material" />
+        <geom type="mesh" class="visual" pos="9.94325e-05 0.00699814 -0.064595" quat="0.99999 -0.00436331 0 -0" mesh="shoulder_28" material="shoulder_28_material" />
+        <geom type="mesh" class="visual" pos="9.94325e-05 0.00699814 -0.064595" quat="0.99999 -0.00436331 0 -0" mesh="shoulder_33" material="shoulder_33_material" />
+        <geom type="mesh" class="visual" pos="9.94325e-05 0.00699814 -0.064595" quat="0.99999 -0.00436331 0 -0" mesh="shoulder_59" material="shoulder_59_material" />
+        <body name="upper_arm" pos="-0.0156568 -0.0308338 0.055497" quat="0.502177 0.502177 -0.497814 -0.497814">
+          <joint axis="0 0 -1" name="shoulder_lift" type="hinge" range="-0.17453292519943295 3.3161255787892263" />
+          <inertial pos="-0.0898464 0.00838162 -0.0180077" mass="0.103" fullinertia="4.07999e-05 0.000147318 0.000142487 1.9781e-05 4.138e-08 8.72e-09" />
+          <geom type="mesh" class="visual" pos="-0.037693 -0.120092 -0.0160858" quat="0.499981 -0.504363 0.495637 0.499981" mesh="upper_arm_06" material="upper_arm_06_material" />
+          <geom type="mesh" class="visual" pos="-0.037693 -0.120092 -0.0160858" quat="0.499981 -0.504363 0.495637 0.499981" mesh="upper_arm_10" material="upper_arm_10_material" />
+          <geom type="mesh" class="visual" pos="-0.037693 -0.120092 -0.0160858" quat="0.499981 -0.504363 0.495637 0.499981" mesh="upper_arm_26" material="upper_arm_26_material" />
+          <geom type="mesh" class="visual" pos="-0.037693 -0.120092 -0.0160858" quat="0.499981 -0.504363 0.495637 0.499981" mesh="upper_arm_37" material="upper_arm_37_material" />
+          <geom type="mesh" class="visual" pos="-0.037693 -0.120092 -0.0160858" quat="0.499981 -0.504363 0.495637 0.499981" mesh="upper_arm_44" material="upper_arm_44_material" />
+          <body name="forearm" pos="-0.11267 0.0277153 -0.00249469" quat="0.923874 0.00403119 0.00166973 -0.382671">
+            <joint axis="0 0 -1" name="elbow_flex" type="hinge" range="-3.2607963376663935 0.11920368407660008" />
+            <inertial pos="0.0670532 0.0716389 -0.0178813" mass="0.104" fullinertia="0.000101705 8.68824e-05 0.00014529 -6.55501e-05 8.56982e-07 9.27441e-07" />
+            <geom type="mesh" class="visual" pos="0.157611 -0.0515817 -0.0123007" quat="0.269386 -0.658484 0.266082 0.650408" mesh="forearm_09" material="forearm_09_material" />
+            <geom type="mesh" class="visual" pos="0.157611 -0.0515817 -0.0123007" quat="0.269386 -0.658484 0.266082 0.650408" mesh="forearm_21" material="forearm_21_material" />
+            <geom type="mesh" class="visual" pos="0.157611 -0.0515817 -0.0123007" quat="0.269386 -0.658484 0.266082 0.650408" mesh="forearm_27" material="forearm_27_material" />
+            <geom type="mesh" class="visual" pos="0.157611 -0.0515817 -0.0123007" quat="0.269386 -0.658484 0.266082 0.650408" mesh="forearm_39" material="forearm_39_material" />
+            <geom type="mesh" class="visual" pos="0.157611 -0.0515817 -0.0123007" quat="0.269386 -0.658484 0.266082 0.650408" mesh="forearm_52" material="forearm_52_material" />
+            <body name="wrist" pos="0.0913234 0.0983431 -0.000955378" quat="0.923873 0.0057008 0.00236128 -0.38265">
+              <joint axis="0 0 -1" name="wrist_flex" type="hinge" range="-1.6580627893946132 1.6580627893946132" />
+              <inertial pos="-0.000100933 0.0386151 -0.0277163" mass="0.079" fullinertia="3.68263e-05 2.53915e-05 2.09995e-05 -1.8815e-08 5.3969e-08 3.64091e-06" />
+              <geom type="mesh" class="visual" pos="0.152973 -0.05924 -0.00949426" quat="0.00312571 0.713243 0.00307163 -0.700903" mesh="wrist_04" material="wrist_04_material" />
+              <geom type="mesh" class="visual" pos="0.152973 -0.05924 -0.00949426" quat="0.00312571 0.713243 0.00307163 -0.700903" mesh="wrist_15" material="wrist_15_material" />
+              <geom type="mesh" class="visual" pos="0.152973 -0.05924 -0.00949426" quat="0.00312571 0.713243 0.00307163 -0.700903" mesh="wrist_35" material="wrist_35_material" />
+              <geom type="mesh" class="visual" pos="0.152973 -0.05924 -0.00949426" quat="0.00312571 0.713243 0.00307163 -0.700903" mesh="wrist_46" material="wrist_46_material" />
+              <geom type="mesh" class="visual" pos="0.152973 -0.05924 -0.00949426" quat="0.00312571 0.713243 0.00307163 -0.700903" mesh="wrist_47" material="wrist_47_material" />
+              <body name="hand" pos="2.29608e-06 0.0603 -0.0192272" quat="0.504354 -0.504335 0.495627 0.495608">
+                <joint axis="0 0 -1" name="wrist_roll" type="hinge" range="-2.792526803190927 2.792526803190927" />
+                <inertial pos="0.000241858 0.00021862 0.0264352" mass="0.087" fullinertia="4.33726e-05 2.75014e-05 3.45063e-05 -5.8436e-08 -4.877e-08 5.73498e-06" />
+                <geom type="mesh" class="visual" pos="-0.00706173 -0.153122 -0.119534" quat="0.703988 -0.710212 -2.33908e-07 -2.35976e-07" mesh="hand_19" material="hand_19_material" />
+                <geom type="mesh" class="visual" pos="-0.00706173 -0.153122 -0.119534" quat="0.703988 -0.710212 -2.33908e-07 -2.35976e-07" mesh="hand_25" material="hand_25_material" />
+                <geom type="mesh" class="visual" pos="-0.00706173 -0.153122 -0.119534" quat="0.703988 -0.710212 -2.33908e-07 -2.35976e-07" mesh="hand_31" material="hand_31_material" />
+                <geom type="mesh" class="visual" pos="-0.00706173 -0.153122 -0.119534" quat="0.703988 -0.710212 -2.33908e-07 -2.35976e-07" mesh="hand_34" material="hand_34_material" />
+                <geom type="mesh" class="visual" pos="-0.00706173 -0.153122 -0.119534" quat="0.703988 -0.710212 -2.33908e-07 -2.35976e-07" mesh="hand_51" material="hand_51_material" />
+                <geom type="mesh" class="visual" pos="-0.00706173 -0.153122 -0.119534" quat="0.703988 -0.710212 -2.33908e-07 -2.35976e-07" mesh="hand_58" material="hand_58_material" />
+                <body name="jaw" pos="0.017805 0.0202291 0.02465" quat="0.502158 -0.502196 0.497795 -0.497833">
+                  <joint axis="0 0 -1" name="gripper" type="hinge" range="-1.7453292519943295 0.17453292519943295" />
+                  <inertial pos="-0.0300266 -0.00157776 -0.0188752" mass="0.012" fullinertia="1.89035e-06 6.61423e-06 5.28739e-06 -3.20128e-07 1.09788e-07 5.77e-09" />
+                  <geom type="mesh" class="visual" pos="0.173116 0.144197 -0.0263785" quat="0.710178 -0.00309876 -0.704008 -0.00307183" mesh="jaw_05" material="jaw_05_material" />
+                  <geom type="mesh" class="visual" pos="0.173116 0.144197 -0.0263785" quat="0.710178 -0.00309876 -0.704008 -0.00307183" mesh="jaw_18" material="jaw_18_material" />
+                  <geom type="mesh" class="visual" pos="0.173116 0.144197 -0.0263785" quat="0.710178 -0.00309876 -0.704008 -0.00307183" mesh="jaw_32" material="jaw_32_material" />
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+    <light pos="0 -0.2 1" dir="0 0 -1" diffuse=".8 .8 .8" />
+    <geom name="floor_visual" type="plane" size="1 1 .1" pos="0 0 0" rgba=".17 .20 .24 1" contype="0" conaffinity="0" />
+  </worldbody>
+  <asset>
+    <mesh file="base_03.obj" inertia="shell" />
+    <mesh file="hand_31.obj" inertia="shell" />
+    <mesh file="forearm_21.obj" inertia="shell" />
+    <mesh file="jaw_32.obj" inertia="shell" />
+    <mesh file="base_36.obj" inertia="shell" />
+    <mesh file="base_24.obj" inertia="shell" />
+    <mesh file="upper_arm_10.obj" inertia="shell" />
+    <mesh file="base_23.obj" inertia="shell" />
+    <mesh file="wrist_35.obj" inertia="shell" />
+    <mesh file="shoulder_20.obj" inertia="shell" />
+    <mesh file="wrist_15.obj" inertia="shell" />
+    <mesh file="base_29.obj" inertia="shell" />
+    <mesh file="base_11.obj" inertia="shell" />
+    <mesh file="base_49.obj" inertia="shell" />
+    <mesh file="forearm_27.obj" inertia="shell" />
+    <mesh file="wrist_46.obj" inertia="shell" />
+    <mesh file="base_13.obj" inertia="shell" />
+    <mesh file="jaw_05.obj" inertia="shell" />
+    <mesh file="base_57.obj" inertia="shell" />
+    <mesh file="hand_51.obj" inertia="shell" />
+    <mesh file="base_22.obj" inertia="shell" />
+    <mesh file="base_55.obj" inertia="shell" />
+    <mesh file="wrist_04.obj" inertia="shell" />
+    <mesh file="shoulder_33.obj" inertia="shell" />
+    <mesh file="upper_arm_26.obj" inertia="shell" />
+    <mesh file="base_08.obj" inertia="shell" />
+    <mesh file="jaw_18.obj" inertia="shell" />
+    <mesh file="base_40.obj" inertia="shell" />
+    <mesh file="base_41.obj" inertia="shell" />
+    <mesh file="base_42.obj" inertia="shell" />
+    <mesh file="base_45.obj" inertia="shell" />
+    <mesh file="base_50.obj" inertia="shell" />
+    <mesh file="base_01.obj" inertia="shell" />
+    <mesh file="base_00.obj" inertia="shell" />
+    <mesh file="base_56.obj" inertia="shell" />
+    <mesh file="upper_arm_37.obj" inertia="shell" />
+    <mesh file="hand_58.obj" inertia="shell" />
+    <mesh file="base_54.obj" inertia="shell" />
+    <mesh file="base_16.obj" inertia="shell" />
+    <mesh file="base_30.obj" inertia="shell" />
+    <mesh file="base_43.obj" inertia="shell" />
+    <mesh file="hand_25.obj" inertia="shell" />
+    <mesh file="forearm_09.obj" inertia="shell" />
+    <mesh file="base_17.obj" inertia="shell" />
+    <mesh file="upper_arm_44.obj" inertia="shell" />
+    <mesh file="base_02.obj" inertia="shell" />
+    <mesh file="shoulder_59.obj" inertia="shell" />
+    <mesh file="base_38.obj" inertia="shell" />
+    <mesh file="wrist_47.obj" inertia="shell" />
+    <mesh file="base_53.obj" inertia="shell" />
+    <mesh file="shoulder_14.obj" inertia="shell" />
+    <mesh file="shoulder_28.obj" inertia="shell" />
+    <mesh file="forearm_52.obj" inertia="shell" />
+    <mesh file="upper_arm_06.obj" inertia="shell" />
+    <mesh file="base_48.obj" inertia="shell" />
+    <mesh file="base_12.obj" inertia="shell" />
+    <mesh file="base_07.obj" inertia="shell" />
+    <mesh file="forearm_39.obj" inertia="shell" />
+    <mesh file="hand_34.obj" inertia="shell" />
+    <mesh file="hand_19.obj" inertia="shell" />
+    <material name="base_00_material" rgba="0.627451 0.627451 0.627451 1" />
+    <material name="base_01_material" rgba="0.294118 0.294118 0.294118 1" />
+    <material name="base_02_material" rgba="0.752941 0.752941 0.752941 1" />
+    <material name="base_03_material" rgba="0.768627 0.768627 0.768627 1" />
+    <material name="base_07_material" rgba="0.898039 0.921569 0.929412 1" />
+    <material name="base_08_material" rgba="1 1 1 1" />
+    <material name="base_11_material" rgba="0.764706 0.811765 0.803922 1" />
+    <material name="base_12_material" rgba="0.964706 0.964706 0.952941 1" />
+    <material name="base_13_material" rgba="0.784314 0.784314 0.784314 1" />
+    <material name="base_16_material" rgba="0.803922 0.803922 0.803922 1" />
+    <material name="base_17_material" rgba="0.207843 0.207843 0.207843 1" />
+    <material name="base_22_material" rgba="0.196078 0.207843 0.262745 1" />
+    <material name="base_23_material" rgba="0.909804 0.443137 0.0313725 1" />
+    <material name="base_24_material" rgba="0.894118 0.894118 0.894118 1" />
+    <material name="base_29_material" rgba="0.788235 0.788235 0.788235 1" />
+    <material name="base_30_material" rgba="0.105882 0.105882 0.105882 1" />
+    <material name="base_36_material" rgba="0.682353 0.427451 0.00784314 1" />
+    <material name="base_38_material" rgba="0.0980392 0.0980392 0.0980392 1" />
+    <material name="base_40_material" rgba="0.74902 0.74902 0.74902 1" />
+    <material name="base_41_material" rgba="0.847059 0 0 1" />
+    <material name="base_42_material" rgba="0.25098 0.25098 0.25098 1" />
+    <material name="base_43_material" rgba="0.8 0.8 0.8 1" />
+    <material name="base_45_material" rgba="0.792157 0.819608 0.933333 1" />
+    <material name="base_48_material" rgba="0.780392 0.568627 0.113725 1" />
+    <material name="base_49_material" rgba="0 0 0 1" />
+    <material name="base_50_material" rgba="0.768627 0.207843 0.152941 1" />
+    <material name="base_53_material" rgba="0.2 0.2 0.2 1" />
+    <material name="base_54_material" rgba="1 0.929412 0.929412 1" />
+    <material name="base_55_material" rgba="0.282353 0.662745 0.32549 1" />
+    <material name="base_56_material" rgba="0 0.666667 0 1" />
+    <material name="base_57_material" rgba="0 0.501961 0 1" />
+    <material name="shoulder_14_material" rgba="0.627451 0.627451 0.627451 1" />
+    <material name="shoulder_20_material" rgba="0.960784 0.960784 0.964706 1" />
+    <material name="shoulder_28_material" rgba="0.964706 0.964706 0.952941 1" />
+    <material name="shoulder_33_material" rgba="0.0980392 0.0980392 0.0980392 1" />
+    <material name="shoulder_59_material" rgba="0.768627 0.207843 0.152941 1" />
+    <material name="upper_arm_06_material" rgba="0.627451 0.627451 0.627451 1" />
+    <material name="upper_arm_10_material" rgba="0.960784 0.960784 0.964706 1" />
+    <material name="upper_arm_26_material" rgba="0.964706 0.964706 0.952941 1" />
+    <material name="upper_arm_37_material" rgba="0.0980392 0.0980392 0.0980392 1" />
+    <material name="upper_arm_44_material" rgba="0.768627 0.207843 0.152941 1" />
+    <material name="forearm_09_material" rgba="0.627451 0.627451 0.627451 1" />
+    <material name="forearm_21_material" rgba="0.960784 0.960784 0.964706 1" />
+    <material name="forearm_27_material" rgba="0.964706 0.964706 0.952941 1" />
+    <material name="forearm_39_material" rgba="0.0980392 0.0980392 0.0980392 1" />
+    <material name="forearm_52_material" rgba="0.768627 0.207843 0.152941 1" />
+    <material name="wrist_04_material" rgba="0.960784 0.960784 0.964706 1" />
+    <material name="wrist_15_material" rgba="0.627451 0.627451 0.627451 1" />
+    <material name="wrist_35_material" rgba="0.0980392 0.0980392 0.0980392 1" />
+    <material name="wrist_46_material" rgba="0.768627 0.207843 0.152941 1" />
+    <material name="wrist_47_material" rgba="0.964706 0.964706 0.952941 1" />
+    <material name="hand_19_material" rgba="0.0980392 0.0980392 0.0980392 1" />
+    <material name="hand_25_material" rgba="0.627451 0.627451 0.627451 1" />
+    <material name="hand_31_material" rgba="0.964706 0.964706 0.952941 1" />
+    <material name="hand_34_material" rgba="0.796078 0.796078 0.796078 1" />
+    <material name="hand_51_material" rgba="0.960784 0.960784 0.964706 1" />
+    <material name="hand_58_material" rgba="0.768627 0.207843 0.152941 1" />
+    <material name="jaw_05_material" rgba="0.960784 0.960784 0.964706 1" />
+    <material name="jaw_18_material" rgba="0.627451 0.627451 0.627451 1" />
+    <material name="jaw_32_material" rgba="0.964706 0.964706 0.952941 1" />
+  </asset>
+  <actuator>
+    <general name="shoulder_pan" joint="shoulder_pan" dyntype="none" gaintype="fixed" gainprm="0.2650445945945946" biastype="affine" biasprm="0 0 -0.3385685107642632" ctrllimited="true" ctrlrange="-7.4 7.4" forcelimited="true" forcerange="-1.96133 1.96133" />
+    <general name="shoulder_lift" joint="shoulder_lift" dyntype="none" gaintype="fixed" gainprm="0.2650445945945946" biastype="affine" biasprm="0 0 -0.3385685107642632" ctrllimited="true" ctrlrange="-7.4 7.4" forcelimited="true" forcerange="-1.96133 1.96133" />
+    <general name="elbow_flex" joint="elbow_flex" dyntype="none" gaintype="fixed" gainprm="0.2650445945945946" biastype="affine" biasprm="0 0 -0.3385685107642632" ctrllimited="true" ctrlrange="-7.4 7.4" forcelimited="true" forcerange="-1.96133 1.96133" />
+    <general name="wrist_flex" joint="wrist_flex" dyntype="none" gaintype="fixed" gainprm="0.2650445945945946" biastype="affine" biasprm="0 0 -0.3385685107642632" ctrllimited="true" ctrlrange="-7.4 7.4" forcelimited="true" forcerange="-1.96133 1.96133" />
+    <general name="wrist_roll" joint="wrist_roll" dyntype="none" gaintype="fixed" gainprm="0.2650445945945946" biastype="affine" biasprm="0 0 -0.3385685107642632" ctrllimited="true" ctrlrange="-7.4 7.4" forcelimited="true" forcerange="-1.96133 1.96133" />
+    <general name="gripper" joint="gripper" dyntype="none" gaintype="fixed" gainprm="0.2650445945945946" biastype="affine" biasprm="0 0 -0.3385685107642632" ctrllimited="true" ctrlrange="-7.4 7.4" forcelimited="true" forcerange="-0.980665 0.980665" />
+  </actuator>
+  <equality />
+  <option timestep="0.001" integrator="implicitfast" gravity="0 0 -9.81" />
+  <custom>
+    <numeric name="terminal_resistance_ohm" data="2.5" />
+    <numeric name="estimated_series_resistance_ohm" data="0.45999999999999996" />
+    <numeric name="output_Kt_Nm_A" data="0.784532" />
+    <numeric name="estimated_output_Ke_V_s_rad" data="1.2774020586314123" />
+    <numeric name="estimated_coulomb_Nm" data="0.04903324999999992" />
+    <numeric name="estimated_viscous_Nm_s_rad" data="0.012606274336967262" />
+    <numeric name="voltage_V" data="7.4" />
+    <numeric name="stall_current_A" data="2.5" />
+    <numeric name="no_load_speed_rad_s" data="5.445427266222309" />
+    <text name="physics_status" data="Published R and Kt; estimated Ke, driver losses and friction; reference link inertias; unidentified rotor inertia omitted; no collisions." />
+  </custom>
+  <visual>
+    <global offwidth="1280" offheight="960" />
+    <quality shadowsize="2048" />
+  </visual>
+</mujoco>

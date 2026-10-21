@@ -1,0 +1,38 @@
+{
+  "model": "Feetech STS3215 C001, 345:1, 7.4 V",
+  "hardware_variant_confirmed": true,
+  "source": "https://www.feetechrc.com/Data/feetechrc/upload/file/20200611/6372749961523760249976542.pdf",
+  "datasheet": {
+    "edition": "A/0, 2020-04-10, section 5",
+    "voltage_V": 7.4,
+    "terminal_resistance_ohm": 2.5,
+    "output_torque_constant_kgf_cm_per_A": 8,
+    "stall_torque_kgf_cm": 19.5,
+    "stall_current_A": 2.5,
+    "no_load_current_A": 0.15,
+    "no_load_speed_rpm": 52,
+    "rated_torque_kgf_cm": 5,
+    "rated_current_A": 0.65,
+    "encoder_counts": 4096,
+    "gear_ratio": 345
+  },
+  "unmeasured": {
+    "rotor_inertia_kg_m2": null,
+    "inductance_H": null,
+    "gearbox_efficiency": null,
+    "backlash_rad": null,
+    "friction_identification": null,
+    "firmware_gain_to_SI_conversion": null,
+    "thermal_time_constant_s": null
+  },
+  "controller_demo_tuning": {
+    "kp_V_per_rad": 25,
+    "ki_V_per_rad_s": 12,
+    "kd_V_s_per_rad": 0.5,
+    "target_speed_rad_s": 0.5,
+    "target_acceleration_rad_s2": 2,
+    "gripper_current_fraction": 0.5
+  },
+  "model_method": "Output-shaft quasi-static DC approximation. R_series=V/Istall-R_terminal; Kt=8*0.0980665; omega0=52*2*pi/60; Ke=(V-(R_terminal+R_series)*I0)/omega0. Coulomb=Kt*Istall-tau_stall; viscous=(Kt*I0-Coulomb)/omega0. These derived loss and back-EMF values fit published endpoints, not independently identified physics. Firmware PID gains are not SI gains. No inductance, thermal or backlash model.",
+  "confirmation": "User selected Standard 7.4 V STS3215"
+}

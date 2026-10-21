@@ -1,0 +1,205 @@
+{
+  "updated": "2026-10-20",
+  "so101": {
+    "model": "SO-101 follower",
+    "frame": "Separate SO-101 assembly world, Z up",
+    "solid_parts": 257,
+    "rigid_links": 7,
+    "revolute_joints": 6,
+    "mate_connectors": 12,
+    "bounds_mm": [
+      -55.462500000000006,
+      -226.47026710066868,
+      0.39429553422084646,
+      55.462499999999984,
+      92.88056618377242,
+      253.82651468520694
+    ],
+    "CAD_volume_mm3": 839798.3426704261,
+    "CAD_mass_g": null,
+    "measured_mass_g": null,
+    "CAD_center_of_mass_mm": null,
+    "CAD_inertia_kg_m2": null,
+    "joints": [
+      {
+        "name": "shoulder_pan",
+        "pivot_mm": [
+          -0.09943246979515806,
+          -7.561565762202504,
+          64.53144129380514
+        ],
+        "CAD_limits_rad": [
+          -1.9198621771937625,
+          1.9198621771937625
+        ],
+        "reference_zero_offset_rad": 0.0,
+        "CAD_mate_connector_z_axis": [
+          1.9428902930940235e-16,
+          -0.008726535498374382,
+          0.9999619230641713
+        ],
+        "simulation_axis_world": [
+          -1.9428902930940235e-16,
+          0.008726535498374382,
+          -0.9999619230641713
+        ],
+        "parent_link": "base",
+        "child_link": "shoulder"
+      },
+      {
+        "name": "shoulder_lift",
+        "pivot_mm": [
+          -15.756212934251362,
+          -38.87849269388244,
+          119.75720869396743
+        ],
+        "CAD_limits_rad": [
+          -0.17453292519943295,
+          3.3161255787892263
+        ],
+        "reference_zero_offset_rad": -1.5707963267948966,
+        "CAD_mate_connector_z_axis": [
+          -0.9999619230641714,
+          -0.008726203218641843,
+          -7.615242181709201e-05
+        ],
+        "simulation_axis_world": [
+          0.9999619230641714,
+          0.008726203218641843,
+          7.615242181709201e-05
+        ],
+        "parent_link": "shoulder",
+        "child_link": "upper_arm"
+      },
+      {
+        "name": "elbow_flex",
+        "pivot_mm": [
+          -14.244835298485595,
+          73.56281583106077,
+          148.45485337295844
+        ],
+        "CAD_limits_rad": [
+          -3.260796337666394,
+          0.11920368407660008
+        ],
+        "reference_zero_offset_rad": 1.5707963267948966,
+        "CAD_mate_connector_z_axis": [
+          -0.9999238475781957,
+          -0.008649718529757967,
+          -0.00880235274080086
+        ],
+        "simulation_axis_world": [
+          0.9999238475781973,
+          0.008649718529757983,
+          0.008802352740800861
+        ],
+        "parent_link": "upper_arm",
+        "child_link": "forearm"
+      },
+      {
+        "name": "wrist_flex",
+        "pivot_mm": [
+          -12.162511802207781,
+          -60.57679095999804,
+          152.25876736118678
+        ],
+        "CAD_limits_rad": [
+          -1.6580627893946132,
+          1.6580627893946132
+        ],
+        "reference_zero_offset_rad": 0.0,
+        "CAD_mate_connector_z_axis": [
+          -0.999847700955417,
+          0.00015296066643890108,
+          -0.017451403874803015
+        ],
+        "simulation_axis_world": [
+          0.9998477009554207,
+          -0.0001529606664388846,
+          0.017451403874803074
+        ],
+        "parent_link": "forearm",
+        "child_link": "wrist"
+      },
+      {
+        "name": "wrist_roll",
+        "pivot_mm": [
+          7.061806888070972,
+          -120.87739601901244,
+          152.06350734450004
+        ],
+        "CAD_limits_rad": [
+          -2.792526803190927,
+          2.792526803190927
+        ],
+        "reference_zero_offset_rad": 0.0486795,
+        "CAD_mate_connector_z_axis": [
+          6.645215739637524e-07,
+          -0.9999612556431758,
+          -0.008802682095903023
+        ],
+        "simulation_axis_world": [
+          -6.645215739670827e-07,
+          0.9999612556431827,
+          0.008802682095903326
+        ],
+        "parent_link": "wrist",
+        "child_link": "hand"
+      },
+      {
+        "name": "gripper",
+        "pivot_mm": [
+          24.866803539609837,
+          -145.70449952218718,
+          172.07488121704554
+        ],
+        "CAD_limits_rad": [
+          -1.7453292519943295,
+          0.17453292519943295
+        ],
+        "reference_zero_offset_rad": 1.5707963267948966,
+        "CAD_mate_connector_z_axis": [
+          0.9999619259454087,
+          -7.614954071813444e-05,
+          0.008725873067878469
+        ],
+        "simulation_axis_world": [
+          -0.9999619259454187,
+          7.614954071968765e-05,
+          -0.00872587306788059
+        ],
+        "parent_link": "hand",
+        "child_link": "jaw"
+      }
+    ],
+    "servo_reference": {
+      "model": "Feetech STS3215 C001",
+      "count": 6,
+      "gear_ratio": 345,
+      "voltage_V": 7.4,
+      "terminal_resistance_ohm": 2.5,
+      "output_torque_constant_Nm_per_A": 0.784532,
+      "stall_torque_Nm": 1.91229675,
+      "stall_current_A": 2.5,
+      "rated_torque_Nm": 0.4903325,
+      "no_load_speed_rad_s": 5.445427266222309,
+      "encoder_counts": 4096,
+      "installed_model": "Feetech STS3215, 7.4 V variant (user reported)",
+      "installed_supply_voltage_V": null
+    },
+    "simulation_reference_mass_kg": 0.632006
+  },
+  "onshape": {
+    "assembly": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/65a095efa0767c21c8f6caae",
+    "parts": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/a684cdbe0b1ef07365f24a6b",
+    "export_microversion": "39f0987c444b49d7bde72b28"
+  },
+  "_sources": {
+    "CAD_geometry_record": "../sentinel-quad/information.json#/so101",
+    "CAD_export": "config/cad-export.json",
+    "servo_reference": "config/servos.json",
+    "manufacturer": "https://www.feetechrc.com/Data/feetechrc/upload/file/20200611/6372749961523760249976542.pdf",
+    "simulation_reference_mass": "https://raw.githubusercontent.com/TheRobotStudio/SO-ARM100/main/Simulation/SO101/so101_new_calib.urdf",
+    "electrical_approximation": "config/electrical-fit.json"
+  }
+}

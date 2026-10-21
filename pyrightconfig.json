@@ -1,0 +1,9 @@
+{
+  "pythonVersion": "3.12",
+  "typeCheckingMode": "basic",
+  "venvPath": ".",
+  "venv": ".venv",
+  "stubPath": "typings",
+  "include": ["airtruck", "typings/smoke.py"],
+  "exclude": ["**/__pycache__", "models", "airtruck/**/tests"]
+}

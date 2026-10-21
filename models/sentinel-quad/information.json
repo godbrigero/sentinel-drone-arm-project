@@ -1,0 +1,641 @@
+{
+  "updated": "2026-10-21",
+  "frame": {
+    "name": "Onshape upright assembly world",
+    "unit": "mm",
+    "x_positive": "rear",
+    "z_positive": "up",
+    "y_physical_side": "positive right, negative left (derived from +X rear, +Z up)"
+  },
+  "drone": {
+    "frame": "S500 V2",
+    "mass_reference_g": {
+      "without_battery": 1011,
+      "with_battery": 1347
+    },
+    "CAD_mass_g": null,
+    "measured_mass_g": null,
+    "CAD_center_of_mass_mm": null,
+    "CAD_inertia_kg_m2": null,
+    "motor_to_motor_dimensions_reference_mm": [
+      334,
+      334,
+      133
+    ],
+    "extended_propellers_envelope_reference_mm": [
+      591,
+      591,
+      187
+    ],
+    "diagonal_reference_mm": 480,
+    "upright_STEP_bounds_mm": [
+      -89.38459,
+      -246.790429,
+      -42.25274,
+      286.38459,
+      128.908783,
+      144.2
+    ],
+    "propellers": {
+      "count": 4,
+      "blades_each": 2,
+      "diameter_mm": 254,
+      "diameter_in": 10,
+      "typical_frame_reference": "Holybro 1045 / SKU 530084",
+      "pitch_reference_in": 4.5,
+      "pitch_reference_mm": 114.3,
+      "Sentinel_exact_pitch_mm": null,
+      "CAD_model": "representative twisted two-blade 1045-style",
+      "CAD_variants": [
+        "A",
+        "B"
+      ],
+      "CAD_variant_by_motor_id": [
+        "A",
+        "B",
+        "A",
+        "B"
+      ],
+      "rotation_mapping_verified": false,
+      "hub_assumed_diameter_mm": 16,
+      "hub_assumed_height_mm": 6,
+      "bore_assumed_diameter_mm": 6.6,
+      "mount_datum": "motor shaft shoulder",
+      "CAD_mass_g": null,
+      "physical_mass_g": null,
+      "tip_planform_radius_mm": 10,
+      "CAD_rotation_by_variant": {
+        "A": "CW",
+        "B": "CCW"
+      },
+      "rotation_mapping_source": "user-specified"
+    },
+    "battery_reference": {
+      "cells_series": 3,
+      "capacity_mAh": 5000,
+      "connector": "XT60"
+    },
+    "GPS_reference": "Neo-M8N",
+    "CPU_reference": "QRB5165",
+    "ESC_reference": "VOXL 4-in-1 V2",
+    "payload_reference_g": 1000
+  },
+  "motors": {
+    "CAD_model": "T-MOTOR AIR2213 kv920",
+    "manufacturer_reference_model": "Holybro 2216-880kv",
+    "installed_model": null,
+    "position_datum": "shaft_shoulder_center",
+    "CAD_local_datum_mm": [
+      0,
+      0,
+      30.1
+    ],
+    "numbering": "CAD occurrence suffix, not flight-controller channel",
+    "axis_direction": "toward shaft tip",
+    "tilt_rad": 0.10471975511965978,
+    "shaft_diameter_mm": 6,
+    "rotors": [
+      {
+        "id": 1,
+        "axis": [
+          -0.073912785204,
+          -0.073912785204,
+          0.994521895368
+        ],
+        "spin": "CW",
+        "shaft_shoulder_center_mm": [
+          262.847692,
+          105.11211,
+          79.50985
+        ],
+        "location": "rear_right"
+      },
+      {
+        "id": 2,
+        "axis": [
+          -0.073912785204,
+          0.073912785204,
+          0.994521895368
+        ],
+        "spin": "CCW",
+        "shaft_shoulder_center_mm": [
+          262.636302,
+          -223.253531,
+          79.50985
+        ],
+        "location": "rear_left"
+      },
+      {
+        "id": 3,
+        "axis": [
+          0.073912785204,
+          0.073912785204,
+          0.994521895368
+        ],
+        "spin": "CW",
+        "shaft_shoulder_center_mm": [
+          -65.847692,
+          -223.11211,
+          79.50985
+        ],
+        "location": "front_left"
+      },
+      {
+        "id": 4,
+        "axis": [
+          0.073912785204,
+          -0.073912785204,
+          0.994521895368
+        ],
+        "spin": "CCW",
+        "shaft_shoulder_center_mm": [
+          -65.706271,
+          105.371885,
+          79.50985
+        ],
+        "location": "front_right"
+      }
+    ],
+    "rotation_convention": "viewed from above; front at top",
+    "rotation_source": "user-specified",
+    "hardware_rotation_verified": false
+  },
+  "cameras": {
+    "reference_config": "C-11 D0006 Sentinel",
+    "installed_models_verified": false,
+    "groups": [
+      {
+        "ids": [
+          0,
+          1
+        ],
+        "role": "front_stereo",
+        "reference_sensor": "OV7251",
+        "reference_module": "M0015",
+        "resolution_px": [
+          640,
+          480
+        ],
+        "shutter": "global",
+        "position_mm": null,
+        "optical_axis": null
+      },
+      {
+        "ids": [
+          2
+        ],
+        "role": "tracking",
+        "reference_sensor": "OV7251",
+        "reference_module": "M0014",
+        "resolution_px": [
+          640,
+          480
+        ],
+        "shutter": "global",
+        "position_mm": null,
+        "optical_axis": null
+      },
+      {
+        "ids": [
+          3
+        ],
+        "role": "high_resolution",
+        "reference_sensor_options": [
+          "IMX214",
+          "IMX412"
+        ],
+        "installed_sensor": null,
+        "position_mm": null,
+        "optical_axis": null
+      },
+      {
+        "ids": [
+          4,
+          5
+        ],
+        "role": "rear_stereo",
+        "reference_sensor": "OV7251",
+        "reference_module": "M0015",
+        "resolution_px": [
+          640,
+          480
+        ],
+        "shutter": "global",
+        "position_mm": null,
+        "optical_axis": null
+      }
+    ],
+    "CAD_frame_origin": "modeled lens surface center; high-resolution lens apex",
+    "CAD_frame_roll": "geometric: +Z outward, +Y projected world-down, +X=Y cross Z",
+    "calibrated_optical_origins_mm": null,
+    "sensor_id_to_CAD_frame": null,
+    "CAD_frames": [
+      {
+        "location": "tracking",
+        "connector_id": "M0E2eiLon0b21B+tr",
+        "position_mm": [
+          12.862866116,
+          -59.485485641,
+          35.035039398
+        ],
+        "z_axis": [
+          -0.689676415246,
+          -0.006506782534,
+          -0.724088464233
+        ],
+        "x_axis": [
+          -0.009434124211,
+          0.99995549766,
+          -0.0
+        ],
+        "y_axis": [
+          0.724056240602,
+          0.006831140512,
+          -0.689707108826
+        ]
+      },
+      {
+        "location": "front_stereo_y_low",
+        "connector_id": "MPWQfsIObwLWAa81V",
+        "position_mm": [
+          19.68353234,
+          -99.427646785,
+          42.858363571
+        ],
+        "z_axis": [
+          -0.999666853614,
+          -0.008667707677,
+          -0.024311573968
+        ],
+        "x_axis": [
+          -0.008670270349,
+          0.9999624125,
+          -0.0
+        ],
+        "y_axis": [
+          0.024310660156,
+          0.000210787919,
+          -0.999704430005
+        ]
+      },
+      {
+        "location": "front_stereo_y_high",
+        "connector_id": "M9F+VwHdLJaC42AtI",
+        "position_mm": [
+          18.991225761,
+          -19.423678787,
+          42.801803319
+        ],
+        "z_axis": [
+          -0.999666853614,
+          -0.008667707677,
+          -0.024311573968
+        ],
+        "x_axis": [
+          -0.008670270349,
+          0.9999624125,
+          -0.0
+        ],
+        "y_axis": [
+          0.024310660156,
+          0.000210787919,
+          -0.999704430005
+        ]
+      },
+      {
+        "location": "rear_stereo_y_low",
+        "connector_id": "MDfvBHfS+nZ05h/1f",
+        "position_mm": [
+          131.556158257,
+          -98.467021912,
+          60.227016846
+        ],
+        "z_axis": [
+          0.999666853614,
+          0.008667707677,
+          0.024311573968
+        ],
+        "x_axis": [
+          0.008670270349,
+          -0.9999624125,
+          -0.0
+        ],
+        "y_axis": [
+          0.024310660156,
+          0.000210787919,
+          -0.999704430005
+        ]
+      },
+      {
+        "location": "rear_stereo_y_high",
+        "connector_id": "MYlPVbyWaGpDh6Njd",
+        "position_mm": [
+          130.863852562,
+          -18.328058154,
+          60.122290795
+        ],
+        "z_axis": [
+          0.999666853614,
+          0.008667707677,
+          0.024311573968
+        ],
+        "x_axis": [
+          0.008670270349,
+          -0.9999624125,
+          0.0
+        ],
+        "y_axis": [
+          0.024310660156,
+          0.000210787919,
+          -0.999704430005
+        ]
+      },
+      {
+        "location": "high_resolution",
+        "connector_id": "MqW5BEHVWYY0t77fo",
+        "position_mm": [
+          21.730499702,
+          -59.360749542,
+          58.136124902
+        ],
+        "z_axis": [
+          -0.999666853614,
+          -0.008667707677,
+          -0.024311573968
+        ],
+        "x_axis": [
+          -0.008670270349,
+          0.9999624125,
+          0.0
+        ],
+        "y_axis": [
+          0.024310660156,
+          0.000210787919,
+          -0.999704430005
+        ]
+      }
+    ],
+    "CAD_verified_microversion": "d1176d5378978055193bcf40"
+  },
+  "platform": {
+    "material": "PETG",
+    "density_g_cm3": 1.27,
+    "CAD_mass_g": 56.939411862,
+    "printed_mass_g": null,
+    "CAD_center_of_mass_mm": [
+      216.66488913,
+      -59.003210138,
+      -20.478093577
+    ],
+    "tray_outer_length_width_mm": [
+      68.422246063,
+      112.018399098
+    ],
+    "tray_internal_nominal_length_width_mm": [
+      63.422246063,
+      107.018399098
+    ],
+    "floor_thickness_mm": 4,
+    "rim_height_mm": 6,
+    "wall_thickness_mm": 2.5,
+    "floor_top_z_mm": -20,
+    "rim_top_z_mm": -14,
+    "bottom_z_mm": -24,
+    "skid_clearance_mm": 18.25274,
+    "arm_front_to_rear_reach_mm": 118.819599285,
+    "edge_radius_mm": 0.6,
+    "hole_entrance_radius_mm": 0.25,
+    "hole_diameter_mm": 3,
+    "mounts": [
+      {
+        "position_mm": [
+          136.602647,
+          -111.0092,
+          -1.5
+        ],
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "thickness_mm": 4,
+        "aircraft_bore_mm": 2.794
+      },
+      {
+        "position_mm": [
+          136.602647,
+          -6.9908,
+          -1.5
+        ],
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "thickness_mm": 4,
+        "aircraft_bore_mm": 2.794
+      },
+      {
+        "position_mm": [
+          183.086604,
+          -74.447595,
+          -15.7875
+        ],
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "thickness_mm": 6,
+        "aircraft_bore_mm": 2.6
+      },
+      {
+        "position_mm": [
+          183.147263,
+          -43.647655,
+          -15.7875
+        ],
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "thickness_mm": 6,
+        "aircraft_bore_mm": 2.6
+      }
+    ],
+    "payload_rating_g": null,
+    "fastener_length_mm": null,
+    "CAD_volume_mm3": 44834.182568536,
+    "source": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/69e6d700e255a86b7a80e46c",
+    "verified_microversion": "5f0de1e76a4028c7fc8d09a7"
+  },
+  "onshape": {
+    "assembly": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/1600b2c66d3b102227c2adfb",
+    "platform": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/69e6d700e255a86b7a80e46c",
+    "platform_verified_microversion": "5f0de1e76a4028c7fc8d09a7",
+    "so101_assembly": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/65a095efa0767c21c8f6caae",
+    "so101_parts": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/a684cdbe0b1ef07365f24a6b",
+    "propellers": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/84661d42c430185df2cdea65",
+    "propellers_verified_microversion": "62b73d9e93ece0d701a74f28"
+  },
+  "_sources": {
+    "evidence": null,
+    "manufacturer": "https://docs.modalai.com/sentinel-functional-description/",
+    "cameras": "https://docs.modalai.com/voxl2-camera-configs/",
+    "sensors": "https://docs.modalai.com/image-sensors/",
+    "platform": null,
+    "rotor_geometry": null,
+    "so101": null,
+    "camera_geometry": null,
+    "propellers": null,
+    "so101_simulation": null
+  },
+  "so101": {
+    "model": "SO-101 follower",
+    "frame": "Separate SO-101 assembly world, Z up",
+    "solid_parts": 257,
+    "rigid_links": 7,
+    "revolute_joints": 6,
+    "mate_connectors": 12,
+    "bounds_mm": [
+      -55.462500000000006,
+      -226.47026710066868,
+      0.39429553422084646,
+      55.462499999999984,
+      92.88056618377242,
+      253.82651468520694
+    ],
+    "CAD_volume_mm3": 839798.3426704261,
+    "CAD_mass_g": null,
+    "measured_mass_g": null,
+    "CAD_center_of_mass_mm": null,
+    "CAD_inertia_kg_m2": null,
+    "joints": [
+      {
+        "name": "shoulder_pan",
+        "axis": [
+          1.9428902930940235e-16,
+          -0.008726535498374382,
+          0.9999619230641713
+        ],
+        "pivot_mm": [
+          -0.09943246979515806,
+          -7.561565762202504,
+          64.53144129380514
+        ],
+        "CAD_limits_rad": [
+          -1.9198621771937625,
+          1.9198621771937625
+        ],
+        "reference_zero_offset_rad": 0.0
+      },
+      {
+        "name": "shoulder_lift",
+        "axis": [
+          -0.9999619230641714,
+          -0.008726203218641843,
+          -7.615242181709201e-05
+        ],
+        "pivot_mm": [
+          -15.756212934251362,
+          -38.87849269388244,
+          119.75720869396743
+        ],
+        "CAD_limits_rad": [
+          -0.17453292519943295,
+          3.3161255787892263
+        ],
+        "reference_zero_offset_rad": -1.5707963267948966
+      },
+      {
+        "name": "elbow_flex",
+        "axis": [
+          -0.9999238475781957,
+          -0.008649718529757967,
+          -0.00880235274080086
+        ],
+        "pivot_mm": [
+          -14.244835298485595,
+          73.56281583106077,
+          148.45485337295844
+        ],
+        "CAD_limits_rad": [
+          -3.260796337666394,
+          0.11920368407660008
+        ],
+        "reference_zero_offset_rad": 1.5707963267948966
+      },
+      {
+        "name": "wrist_flex",
+        "axis": [
+          -0.999847700955417,
+          0.00015296066643890108,
+          -0.017451403874803015
+        ],
+        "pivot_mm": [
+          -12.162511802207781,
+          -60.57679095999804,
+          152.25876736118678
+        ],
+        "CAD_limits_rad": [
+          -1.6580627893946132,
+          1.6580627893946132
+        ],
+        "reference_zero_offset_rad": 0.0
+      },
+      {
+        "name": "wrist_roll",
+        "axis": [
+          6.645215739637524e-07,
+          -0.9999612556431758,
+          -0.008802682095903023
+        ],
+        "pivot_mm": [
+          7.061806888070972,
+          -120.87739601901244,
+          152.06350734450004
+        ],
+        "CAD_limits_rad": [
+          -2.792526803190927,
+          2.792526803190927
+        ],
+        "reference_zero_offset_rad": 0.0486795
+      },
+      {
+        "name": "gripper",
+        "axis": [
+          0.9999619259454087,
+          -7.614954071813444e-05,
+          0.008725873067878469
+        ],
+        "pivot_mm": [
+          24.866803539609837,
+          -145.70449952218718,
+          172.07488121704554
+        ],
+        "CAD_limits_rad": [
+          -1.7453292519943295,
+          0.17453292519943295
+        ],
+        "reference_zero_offset_rad": 1.5707963267948966
+      }
+    ],
+    "servo_reference": {
+      "model": "Feetech STS3215 C001",
+      "count": 6,
+      "gear_ratio": 345,
+      "voltage_V": 7.4,
+      "terminal_resistance_ohm": 2.5,
+      "output_torque_constant_Nm_per_A": 0.784532,
+      "stall_torque_Nm": 1.91229675,
+      "stall_current_A": 2.5,
+      "rated_torque_Nm": 0.4903325,
+      "no_load_speed_rad_s": 5.445427266222309,
+      "encoder_counts": 4096,
+      "installed_model": "Feetech STS3215, 7.4 V variant (user reported)",
+      "installed_supply_voltage_V": null
+    },
+    "simulation_reference_mass_kg": 0.632006
+  }
+}

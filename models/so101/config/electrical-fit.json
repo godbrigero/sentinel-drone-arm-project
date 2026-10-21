@@ -1,0 +1,11 @@
+{
+  "terminal_resistance_ohm": 2.5,
+  "estimated_series_resistance_ohm": 0.45999999999999996,
+  "output_Kt_Nm_A": 0.784532,
+  "estimated_output_Ke_V_s_rad": 1.2774020586314123,
+  "estimated_coulomb_Nm": 0.04903324999999992,
+  "estimated_viscous_Nm_s_rad": 0.012606274336967262,
+  "voltage_V": 7.4,
+  "stall_current_A": 2.5,
+  "no_load_speed_rad_s": 5.445427266222309
+}

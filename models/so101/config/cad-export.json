@@ -1,0 +1,1779 @@
+{
+  "cad_url": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/65a095efa0767c21c8f6caae",
+  "microversion": "39f0987c444b49d7bde72b28",
+  "units": "m, kg, rad, kg m2",
+  "parts": 257,
+  "links": [
+    {
+      "name": "base",
+      "parts": [
+        "JFD",
+        "JFT",
+        "KFDQ",
+        "KFHQ",
+        "JFr",
+        "JFv",
+        "JFz",
+        "JF3",
+        "JF7",
+        "JF/",
+        "KF7E",
+        "KF/E",
+        "KFDF",
+        "KFHF",
+        "KFLF",
+        "KFPF",
+        "KFTF",
+        "KFXF",
+        "KFbF",
+        "KFfF",
+        "KFjF",
+        "KFnF",
+        "KFrF",
+        "KFvF",
+        "KFzF",
+        "KF3F",
+        "KF7F",
+        "KF/F",
+        "KFDG",
+        "KFHG",
+        "KFLG",
+        "KFPG",
+        "KFTG",
+        "KFXG",
+        "KFbG",
+        "KFfG",
+        "KFjG",
+        "KFnG",
+        "KFrG",
+        "KFvG",
+        "KFzG",
+        "KF3G",
+        "KF7G",
+        "KF/G",
+        "KFDH",
+        "KFHH",
+        "KFLH",
+        "KFPH",
+        "KFTH",
+        "KFXH",
+        "KFbH",
+        "KFfH",
+        "KFjH",
+        "KFnH",
+        "KFrH",
+        "KFvH",
+        "KFzH",
+        "KF3H",
+        "KF7H",
+        "KF/H",
+        "KFDI",
+        "KFHI",
+        "KFLI",
+        "KFPI",
+        "KFTI",
+        "KFXI",
+        "KFbI",
+        "KFfI",
+        "KFjI",
+        "KFnI",
+        "KFrI",
+        "KFvI",
+        "KFzI",
+        "KF3I",
+        "KF7I",
+        "KF/I",
+        "KFDJ",
+        "KFHJ",
+        "KFLJ",
+        "KFPJ",
+        "KFTJ",
+        "KFXJ",
+        "KFbJ",
+        "KFfJ",
+        "KFjJ",
+        "KFnJ",
+        "KFrJ",
+        "KFvJ",
+        "KFzJ",
+        "KF3J",
+        "KF7J",
+        "KF/J",
+        "KFDK",
+        "KFHK",
+        "KFLK",
+        "KFPK",
+        "KFTK",
+        "KFXK",
+        "KFbK",
+        "KFfK",
+        "KFjK",
+        "KFnK",
+        "KFrK",
+        "KFvK",
+        "KFzK",
+        "KF3K",
+        "KF7K",
+        "KF/K",
+        "KFDL",
+        "KFHL",
+        "KFLL",
+        "KFPL",
+        "KFXL",
+        "KFbL",
+        "KFfL",
+        "KFjL",
+        "KFnL",
+        "KFrL",
+        "KFvL",
+        "KFzL",
+        "KF3L",
+        "KF7L",
+        "KF/L",
+        "KFDM",
+        "KFHM",
+        "KFLM",
+        "KFXM",
+        "KFbM",
+        "KFfM",
+        "KFjM",
+        "KFnM",
+        "KFrM",
+        "KFvM",
+        "KFzM",
+        "KF3M",
+        "KF7M",
+        "KF/M",
+        "KFDN"
+      ],
+      "instances": [
+        "MCjbd8s/FLe7rkkdb",
+        "MuFTnK22d2QE1+0nW",
+        "MpRYkk822XBUf8KB7",
+        "Mdu64OJZCqiBuRMM+",
+        "MUs/+MNXY9YBi7fxb",
+        "M8PqIBkPTGd+02EZS",
+        "MoC7ee9BVP5X8xnWs",
+        "Mg9AjcxprH1nthrc3",
+        "MugBKxG8YYZmSo5on",
+        "MbdIrlV7+LK5oKIGL",
+        "MR3ktxdEPJW0JtTf5",
+        "MQwWxuiJC0pw8yeml",
+        "MXxWX1UkKNlOFWg91",
+        "MigSx55mgo3WWiLQQ",
+        "M+iII+mIUQAQYo1cI",
+        "MVVFzCOSlO4LH3/D9",
+        "MQDPSXr7qF/JDrEcb",
+        "M3k3nB1DAJBl8zz/I",
+        "MLQOK4Fvn2mRsUXFB",
+        "MFjalU7ornymyi6o2",
+        "MDfkFd4ArqU93HqTL",
+        "MXSO0MPk6lH2/wJOj",
+        "MvfiLfryCmYHdrj+O",
+        "MF4RI5Eb+l75YcMyM",
+        "M3lH3GFG/OpJVy/U5",
+        "MRf4vtIHuKybS7zG9",
+        "MUGm8suHVwxNzlxR+",
+        "M5JdklENz74ITQIGf",
+        "MR0Bm3n9zga8d/qEF",
+        "MobeU5xaNYJp2Ui/J",
+        "MjkmpV69aijcclVl0",
+        "MlNNFYd2L/z42Q9aq",
+        "MnIlN7V37m5aEZWWE",
+        "MkzC5c2fJn6rAVc1G",
+        "MMxY1piSliIQ1iIrc",
+        "MKQu2K/coRuc5s+ER",
+        "My0FOSNdDHh/LaiXx",
+        "MKToM+ORQC956FKFI",
+        "M1SjuUs+QDDv9+VcQ",
+        "M3YmUz3W4JdoQrrG0",
+        "MvPUH77WXXQyLL6HJ",
+        "MtPDdUuTOET03ce+d",
+        "MyeFeI9cWmvaL1oNZ",
+        "MTtFMwhW9hXYKP3Fb",
+        "Ml3X4RudGBX/fbAFT",
+        "MIrKhAflGEKpbbmSE",
+        "MrIFu7DSGFbC3gfwW",
+        "MkFT6myUzTBw2FCdX",
+        "MuqhQSKrtmCBVwR9R",
+        "M3cnJKbJuqII3EfQR",
+        "Mb89N8AaHU62lpjhU",
+        "MTV3aqzc7kESelDd8",
+        "MiQr+pS9U9ZZgOLxM",
+        "MB5f/wS2bpVycjr8B",
+        "MuqAoO3m+s0rHvzt9",
+        "MMJogci30o2fXyJYY",
+        "M6wkqVa/mFd/3nWO0",
+        "MUQJDm2svaynwPQ1D",
+        "MF2gyJ+oafVQxiZUn",
+        "MusR0OP9Bzxoy0DNo",
+        "M4DjhsUKx7uOtKTs5",
+        "MhFmMk9sDe3ZxBAJ+",
+        "MksXcHHsxzfg04s7e",
+        "MMsZXfnf2VhxFC6oK",
+        "Me/R2And17/viQb1i",
+        "Md/p9Ap9VCvEn0QrL",
+        "M00YSXiIRjouONrib",
+        "MZgl540cMFvvNpVgc",
+        "MfbzdmxQvHueardrP",
+        "MM2Fg1Urf/40yOtIy",
+        "Ml4Zo15HzTnFxmHLf",
+        "MHu2zYGNKSYmv47eP",
+        "Mlhkj+CQ087zLEajE",
+        "M4bJ3RvH6/JMhDUpn",
+        "MXgzs6oYWrCElf/4i",
+        "M7VBJDIY8v9r22fRZ",
+        "MUcvPiGOCw/W0BGNU",
+        "MWNUwJhfhZWejb8TG",
+        "MLcqKX5ymZOjnqiNS",
+        "M7WOO3nhDnTjNXm0h",
+        "MXXxclWnfkWc/BwkQ",
+        "MiVCj+lhpbWGjIiNw",
+        "MaTgrkGU8LeuVD+5m",
+        "MmZFge0WLtwCJmegh",
+        "MZKXu9pPruuD10H+T",
+        "MSRfhkc544U8NlDd5",
+        "MD9CMQQQft7DE5wQB",
+        "M21aijKLQi9ETvzL1",
+        "M9i7fPfahyM2csA1n",
+        "Mwvl5ow6nR5j2rR3B",
+        "MuopcUiptLLrz9bn4",
+        "MyrjOgn1iIaqRdROA",
+        "MLim5lEGnt2vSieDR",
+        "MvV4CgftmmVqCWNxx",
+        "MmXbTjESmZtlfXp1T",
+        "MAif6Vt1sJ2xy69w3",
+        "MKDJ62+4Mk+eAfKLl",
+        "MGpyqinSVT/rS+E7r",
+        "Mp67ClTM2K8WMwSam",
+        "MWFRCX/sYRO432giV",
+        "M4/xIrdaoSnTlVGvC",
+        "MfNxsLrRcrf7K/EKA",
+        "MjiZIHE0TgRK8VyHC",
+        "Mk61O4vglMNgngu6T",
+        "MqSyWj52/a1cPwpIj",
+        "MclLXsPI1tkKKy1h+",
+        "MKyYOX6QZ7ocWpFqC",
+        "M/3po1swcbHu0GGeD",
+        "MzVE3fUwgUBDnds6G",
+        "MoaLGUrMXUaEY4RTH",
+        "M2W1cuv10uvW/mwnl",
+        "Mwbn5ewEuMW9n+IyN",
+        "MleD6PU90hnOgNJHq",
+        "M0vXs9Hakde7kqyiM",
+        "MUHtEgi8OaZ+cf156",
+        "Miv/I1oZ6B9Pq4wkc",
+        "MoVWmy70wWI0WmfpI",
+        "MAIyJqM0W9JgQpOUY",
+        "Mr2vJDLwVlWrqpLrQ",
+        "M8Vi6Oz/F7pwkCUZY",
+        "MqlBNd013bxZ6aNEV",
+        "MQHIW2oZ2hB9++SRN",
+        "MwiPjZN8a65cRktKV",
+        "MJdhKzjcn2saAoCl9",
+        "MrljfXU+jM8f1bhaX",
+        "MBbgdrM5JbtwxtiW7",
+        "MmpLRyBq4uQu6UdTw",
+        "MQXq3VljMEJTMl31R",
+        "MdfVE6hvT8z64mj6p",
+        "M5x3+JWD/pnkGL3dT",
+        "M5cdXIkd3Av+/LhU4",
+        "MylQLRmA6qx68aTT0",
+        "Mi5plloUYkd0EftMd",
+        "MBxSwE2DbBZoJBtAo",
+        "MNhYuTJaU80sm2SN+",
+        "Mhk6mpIUc6h9YOo2O",
+        "M2l5gQsIPmkuROnFM",
+        "M2QbQMWFm2ByD33DN"
+      ],
+      "reference_link": "base_link",
+      "mass_kg": 0.147,
+      "com_world_m": [
+        -5.208663533048717e-05,
+        0.017840131196534256,
+        0.03627867457702024
+      ],
+      "inertia_world_kg_m2": [
+        [
+          0.00013611700373801036,
+          4.597027303225694e-07,
+          9.751192089803878e-08
+        ],
+        [
+          4.597027303225694e-07,
+          0.00011468582175274288,
+          -4.971234867450012e-06
+        ],
+        [
+          9.751192089803878e-08,
+          -4.97123486745001e-06,
+          0.00013036417450924706
+        ]
+      ]
+    },
+    {
+      "name": "shoulder",
+      "parts": [
+        "JFH",
+        "JFX",
+        "KFHN",
+        "KFLN",
+        "KFrP",
+        "KFDB",
+        "KFHB",
+        "KFLB",
+        "KFPB",
+        "KFLE",
+        "KFPE",
+        "KFTE",
+        "KFXE",
+        "KFbE",
+        "KFfE",
+        "KFjE",
+        "KFnE",
+        "KFPN",
+        "KFTN",
+        "KFXN",
+        "KFbN",
+        "KFfN",
+        "KFjN"
+      ],
+      "instances": [
+        "MkrpoIL5qWOSeT9Bk",
+        "M9hES+DNAgU98qgKG",
+        "M/PvH5Yp2giDuyepJ",
+        "MM28BI1yphPJIOrWk",
+        "MtrQkRhqJennYEl+x",
+        "Mpaa3WAmkeG93LWko",
+        "MYlRo6t0G0zaobiJc",
+        "MmkcyIun7URym39nZ",
+        "MRlZGP6cCLG/oq02J",
+        "MwA5E6oe7cCST5UTy",
+        "M8yHeH4MoXzHzpwWR",
+        "MWMU73c4Gz+Ylvduy",
+        "Mr2qbPXspPRtvc+73",
+        "Mg/hxn/upVH6341jV",
+        "MyczkkK2TIgpa6nqb",
+        "MOc5Kifa8e0KCwD2S",
+        "MtBRt/ZldeQhO7SDd",
+        "MPl4cc6dHMaC4MQgV",
+        "MU9eZmzz7xZYUAuuJ",
+        "M4HgW4nbtzns5J7eY",
+        "MZP3d0hvzGVG2Mli3",
+        "MXlnFLa8BkzFgSxxl",
+        "M/H4f8dOw8wxtM7s/"
+      ],
+      "reference_link": "shoulder_link",
+      "mass_kg": 0.100006,
+      "com_world_m": [
+        -0.00014219987993321762,
+        -0.038751046073750406,
+        0.09078033629504112
+      ],
+      "inertia_world_kg_m2": [
+        [
+          8.104032692981266e-05,
+          7.679202397542778e-08,
+          -1.4926300312853536e-07
+        ],
+        [
+          7.679202397542777e-08,
+          8.37341555834869e-05,
+          1.6846548090809893e-06
+        ],
+        [
+          -1.4926300312853533e-07,
+          1.6846548090809889e-06,
+          2.4003117486700626e-05
+        ]
+      ]
+    },
+    {
+      "name": "upper_arm",
+      "parts": [
+        "JFL",
+        "KFnN",
+        "KFrN",
+        "KFvP",
+        "KFTB",
+        "KFXB",
+        "KFbB",
+        "KFfB",
+        "KFLD",
+        "KFPD",
+        "KFTD",
+        "KFXD",
+        "KFrD",
+        "KFvD",
+        "KFzD",
+        "KF3D",
+        "KFvN",
+        "KFzN",
+        "KF3N",
+        "KF7N",
+        "KF/N",
+        "KFDO"
+      ],
+      "instances": [
+        "MvzvkAtA4oHB+9z/s",
+        "MsRyu6OvZyqWdqzdf",
+        "MXy80z+PjGU59+bgb",
+        "MsGMIBqft1rXRGo/D",
+        "Mk7bD8/3R3B7FET8S",
+        "M+i/DghNsR3K+/tpT",
+        "MxkJTTu01tLaEu46a",
+        "MsfQ1OnL/5E/XPDAG",
+        "MbBUN53wfLSfKY7h+",
+        "MaWXU9uee/BWKlkeu",
+        "M91h/DT+PDQBKOaFc",
+        "MjYkMjA93KNk4kQbY",
+        "MKxjlLC3JY57iGbbG",
+        "MxoIpCgByrPpUNRCz",
+        "MHlT2sBP5GLbFjTCs",
+        "MARKor0aZqvw4k67S",
+        "MEe5vsOPdWdjGPGG2",
+        "M2x+NB+uAxoN9gR2d",
+        "MuuJspDKTh9qMngGU",
+        "MxLKTKiK64HgHkmXL",
+        "Mo+5spgpMLkTv9Xu6",
+        "Mh1s/4bixiUGuiZOi"
+      ],
+      "reference_link": "upper_arm_link",
+      "mass_kg": 0.103,
+      "com_world_m": [
+        0.0014667275237168244,
+        0.05104502506583356,
+        0.12892389827939935
+      ],
+      "inertia_world_kg_m2": [
+        [
+          0.0001424785330665488,
+          9.272504602355708e-07,
+          1.7199780200497738e-07
+        ],
+        [
+          9.27250460235571e-07,
+          4.1161643369660384e-05,
+          -2.070670161595737e-05
+        ],
+        [
+          1.7199780200497732e-07,
+          -2.0706701615957374e-05,
+          0.00014696502356379015
+        ]
+      ]
+    },
+    {
+      "name": "forearm",
+      "parts": [
+        "JFP",
+        "JFb",
+        "KFHO",
+        "KFLO",
+        "KFzP",
+        "KFjB",
+        "KFnB",
+        "KFrB",
+        "KFvB",
+        "KF7C",
+        "KF/C",
+        "KFDD",
+        "KFHD",
+        "KFbD",
+        "KFfD",
+        "KFjD",
+        "KFnD",
+        "KFPO",
+        "KFTO",
+        "KFXO",
+        "KFbO",
+        "KFfO",
+        "KFjO"
+      ],
+      "instances": [
+        "MAPpcN/0bWoTahqmq",
+        "MxLesYwt6ddvRDi0s",
+        "MuFmXkl+i+SdIuZzg",
+        "MnK81CbSAQCm+GRVG",
+        "MH9kJhRIOgcrvAbrn",
+        "M7xQ2lYb14/Vz43i+",
+        "M+n7+z8BQZoZldHRK",
+        "MX8BqzjTrG9UjYuIJ",
+        "Mfber+uHLpns4O7T7",
+        "MP25NRwVo90A8PZP5",
+        "MYfLbEwyYYHgrRAva",
+        "MjyZKRL2fdOiwEgR8",
+        "MdSc1qe40Mc3JEDhJ",
+        "MYphZ2/qUg167yqbn",
+        "MdrEOY21WB5H/tjYv",
+        "MPQ6WQJ+kXFswQQM4",
+        "MVj5wlUh9/ZrKi9Q2",
+        "MTPZb4kN0PX6qrCsA",
+        "MlrMnLVNmqavi4QHc",
+        "MWoQ0fM8CjdVsBvKA",
+        "MOE6i6iknjE4j3hoq",
+        "MAiyjdMEW+qEtsQyC",
+        "MbwI2mELLZ3+NWsL8"
+      ],
+      "reference_link": "lower_arm_link",
+      "mass_kg": 0.104,
+      "com_world_m": [
+        0.004462598477690033,
+        -0.02437362738113137,
+        0.15100065824257128
+      ],
+      "inertia_world_kg_m2": [
+        [
+          0.00014526225794637266,
+          2.2158943794263196e-06,
+          -2.22292953729071e-07
+        ],
+        [
+          2.2158943794263196e-06,
+          2.865422442580892e-05,
+          6.277972687717449e-06
+        ],
+        [
+          -2.2229295372907104e-07,
+          6.277972687717451e-06,
+          0.0001599613176278187
+        ]
+      ]
+    },
+    {
+      "name": "wrist",
+      "parts": [
+        "JFf",
+        "KF7B",
+        "KF/B",
+        "KFnO",
+        "KFrO",
+        "KF3P",
+        "KFbC",
+        "KFfC",
+        "KFjC",
+        "KFnC",
+        "KF7D",
+        "KF/D",
+        "KFDE",
+        "KFHE",
+        "KFvO",
+        "KFzO",
+        "KF3O",
+        "KF7O",
+        "KF/O",
+        "KFDP"
+      ],
+      "instances": [
+        "MG5FFD372EhpuJLBK",
+        "MBPCzfSZWSPElGa1v",
+        "MgOsNttbNL4CwARCM",
+        "MEIaWm0oOdE9v/zfX",
+        "MozgAsYDpADdafzNj",
+        "MHc/jyuHqWKpUO7lx",
+        "Myh0OjsvHNqpvHpk9",
+        "MD3rxXeygYOjOujG6",
+        "MQ6HQGxFU1fKIfPND",
+        "M/g80eP4v3R0Lkjaz",
+        "M7fekIQ6LamyaFb2o",
+        "MTFUlCMRskMWkaHdJ",
+        "MuJm3bjZI/TN2NIPh",
+        "MjMwqQO0cN3WV5FgS",
+        "MXOmvshEjvWP100jK",
+        "MmOObFgb+rPN2zAtO",
+        "MmVThobtXgxWczUMj",
+        "MDWfrVnkDorQvWwwQ",
+        "MLKI309FtTWu7VoY1",
+        "MmOjv2W0XYcwJbqep"
+      ],
+      "reference_link": "wrist_link",
+      "mass_kg": 0.079,
+      "com_world_m": [
+        0.01554783224042245,
+        -0.09919554295225519,
+        0.15250492354863981
+      ],
+      "inertia_world_kg_m2": [
+        [
+          2.1002466108613603e-05,
+          3.6424896572455366e-06,
+          -1.9031351785914122e-07
+        ],
+        [
+          3.642489657245537e-06,
+          2.539157354779041e-05,
+          -5.5469755647068755e-08
+        ],
+        [
+          -1.903135178591412e-07,
+          -5.5469755647068775e-08,
+          3.682326034359601e-05
+        ]
+      ]
+    },
+    {
+      "name": "hand",
+      "parts": [
+        "JFj",
+        "KFzB",
+        "KF3B",
+        "KFDC",
+        "KFHC",
+        "KFPM",
+        "KFTM",
+        "KFHP",
+        "KF7P",
+        "KF/P",
+        "KFrE",
+        "KFvE",
+        "KFzE",
+        "KF3E",
+        "KFLP",
+        "KFPP",
+        "KFTP",
+        "KFXP",
+        "KFbP",
+        "KFfP"
+      ],
+      "instances": [
+        "MFxwJ3i3+kJ7nFbG7",
+        "M7Xf9axwwm3G2W92V",
+        "MdjVznH1g60qSxAti",
+        "MlMRtZtaIl0f/yJ8C",
+        "M0rvwDOJvWHo5ucTo",
+        "McUqpADDuEKCf5K/U",
+        "MbDk1kG910mgXw4I5",
+        "MLhIuOy3ScQwGv6B2",
+        "MsBAw7ML4GVXata5L",
+        "ML7tbI3dfoLuMjBLS",
+        "MUQJ+T8CBY7az1+yr",
+        "Mckz8faRNyECWd7Ex",
+        "MtUVmkDX99lxh+BFV",
+        "M5VfIkd8Jdoj+Gm57",
+        "MKLQ368RtowNQ54hw",
+        "MqwMOiJ2TnHjLaLEm",
+        "MaRc6Mih0J/8vQ3AB",
+        "MKqTAPmL71Jayyk0E",
+        "MpSO0ZlbqxS2MPepY",
+        "MuPtVsaO9ddzThRA1"
+      ],
+      "reference_link": "gripper_link",
+      "mass_kg": 0.087,
+      "com_world_m": [
+        0.007303682110174269,
+        -0.14731346304389753,
+        0.15204941900458274
+      ],
+      "inertia_world_kg_m2": [
+        [
+          4.337255908977682e-05,
+          4.9288591844587e-08,
+          -5.800022172438147e-08
+        ],
+        [
+          4.9288591844586985e-08,
+          3.460674711705238e-05,
+          -5.672430950715745e-06
+        ],
+        [
+          -5.800022172438143e-08,
+          -5.6724309507157445e-06,
+          2.7400993793170717e-05
+        ]
+      ]
+    },
+    {
+      "name": "jaw",
+      "parts": [
+        "JFn",
+        "KFjP",
+        "KFnP",
+        "KFLC",
+        "KFPC",
+        "KFTC",
+        "KFXC",
+        "KFrC",
+        "KFvC",
+        "KFzC",
+        "KF3C"
+      ],
+      "instances": [
+        "MASPYEGsbk0noMpLi",
+        "MVfqdpPDQvm1V6eAz",
+        "MFQKKJdGfi06eNEOA",
+        "M20MVaB/Vh8YlyJPr",
+        "MT7bAQVGwJMtp4WMM",
+        "M4rYuZO7O0jR0+4UC",
+        "MxJKNXM8Ap2USdSNO",
+        "M+akGuY4xUf5BX3Ln",
+        "MNG9U+np9WdlWC4NS",
+        "MlG+6thqt9M3R9WNB",
+        "MAazQOgc5eJyLKM1y"
+      ],
+      "reference_link": "moving_jaw_so101_v1_link",
+      "mass_kg": 0.012,
+      "com_world_m": [
+        0.005730296105211297,
+        -0.14754277673096033,
+        0.201920702864282
+      ],
+      "inertia_world_kg_m2": [
+        [
+          5.289048315043702e-06,
+          3.6759096755552887e-09,
+          -8.010000999345042e-08
+        ],
+        [
+          3.675909675555289e-09,
+          6.608278678532066e-06,
+          3.6135362730759696e-07
+        ],
+        [
+          -8.010000999345042e-08,
+          3.6135362730759696e-07,
+          1.8946430064242409e-06
+        ]
+      ]
+    }
+  ],
+  "joints": [
+    {
+      "name": "shoulder_pan",
+      "parent": "base",
+      "child": "shoulder",
+      "T_world_joint": [
+        [
+          1.0,
+          0.0,
+          1.9428902930940235e-16,
+          -9.943246979515806e-05
+        ],
+        [
+          1.6954701112132003e-18,
+          0.9999619230641713,
+          -0.008726535498374382,
+          -0.0075615657622025035
+        ],
+        [
+          -1.942816313785011e-16,
+          0.008726535498374382,
+          0.9999619230641713,
+          0.06453144129380514
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "axis_joint": [
+        0,
+        0,
+        -1
+      ],
+      "limits_rad": [
+        -1.9198621771937625,
+        1.9198621771937625
+      ]
+    },
+    {
+      "name": "shoulder_lift",
+      "parent": "shoulder",
+      "child": "upper_arm",
+      "T_world_joint": [
+        [
+          0.00872653549837413,
+          -1.1169287675384557e-51,
+          -0.9999619230641714,
+          -0.015756212934251362
+        ],
+        [
+          -0.999923847578183,
+          -0.008726535499830398,
+          -0.008726203218641843,
+          -0.038878492693882445
+        ],
+        [
+          -0.008726203220098164,
+          0.9999619230641588,
+          -7.615242181709201e-05,
+          0.11975720869396743
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "axis_joint": [
+        0,
+        0,
+        -1
+      ],
+      "limits_rad": [
+        -0.17453292519943295,
+        3.3161255787892263
+      ]
+    },
+    {
+      "name": "elbow_flex",
+      "parent": "upper_arm",
+      "child": "forearm",
+      "T_world_joint": [
+        [
+          0.012340949899319886,
+          -1.4860663415853743e-17,
+          -0.9999238475781973,
+          -0.014244835298485616
+        ],
+        [
+          -0.7008423098144734,
+          -0.7132637935177095,
+          -0.008649718529757983,
+          0.0735628158310609
+        ],
+        [
+          -0.713209476752448,
+          0.7008956847182974,
+          -0.008802352740800861,
+          0.14845485337295877
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "axis_joint": [
+        0,
+        0,
+        -1
+      ],
+      "limits_rad": [
+        -3.2607963376663935,
+        0.11920368407660008
+      ]
+    },
+    {
+      "name": "wrist_flex",
+      "parent": "forearm",
+      "child": "wrist",
+      "T_world_joint": [
+        [
+          0.01745207420815561,
+          -1.0198385870495804e-17,
+          -0.9998477009554207,
+          -0.012162511802207824
+        ],
+        [
+          0.008763277582447396,
+          -0.9999615900468662,
+          0.0001529606664388846,
+          -0.06057679095999839
+        ],
+        [
+          -0.9998092968520822,
+          -0.008764612424546452,
+          -0.017451403874803074,
+          0.15225876736118737
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "axis_joint": [
+        0,
+        0,
+        -1
+      ],
+      "limits_rad": [
+        -1.6580627893946132,
+        1.6580627893946132
+      ]
+    },
+    {
+      "name": "wrist_roll",
+      "parent": "wrist",
+      "child": "hand",
+      "T_world_joint": [
+        [
+          0.9999999999997864,
+          1.1987696377207495e-15,
+          6.645215739670827e-07,
+          0.007061806888071234
+        ],
+        [
+          6.644958274907815e-07,
+          -0.008802682095904672,
+          -0.9999612556431827,
+          -0.12087739601901334
+        ],
+        [
+          5.8495733596806055e-09,
+          0.999961255643404,
+          -0.008802682095903326,
+          0.152063507344501
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "axis_joint": [
+        0,
+        0,
+        -1
+      ],
+      "limits_rad": [
+        -2.792526803190927,
+        2.792526803190927
+      ]
+    },
+    {
+      "name": "gripper",
+      "parent": "hand",
+      "child": "jaw",
+      "T_world_joint": [
+        [
+          0.00872620533503792,
+          -1.5365651265919315e-15,
+          0.9999619259454187,
+          0.02486680353961069
+        ],
+        [
+          0.00872620325476408,
+          0.9999619230640864,
+          -7.614954071968765e-05,
+          -0.1457044995221889
+        ],
+        [
+          -0.9999238504592384,
+          0.008726535509353381,
+          0.00872587306788059,
+          0.17207488121704734
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "axis_joint": [
+        0,
+        0,
+        -1
+      ],
+      "limits_rad": [
+        -1.7453292519943295,
+        0.17453292519943295
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "link": "base",
+      "file": "assets/base_00.obj",
+      "rgba": [
+        0.6274509803921569,
+        0.6274509803921569,
+        0.6274509803921569,
+        1.0
+      ],
+      "vertices": 26075,
+      "triangles": 51610,
+      "sha256": "0c98a77c7b48e3fc4c3f415d1f46cae5a86f8a1a0fa92fa6c25f44c7f7ffad2d"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_01.obj",
+      "rgba": [
+        0.29411764705882354,
+        0.29411764705882354,
+        0.29411764705882354,
+        1.0
+      ],
+      "vertices": 2542,
+      "triangles": 4057,
+      "sha256": "59adc91ba60677df2527f7e7e8406823e7a96b96a3bf90422bcad6e08ac20f87"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_02.obj",
+      "rgba": [
+        0.7529411764705882,
+        0.7529411764705882,
+        0.7529411764705882,
+        1.0
+      ],
+      "vertices": 9304,
+      "triangles": 17299,
+      "sha256": "f6be9bb878aec6492727297d8f420adf92a74593adfeb9292d6e3aa7958b42d0"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_03.obj",
+      "rgba": [
+        0.7686274509803922,
+        0.7686274509803922,
+        0.7686274509803922,
+        1.0
+      ],
+      "vertices": 6984,
+      "triangles": 11622,
+      "sha256": "be79dc389df5a268c111465a4c1d0533c2541083efccd62a16a1bb826ae5f8fd"
+    },
+    {
+      "link": "wrist",
+      "file": "assets/wrist_04.obj",
+      "rgba": [
+        0.9607843137254902,
+        0.9607843137254902,
+        0.9647058823529412,
+        1.0
+      ],
+      "vertices": 1949,
+      "triangles": 3930,
+      "sha256": "80bab773b5ce27f8d972ed8e58f0b93c60cde6205ab319746715eaee062de760"
+    },
+    {
+      "link": "jaw",
+      "file": "assets/jaw_05.obj",
+      "rgba": [
+        0.9607843137254902,
+        0.9607843137254902,
+        0.9647058823529412,
+        1.0
+      ],
+      "vertices": 1949,
+      "triangles": 3930,
+      "sha256": "2c8e8e4c028b67a349175242bfdeba95cdebe2e20d96059aa84941a06d43632e"
+    },
+    {
+      "link": "upper_arm",
+      "file": "assets/upper_arm_06.obj",
+      "rgba": [
+        0.6274509803921569,
+        0.6274509803921569,
+        0.6274509803921569,
+        1.0
+      ],
+      "vertices": 12942,
+      "triangles": 25366,
+      "sha256": "885968e942e71ee5b88347cf9fa3a98b752833128253f9a55a18ca44afb89530"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_07.obj",
+      "rgba": [
+        0.8980392156862745,
+        0.9215686274509803,
+        0.9294117647058824,
+        1.0
+      ],
+      "vertices": 10080,
+      "triangles": 12987,
+      "sha256": "262238844ed7174fd739e91cadbe01abd1a0d3761bd4ea6d1842f492cba51053"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_08.obj",
+      "rgba": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "vertices": 37279,
+      "triangles": 58859,
+      "sha256": "565cd4b337fccd993e2055aa9bd23e304950ab7010f0f9fb402610651ba815fc"
+    },
+    {
+      "link": "forearm",
+      "file": "assets/forearm_09.obj",
+      "rgba": [
+        0.6274509803921569,
+        0.6274509803921569,
+        0.6274509803921569,
+        1.0
+      ],
+      "vertices": 12982,
+      "triangles": 25406,
+      "sha256": "a71efd04e7a4e32cfd3ee6c823275cea924ca02223b793214ec9bf1e3f6d7b12"
+    },
+    {
+      "link": "upper_arm",
+      "file": "assets/upper_arm_10.obj",
+      "rgba": [
+        0.9607843137254902,
+        0.9607843137254902,
+        0.9647058823529412,
+        1.0
+      ],
+      "vertices": 1949,
+      "triangles": 3930,
+      "sha256": "77bdb01388dac5176dd9964e6fa2d4019cdf41a2ed7acca97d2a94c877d14adf"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_11.obj",
+      "rgba": [
+        0.7647058823529411,
+        0.8117647058823529,
+        0.803921568627451,
+        1.0
+      ],
+      "vertices": 80,
+      "triangles": 120,
+      "sha256": "d3cb28380bddce10717a948eaf7a6f5cbf7e6427728750ba998b3300cf70287e"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_12.obj",
+      "rgba": [
+        0.9647058823529412,
+        0.9647058823529412,
+        0.9529411764705882,
+        1.0
+      ],
+      "vertices": 23482,
+      "triangles": 46664,
+      "sha256": "73a85b88f3795f02bdab78c68529dd2fcbe7eb8a0979d792c8a109bd3d5a78df"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_13.obj",
+      "rgba": [
+        0.7843137254901961,
+        0.7843137254901961,
+        0.7843137254901961,
+        1.0
+      ],
+      "vertices": 34,
+      "triangles": 64,
+      "sha256": "94f0c2714d9a5ad78b6f3bfca01a2a2cf898e7c2e7c079a4fe14473074d4211c"
+    },
+    {
+      "link": "shoulder",
+      "file": "assets/shoulder_14.obj",
+      "rgba": [
+        0.6274509803921569,
+        0.6274509803921569,
+        0.6274509803921569,
+        1.0
+      ],
+      "vertices": 14846,
+      "triangles": 27278,
+      "sha256": "171f622a6cce37365e7ea5d0c8e12af30fb62770acfeecbda7a9f298261f9e32"
+    },
+    {
+      "link": "wrist",
+      "file": "assets/wrist_15.obj",
+      "rgba": [
+        0.6274509803921569,
+        0.6274509803921569,
+        0.6274509803921569,
+        1.0
+      ],
+      "vertices": 12076,
+      "triangles": 23650,
+      "sha256": "fe051a89a047f22c050f859bd66e553f97d72ed270dac1f6bd2acf1b0c38f45b"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_16.obj",
+      "rgba": [
+        0.803921568627451,
+        0.803921568627451,
+        0.803921568627451,
+        1.0
+      ],
+      "vertices": 7128,
+      "triangles": 14080,
+      "sha256": "29b119a46a032f221612a21969af8a58db316289d2134f58fb21de786141a2f5"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_17.obj",
+      "rgba": [
+        0.20784313725490197,
+        0.20784313725490197,
+        0.20784313725490197,
+        1.0
+      ],
+      "vertices": 3084,
+      "triangles": 3240,
+      "sha256": "4aff0991bd5df4c5fa98dd3f976f4653ab57cdd77f48eacfafc1ce6401b7fc6b"
+    },
+    {
+      "link": "jaw",
+      "file": "assets/jaw_18.obj",
+      "rgba": [
+        0.6274509803921569,
+        0.6274509803921569,
+        0.6274509803921569,
+        1.0
+      ],
+      "vertices": 10760,
+      "triangles": 21488,
+      "sha256": "4145c4cafea6b68046df30567a99bca2de3ee0ca79996eb3e2a3478cd24921a7"
+    },
+    {
+      "link": "hand",
+      "file": "assets/hand_19.obj",
+      "rgba": [
+        0.09803921568627451,
+        0.09803921568627451,
+        0.09803921568627451,
+        1.0
+      ],
+      "vertices": 36405,
+      "triangles": 72056,
+      "sha256": "fa3492fb74aa5947a54f29c52c19a225a118935aa48ecfc764845d4e3a9e8786"
+    },
+    {
+      "link": "shoulder",
+      "file": "assets/shoulder_20.obj",
+      "rgba": [
+        0.9607843137254902,
+        0.9607843137254902,
+        0.9647058823529412,
+        1.0
+      ],
+      "vertices": 1949,
+      "triangles": 3930,
+      "sha256": "48fa146890dab42e6b328c53e7a1181738a637cbdc7a7c16a9979e83da0ec049"
+    },
+    {
+      "link": "forearm",
+      "file": "assets/forearm_21.obj",
+      "rgba": [
+        0.9607843137254902,
+        0.9607843137254902,
+        0.9647058823529412,
+        1.0
+      ],
+      "vertices": 1949,
+      "triangles": 3930,
+      "sha256": "7b3aeac2e065c115615dcc0c83ec1957a2d33f35218793a5dce481f9606520cb"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_22.obj",
+      "rgba": [
+        0.19607843137254902,
+        0.20784313725490197,
+        0.2627450980392157,
+        1.0
+      ],
+      "vertices": 170,
+      "triangles": 320,
+      "sha256": "9b65863516fc1903bc7f63ba5c0775e367b6e85eec95d4b934390219197d1fad"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_23.obj",
+      "rgba": [
+        0.9098039215686274,
+        0.44313725490196076,
+        0.03137254901960784,
+        1.0
+      ],
+      "vertices": 707,
+      "triangles": 679,
+      "sha256": "b9cb8ddc7c757300833db70f333aa0440484d57f2711859ed2e23c9c6e4f11b7"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_24.obj",
+      "rgba": [
+        0.8941176470588236,
+        0.8941176470588236,
+        0.8941176470588236,
+        1.0
+      ],
+      "vertices": 424,
+      "triangles": 816,
+      "sha256": "24416556edc906f055a1ffd4064acd1658dd5455b8f705e60510c979a9e23884"
+    },
+    {
+      "link": "hand",
+      "file": "assets/hand_25.obj",
+      "rgba": [
+        0.6274509803921569,
+        0.6274509803921569,
+        0.6274509803921569,
+        1.0
+      ],
+      "vertices": 8919,
+      "triangles": 17320,
+      "sha256": "7a6b5249145e027400381677c155a605c2bbb3984fc0e96d317cd631be62369a"
+    },
+    {
+      "link": "upper_arm",
+      "file": "assets/upper_arm_26.obj",
+      "rgba": [
+        0.9647058823529412,
+        0.9647058823529412,
+        0.9529411764705882,
+        1.0
+      ],
+      "vertices": 9998,
+      "triangles": 19565,
+      "sha256": "7b1af2b7d9156fd72409bd09afc480199968a7ef7205f27853c9fdb39088b4e6"
+    },
+    {
+      "link": "forearm",
+      "file": "assets/forearm_27.obj",
+      "rgba": [
+        0.9647058823529412,
+        0.9647058823529412,
+        0.9529411764705882,
+        1.0
+      ],
+      "vertices": 18636,
+      "triangles": 36890,
+      "sha256": "e2440a5b3622c407df7bf89f19478e8b184588181dcc0e09cc9c853feeef9d0d"
+    },
+    {
+      "link": "shoulder",
+      "file": "assets/shoulder_28.obj",
+      "rgba": [
+        0.9647058823529412,
+        0.9647058823529412,
+        0.9529411764705882,
+        1.0
+      ],
+      "vertices": 14032,
+      "triangles": 27568,
+      "sha256": "3c42a4eb7684e983396df896ccea1f3d1d32355457682ce924fab00d28ca3360"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_29.obj",
+      "rgba": [
+        0.788235294117647,
+        0.788235294117647,
+        0.788235294117647,
+        1.0
+      ],
+      "vertices": 272,
+      "triangles": 576,
+      "sha256": "1b3daa8647bb321f08ebdc158d07175d70ba4da5cf12b5ac14055e9cb4c9cc1a"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_30.obj",
+      "rgba": [
+        0.10588235294117647,
+        0.10588235294117647,
+        0.10588235294117647,
+        1.0
+      ],
+      "vertices": 16,
+      "triangles": 24,
+      "sha256": "0f28572107dbf03e7aa09ec1ee9846a2530921a023617d20ab3f2b5c679ffe70"
+    },
+    {
+      "link": "hand",
+      "file": "assets/hand_31.obj",
+      "rgba": [
+        0.9647058823529412,
+        0.9647058823529412,
+        0.9529411764705882,
+        1.0
+      ],
+      "vertices": 13356,
+      "triangles": 26104,
+      "sha256": "6bb6a32242f57abdb5e71b51a59907d4c117f5df2017903131b9956a42f6fbac"
+    },
+    {
+      "link": "jaw",
+      "file": "assets/jaw_32.obj",
+      "rgba": [
+        0.9647058823529412,
+        0.9647058823529412,
+        0.9529411764705882,
+        1.0
+      ],
+      "vertices": 7164,
+      "triangles": 14392,
+      "sha256": "208426497c5219f36eb740c971a6ac1aaa21b0ec9b6a507bba8158989aa03a44"
+    },
+    {
+      "link": "shoulder",
+      "file": "assets/shoulder_33.obj",
+      "rgba": [
+        0.09803921568627451,
+        0.09803921568627451,
+        0.09803921568627451,
+        1.0
+      ],
+      "vertices": 34776,
+      "triangles": 68875,
+      "sha256": "6c210c0f4e32ef2b1d45559db997b2ae29055b711bfb6b59868e54a5e406774b"
+    },
+    {
+      "link": "hand",
+      "file": "assets/hand_34.obj",
+      "rgba": [
+        0.796078431372549,
+        0.796078431372549,
+        0.796078431372549,
+        1.0
+      ],
+      "vertices": 788,
+      "triangles": 1576,
+      "sha256": "1fbfe171a0e0129654c4b2652bc17dcfb7ab976add1c7c388779c72dd38def85"
+    },
+    {
+      "link": "wrist",
+      "file": "assets/wrist_35.obj",
+      "rgba": [
+        0.09803921568627451,
+        0.09803921568627451,
+        0.09803921568627451,
+        1.0
+      ],
+      "vertices": 34652,
+      "triangles": 68754,
+      "sha256": "cc45753b64d5c3367c4461d30700a8f48490f5aa57d92459c8a926225c02db56"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_36.obj",
+      "rgba": [
+        0.6823529411764706,
+        0.42745098039215684,
+        0.00784313725490196,
+        1.0
+      ],
+      "vertices": 2406,
+      "triangles": 2688,
+      "sha256": "a6cd4bfdbda2702632945b8b91cc5c64828fcc720f4e48d6099fb71b2f196823"
+    },
+    {
+      "link": "upper_arm",
+      "file": "assets/upper_arm_37.obj",
+      "rgba": [
+        0.09803921568627451,
+        0.09803921568627451,
+        0.09803921568627451,
+        1.0
+      ],
+      "vertices": 34334,
+      "triangles": 68099,
+      "sha256": "af32952756d82605bb7e1ae3b3841c22de6c93b46ebde539d7e7fcb1f07919ab"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_38.obj",
+      "rgba": [
+        0.09803921568627451,
+        0.09803921568627451,
+        0.09803921568627451,
+        1.0
+      ],
+      "vertices": 30544,
+      "triangles": 61048,
+      "sha256": "27155c313c074351246eb198e1b522e01628e840493ef135495ee3d4b0131700"
+    },
+    {
+      "link": "forearm",
+      "file": "assets/forearm_39.obj",
+      "rgba": [
+        0.09803921568627451,
+        0.09803921568627451,
+        0.09803921568627451,
+        1.0
+      ],
+      "vertices": 35379,
+      "triangles": 70168,
+      "sha256": "fc10d40f32cf89eb9200611e39c345850c61e924e7d069b504a03cd4d3b62037"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_40.obj",
+      "rgba": [
+        0.7490196078431373,
+        0.7490196078431373,
+        0.7490196078431373,
+        1.0
+      ],
+      "vertices": 238,
+      "triangles": 460,
+      "sha256": "be2eb55b9fcb09e78b06355e10fff4ed9618a3c1881cbc913a2143f741577f7d"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_41.obj",
+      "rgba": [
+        0.8470588235294118,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "vertices": 92,
+      "triangles": 180,
+      "sha256": "74e011e3417211b5b73c055d382f403050d24670275e1b1c11ebf19fb8b7dfd9"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_42.obj",
+      "rgba": [
+        0.25098039215686274,
+        0.25098039215686274,
+        0.25098039215686274,
+        1.0
+      ],
+      "vertices": 214,
+      "triangles": 345,
+      "sha256": "4e142124dc01406df679f03057202babac9779713d855d2589e6856db4297bfe"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_43.obj",
+      "rgba": [
+        0.8,
+        0.8,
+        0.8,
+        1.0
+      ],
+      "vertices": 1544,
+      "triangles": 3084,
+      "sha256": "e38cd1276fefd56ebf4899c22347d34bbed1942713cd36bddb5c5773d36572bb"
+    },
+    {
+      "link": "upper_arm",
+      "file": "assets/upper_arm_44.obj",
+      "rgba": [
+        0.7686274509803922,
+        0.20784313725490197,
+        0.15294117647058825,
+        1.0
+      ],
+      "vertices": 3575,
+      "triangles": 6270,
+      "sha256": "4ad7f509b6326914adf32e12b7d2b5da54afbd6e435a660d925036ea90e4a905"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_45.obj",
+      "rgba": [
+        0.792156862745098,
+        0.8196078431372549,
+        0.9333333333333333,
+        1.0
+      ],
+      "vertices": 20,
+      "triangles": 16,
+      "sha256": "f934a2613ba43aec86637a3494cdc5703d4fac6cfdfe468b7ab7cbaecd2d716d"
+    },
+    {
+      "link": "wrist",
+      "file": "assets/wrist_46.obj",
+      "rgba": [
+        0.7686274509803922,
+        0.20784313725490197,
+        0.15294117647058825,
+        1.0
+      ],
+      "vertices": 3764,
+      "triangles": 6687,
+      "sha256": "7b7f5684080bfd5a0d744c7718c94bbab519640270c1bd28626c62e4b7ddbbcc"
+    },
+    {
+      "link": "wrist",
+      "file": "assets/wrist_47.obj",
+      "rgba": [
+        0.9647058823529412,
+        0.9647058823529412,
+        0.9529411764705882,
+        1.0
+      ],
+      "vertices": 16043,
+      "triangles": 31629,
+      "sha256": "edac10adb5d474e3e8a57aa683ef76bb15e9b5dd1dd912fc8aab8114eed2d24c"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_48.obj",
+      "rgba": [
+        0.7803921568627451,
+        0.5686274509803921,
+        0.11372549019607843,
+        1.0
+      ],
+      "vertices": 52,
+      "triangles": 100,
+      "sha256": "7aeb5b9e85faba114cbae0a6859cf8a959630d574396e512e8145ee44645acdf"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_49.obj",
+      "rgba": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "vertices": 3852,
+      "triangles": 7148,
+      "sha256": "0ab79a1b401f0bd1d6be89d500f315523cd555518517e6b34a10ffd9aec91e82"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_50.obj",
+      "rgba": [
+        0.7686274509803922,
+        0.20784313725490197,
+        0.15294117647058825,
+        1.0
+      ],
+      "vertices": 3721,
+      "triangles": 6498,
+      "sha256": "5354374e26f959f6e7ee7ed4948f397eae9482fba3d164dfbcd4981eaf6ecc28"
+    },
+    {
+      "link": "hand",
+      "file": "assets/hand_51.obj",
+      "rgba": [
+        0.9607843137254902,
+        0.9607843137254902,
+        0.9647058823529412,
+        1.0
+      ],
+      "vertices": 1168,
+      "triangles": 2352,
+      "sha256": "62dd1f482c875fac6a258327d8915ce5e0d864f23a6c7a0fcfad1f492f6222f8"
+    },
+    {
+      "link": "forearm",
+      "file": "assets/forearm_52.obj",
+      "rgba": [
+        0.7686274509803922,
+        0.20784313725490197,
+        0.15294117647058825,
+        1.0
+      ],
+      "vertices": 4748,
+      "triangles": 8604,
+      "sha256": "a408d98e0d535521d1ec903cf5aeeb70df27e9791e94998501662c5a848dd9fd"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_53.obj",
+      "rgba": [
+        0.2,
+        0.2,
+        0.2,
+        1.0
+      ],
+      "vertices": 1103,
+      "triangles": 1634,
+      "sha256": "81da42469d33125275e520053435460a25ae6541e5ef45333f7f708ee0489e93"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_54.obj",
+      "rgba": [
+        1.0,
+        0.9294117647058824,
+        0.9294117647058824,
+        1.0
+      ],
+      "vertices": 608,
+      "triangles": 568,
+      "sha256": "9343e9e50beda1185151aed7630fff2407e470e36b1d17cbaf8d5b7a2615bfc9"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_55.obj",
+      "rgba": [
+        0.2823529411764706,
+        0.6627450980392157,
+        0.3254901960784314,
+        1.0
+      ],
+      "vertices": 522,
+      "triangles": 964,
+      "sha256": "6ccd15dac97fe6889d8bfb0e2d08c183f516fbd5587164e424fc1367c3ed0025"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_56.obj",
+      "rgba": [
+        0.0,
+        0.6666666666666666,
+        0.0,
+        1.0
+      ],
+      "vertices": 16,
+      "triangles": 28,
+      "sha256": "d5137a9788ead63e4ed1b722ff3a9d4f14a9ba06f8a8249ebfa7f5cfd2c29102"
+    },
+    {
+      "link": "base",
+      "file": "assets/base_57.obj",
+      "rgba": [
+        0.0,
+        0.5019607843137255,
+        0.0,
+        1.0
+      ],
+      "vertices": 3208,
+      "triangles": 6532,
+      "sha256": "867920eab4278a1245554a0e6ba977362d05b62955b2615000e8a067d8370518"
+    },
+    {
+      "link": "hand",
+      "file": "assets/hand_58.obj",
+      "rgba": [
+        0.7686274509803922,
+        0.20784313725490197,
+        0.15294117647058825,
+        1.0
+      ],
+      "vertices": 4854,
+      "triangles": 8510,
+      "sha256": "b69bdc4663eefc7f700856659860aa4c911fe096427b34c3068127368781f872"
+    },
+    {
+      "link": "shoulder",
+      "file": "assets/shoulder_59.obj",
+      "rgba": [
+        0.7686274509803922,
+        0.20784313725490197,
+        0.15294117647058825,
+        1.0
+      ],
+      "vertices": 3769,
+      "triangles": 6451,
+      "sha256": "5715fa30587e28927ca7a1e3efb68cc03cb1bb00f8f6c8082d163e9f1d327de6"
+    }
+  ],
+  "triangles": 1019018,
+  "bounds_m": [
+    [
+      -0.05546249821782112,
+      -0.2264702320098877,
+      0.00039429552271030843
+    ],
+    [
+      0.05546249821782112,
+      0.09287548810243607,
+      0.25382640957832336
+    ]
+  ],
+  "mass_source": "https://raw.githubusercontent.com/TheRobotStudio/SO-ARM100/main/Simulation/SO101/so101_new_calib.urdf",
+  "mass_status": "reference approximation aligned to CAD; not assigned or measured CAD mass",
+  "reference_urdf_sha256": "3a65d2d35e68a8d2f0c2cc176d19b884506543c93ba72980145b80abe276022c"
+}
