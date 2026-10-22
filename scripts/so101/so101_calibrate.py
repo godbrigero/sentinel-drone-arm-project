@@ -20,11 +20,11 @@ import tty
 from serial.tools import list_ports  # type: ignore[import-untyped]
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from airtruck.raw_controls.so101.controller import (
+from airtruck.raw_api.so101.controller import (
     JOINTS, JointCalibration, joint_calibrations_dict, load_joint_calibrations,
 )
-from airtruck.raw_controls.so101.io import JointName, ServoTransport
-from airtruck.raw_controls.so101.transport import FeetechTransport
+from airtruck.raw_api.so101.io import JointName, ServoTransport
+from airtruck.raw_api.so101.transport import FeetechTransport
 
 # Distal to proximal along the kinematic chain, independent of the arm's pose.
 ORDER: tuple[JointName, ...] = tuple(reversed(JOINTS))

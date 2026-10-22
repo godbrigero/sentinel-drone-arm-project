@@ -161,7 +161,7 @@ force in newtons, and penetration in meters, computed from the current physics
 state. It does not fabricate contact events from proximity.
 
 For explicitly simulated motor experiments, retrieve
-`world.system(name, SimulatedArmController)` from `airtruck.raw_controls.so101.io`.
+`world.system(name, SimulatedArmController)` from `airtruck.raw_api.so101.io`.
 `set_motor_voltages({...})` overrides the selected position loops, rejecting values
 outside the supply range. Other joints keep their position control. Voltage and
 output torque feedback are available as `motor_voltages` and `motor_torques_nm`.

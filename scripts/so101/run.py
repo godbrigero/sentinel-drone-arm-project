@@ -7,8 +7,8 @@ import mujoco
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from airtruck.raw_controls.so101.controller import JOINTS
-from airtruck.raw_controls.so101.io import ArmController
+from airtruck.raw_api.so101.controller import JOINTS
+from airtruck.raw_api.so101.io import ArmController
 from airtruck.testing_util import load_world
 
 

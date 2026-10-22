@@ -1,8 +1,8 @@
 """Backend adapters; public views keep physics buffers out of test controls."""
 from collections.abc import Callable, Mapping
 from typing import Protocol
-from airtruck.raw_controls.so101.controller import SimSO101
-from airtruck.raw_controls.so101.io import ArmController, SimulatedArmController, JointName, PositionCommand
+from airtruck.raw_api.so101.controller import SimSO101
+from airtruck.raw_api.so101.io import ArmController, SimulatedArmController, JointName, PositionCommand
 
 
 class SystemAdapter(Protocol):

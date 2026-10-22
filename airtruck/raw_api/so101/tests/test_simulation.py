@@ -6,8 +6,8 @@ from pathlib import Path
 import mujoco
 import pytest
 import numpy as np
-from airtruck.raw_controls.so101.controller import JOINTS, SimSO101, ServoSpec, RealSO101
-from airtruck.raw_controls.so101.io import ArmController
+from airtruck.raw_api.so101.controller import JOINTS, SimSO101, ServoSpec, RealSO101
+from airtruck.raw_api.so101.io import ArmController
 from airtruck.testing_util import simulation
 from airtruck.testing_util import WorldControl
 from airtruck.testing_util.mujoco_world import MujocoWorld

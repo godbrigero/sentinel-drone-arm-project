@@ -7,7 +7,7 @@ import pytest
 from airtruck.testing_util.pytest_plugin import world_factory
 from airtruck.testing_util.mujoco_world import MujocoWorld
 from airtruck.testing_util import WorldControl, load_world
-from airtruck.raw_controls.so101.io import ArmController
+from airtruck.raw_api.so101.io import ArmController
 
 
 @pytest.mark.sim

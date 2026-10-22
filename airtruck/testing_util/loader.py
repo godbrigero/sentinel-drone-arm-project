@@ -7,7 +7,7 @@ import re
 from typing import cast
 import mujoco
 import numpy as np
-from airtruck.raw_controls.so101.controller import ServoSpec, SimSO101
+from airtruck.raw_api.so101.controller import ServoSpec, SimSO101
 from airtruck.testing_util.adapters import SO101Adapter, SystemAdapter
 from airtruck.testing_util.mujoco_world import MujocoWorld, Placement
 from airtruck.testing_util.types import Pose

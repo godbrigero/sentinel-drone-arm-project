@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 import pytest
-from airtruck.raw_controls.so101.io import SimulatedArmController
+from airtruck.raw_api.so101.io import SimulatedArmController
 from airtruck.testing_util import WorldControl, load_world
 from airtruck.testing_util import simulation
 

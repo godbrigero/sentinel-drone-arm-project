@@ -4,7 +4,7 @@ Run: uv run --locked mjpython -m pytest --sim-gui -s -k two_arms_greeting
 The existing SO-101 model has no collision contacts; this is coordinated motion.
 """
 import pytest
-from airtruck.raw_controls.so101.io import ArmController
+from airtruck.raw_api.so101.io import ArmController
 from airtruck.testing_util import WorldControl
 from airtruck.testing_util import simulation
 

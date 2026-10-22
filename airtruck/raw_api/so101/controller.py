@@ -12,7 +12,7 @@ import numpy as np
 from numpy.typing import NDArray
 import mujoco
 
-from airtruck.raw_controls.so101.io import (
+from airtruck.raw_api.so101.io import (
     ArmController,
     ServoTransport,
     JointName,

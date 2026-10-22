@@ -1,37 +1,37 @@
 # Airtruck
 
-`airtruck` is a top-level namespace package; `airtruck.testing_util` has an explicit public API. Import controls directly from `airtruck.raw_controls.so101.controller` and interfaces from `airtruck.raw_controls.so101.io`:
+`airtruck` is a top-level namespace package; `airtruck.testing_util` has an explicit public API. Import controls directly from `airtruck.raw_api.so101.controller` and interfaces from `airtruck.raw_api.so101.io`:
 
 ```python
-from airtruck.raw_controls.so101.io import ArmController  # Shared typed control interface
-from airtruck.raw_controls.so101.controller import SimSO101  # Explicit simulation backend
-from airtruck.raw_controls.so101.controller import RealSO101 # Explicit physical backend
+from airtruck.raw_api.so101.io import ArmController  # Shared typed control interface
+from airtruck.raw_api.so101.controller import SimSO101  # Explicit simulation backend
+from airtruck.raw_api.so101.controller import RealSO101 # Explicit physical backend
 ```
 
 All paths below are relative to the repository root.
 
 | Folder | Responsibility |
 |---|---|
-| `airtruck/raw_controls/so101/controller.py` | `SimSO101`, `RealSO101`, and hardware joint calibration |
-| `airtruck/raw_controls/so101/io.py` | `ArmController` abstract base class and `ServoTransport` protocol |
-| `airtruck/raw_controls/so101/transport.py` | Acknowledged Feetech STS3215 serial transport for `RealSO101` |
+| `airtruck/raw_api/so101/controller.py` | `SimSO101`, `RealSO101`, and hardware joint calibration |
+| `airtruck/raw_api/so101/io.py` | `ArmController` abstract base class and `ServoTransport` protocol |
+| `airtruck/raw_api/so101/transport.py` | Acknowledged Feetech STS3215 serial transport for `RealSO101` |
 | `models/so101/` | MJCF, mesh assets, CAD source manifest, reference data and runtime motor parameters |
 | `scripts/so101/` | Model rebuild, verification, viewer commands, and guided hardware calibration |
 | `airtruck/testing_util/` | Shared testing utilities: typed worlds, controls, contacts, pytest decorator/fixtures, and utility tests |
 | `worlds/so101_bench/` | World manifest and environment scene |
-| `airtruck/raw_controls/so101/tests/` | Simulation and fake-transport regression tests |
+| `airtruck/raw_api/so101/tests/` | Simulation and fake-transport regression tests |
 | `docs/` | Usage, hardware and motor-model documentation |
 | `typings/` | MuJoCo stubs for static tooling only |
 | `global-info-images/` | Existing user-provided reference images |
 
-Device controls live under `airtruck/raw_controls/<device>/`; SO-101 simulation and hardware implementations share `controller.py`, with their interfaces alongside in `io.py`. Future drone controls can live under `airtruck/raw_controls/drone/`.
+Device controls live under `airtruck/raw_api/<device>/`; SO-101 simulation and hardware implementations share `controller.py`, with their interfaces alongside in `io.py`. Future drone controls can live under `airtruck/raw_api/drone/`.
 
 The controller receives its dependencies explicitly: `SimSO101(model, data, servo_spec=spec)`. Scripts and test fixtures load the model and configuration; the controller has no filesystem or environment knowledge.
 
-Both backends inherit `ArmController` from `airtruck.raw_controls.so101.io`. Its abstract methods and properties must be implemented before a subclass can be instantiated. Both backends expose `set_positions`, `positions`, `targets`, `limits`, `enabled` and `set_enabled`. Hardware calibration defines its own midpoint zero; it does not inherit the simulation CAD zero. Simulation time advances only through the world stepping methods. Physical motors run asynchronously through the supplied driver; the physical adapter deliberately has no simulated `step()` or automatic reset-to-zero.
+Both backends inherit `ArmController` from `airtruck.raw_api.so101.io`. Its abstract methods and properties must be implemented before a subclass can be instantiated. Both backends expose `set_positions`, `positions`, `targets`, `limits`, `enabled` and `set_enabled`. Hardware calibration defines its own midpoint zero; it does not inherit the simulation CAD zero. Simulation time advances only through the world stepping methods. Physical motors run asynchronously through the supplied driver; the physical adapter deliberately has no simulated `step()` or automatic reset-to-zero.
 
 ```python
-from airtruck.raw_controls.so101.io import ArmController
+from airtruck.raw_api.so101.io import ArmController
 
 def move_pan(arm: ArmController) -> None:
     arm.set_positions({"shoulder_pan": 0.0872665})

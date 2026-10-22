@@ -5,8 +5,8 @@ import mujoco.viewer
 import numpy as np
 from numpy.typing import NDArray
 from airtruck.testing_util import WorldControl, Pose, EntityHandle, Sample
-from airtruck.raw_controls.so101.io import ArmController, JointName
-from airtruck.raw_controls.so101.controller import JointCalibration, load_joint_calibrations
+from airtruck.raw_api.so101.io import ArmController, JointName
+from airtruck.raw_api.so101.controller import JointCalibration, load_joint_calibrations
 
 def check_api(model: mujoco.MjModel, data: mujoco.MjData,
               handle: mujoco.viewer.Handle) -> None:

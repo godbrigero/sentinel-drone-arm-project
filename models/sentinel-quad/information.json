@@ -637,5 +637,106 @@
       "installed_supply_voltage_V": null
     },
     "simulation_reference_mass_kg": 0.632006
+  },
+  "modular_platform": {
+    "interface": "twin under-floor dovetail rails",
+    "insertion_axis": [
+      -1,
+      0,
+      0
+    ],
+    "withdrawal_axis": [
+      1,
+      0,
+      0
+    ],
+    "usable_length_width_mm": [
+      63.422246063,
+      107.018399098
+    ],
+    "tray_outer_length_width_mm": [
+      68.422246063,
+      112.018399098
+    ],
+    "floor_top_z_mm": -20,
+    "floor_thickness_mm": 4,
+    "rim_top_z_mm": -14,
+    "minimum_plastic_z_mm": -32,
+    "minimum_hardware_z_mm": -35,
+    "skid_clearance_mm": 7.252740154,
+    "plastic_skid_clearance_mm": 10.252740154,
+    "rail_centers_y_mm": [
+      -94,
+      -24
+    ],
+    "rail_center_spacing_mm": 70,
+    "nominal_slide_clearance_mm": 0.3,
+    "slide_engagement_length_mm": 56,
+    "withdrawal_clearance_mm": 70,
+    "kernel_motion_check_positions_mm": [
+      0,
+      1,
+      5,
+      15,
+      30,
+      50,
+      63,
+      70
+    ],
+    "carrier_drone_mounts": "platform.mounts",
+    "material": "PETG",
+    "density_g_cm3": 1.27,
+    "carrier_CAD_mass_g": 34.916976862,
+    "tray_CAD_mass_g": 52.427362755,
+    "printed_parts_CAD_mass_g": 87.344339616,
+    "printed_mass_g": null,
+    "hardware_mass_g": null,
+    "payload_rating_g": null,
+    "fasteners": {
+      "screw": "M3 x 8 socket head",
+      "quantity": 2,
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "centers_xy_mm": [
+        [
+          250,
+          -94
+        ],
+        [
+          250,
+          -24
+        ]
+      ],
+      "head_diameter_height_mm": [
+        5.5,
+        3
+      ],
+      "drive_hex_mm": 2.5,
+      "nut": "M3 hex",
+      "nut_quantity": 2,
+      "nut_across_flats_thickness_mm": [
+        5.5,
+        2.4
+      ],
+      "nominal_thread_engagement_mm": 2.4,
+      "nut_loading": "rear",
+      "physical_fit_verified": false,
+      "reference_threads_modeled": false
+    },
+    "assembly": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/8c6ad7b60b47f19829e469ae",
+    "parts": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/9633876d7ae93db34c1791d4",
+    "extracted_view": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/decb8eda10fae487b7a31af3",
+    "design": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/4f59b60ba6e55595486c14cc",
+    "verified_geometry_microversion": "843d943a1d18a9995efdd756",
+    "sources": {
+      "screw": "https://www.mouser.com/datasheet/3/3668/1/2685970.pdf",
+      "nut": "https://www.pgb-europe.com/en-gb/242805/hexagon-nut-6-din-934-m3"
+    },
+    "beam_end_radius_mm": 8,
+    "ear_root_blend_radius_mm": 1.2,
+    "rear_beam_edge_radius_mm": 0.6
   }
 }

@@ -4,7 +4,7 @@ from contextlib import nullcontext
 import math
 from types import SimpleNamespace
 import pytest
-from airtruck.raw_controls.so101.controller import JOINTS, load_joint_calibrations
+from airtruck.raw_api.so101.controller import JOINTS, load_joint_calibrations
 from scripts.so101.so101_calibrate import Motion, ORDER, make_calibration, save_checkpoint, capture, calibrate, keyboard, main, TerminalUI, select_port
 
 

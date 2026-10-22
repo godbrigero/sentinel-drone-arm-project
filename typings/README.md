@@ -23,7 +23,7 @@ Array dtype is represented; dimensions, contiguity, writability, and physical un
 The workspace typechecker configuration supplies this directory as the stub path. To check independently from the project root:
 
 ```sh
-MYPYPATH=typings uv run mypy --explicit-package-bases typings/smoke.py airtruck/raw_controls/so101/controller.py
+MYPYPATH=typings uv run mypy --explicit-package-bases typings/smoke.py airtruck/raw_api/so101/controller.py
 uv run mypy --follow-imports=skip typings/mujoco
 ```
 

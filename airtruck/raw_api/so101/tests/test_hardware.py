@@ -3,9 +3,9 @@
 import math
 import pytest
 from collections.abc import Mapping, Sequence
-from airtruck.raw_controls.so101.io import ArmController
-from airtruck.raw_controls.so101.controller import JointCalibration, RealSO101 as SO101
-from airtruck.raw_controls.so101.controller import JOINTS, joint_positions
+from airtruck.raw_api.so101.io import ArmController
+from airtruck.raw_api.so101.controller import JointCalibration, RealSO101 as SO101
+from airtruck.raw_api.so101.controller import JOINTS, joint_positions
 
 
 class FakeTransport:

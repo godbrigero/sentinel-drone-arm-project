@@ -2,8 +2,8 @@
 from types import SimpleNamespace
 import pytest
 import scservo_sdk
-from airtruck.raw_controls.so101.transport import FeetechTransport, FeetechTransportError
-from airtruck.raw_controls.so101.controller import RealSO101, JointCalibration, JOINTS
+from airtruck.raw_api.so101.transport import FeetechTransport, FeetechTransportError
+from airtruck.raw_api.so101.controller import RealSO101, JointCalibration, JOINTS
 
 
 @pytest.fixture

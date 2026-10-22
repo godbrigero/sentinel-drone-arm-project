@@ -1,18 +1,18 @@
 # Physical SO-101 adapter
 
-`RealSO101` in `airtruck/raw_controls/so101/controller.py` provides the physical implementation of Airtruck's shared position-control interface. It is tested against a fake transport; no hardware communication or motion was performed during development.
+`RealSO101` in `airtruck/raw_api/so101/controller.py` provides the physical implementation of Airtruck's shared position-control interface. It is tested against a fake transport; no hardware communication or motion was performed during development.
 
-- `airtruck/raw_controls/so101/controller.py`: `RealSO101` and immutable `JointCalibration` records.
-- `airtruck/raw_controls/so101/io.py`: `ServoTransport`, the contract a selected Feetech/serial driver must implement.
-- `airtruck/raw_controls/so101/tests/test_hardware.py`: calibration, command validation, communication-failure and enable/disable tests.
+- `airtruck/raw_api/so101/controller.py`: `RealSO101` and immutable `JointCalibration` records.
+- `airtruck/raw_api/so101/io.py`: `ServoTransport`, the contract a selected Feetech/serial driver must implement.
+- `airtruck/raw_api/so101/tests/test_hardware.py`: calibration, command validation, communication-failure and enable/disable tests.
 
-The caller supplies an already configured transport implementing `read_positions(servo_ids)`, `write_positions({servo_id: raw_ticks})` and `set_torque_enabled(servo_ids, enabled)`. It must raise on failed communication rather than fabricate feedback. The caller owns connection lifecycle, startup torque state, bus timing, firmware configuration and device errors. `FeetechTransport` in `airtruck/raw_controls/so101/transport.py` provides this implementation using the locked `feetech-servo-sdk` dependency. Supply your actual serial port explicitly; no device scanning or automatic connection occurs.
+The caller supplies an already configured transport implementing `read_positions(servo_ids)`, `write_positions({servo_id: raw_ticks})` and `set_torque_enabled(servo_ids, enabled)`. It must raise on failed communication rather than fabricate feedback. The caller owns connection lifecycle, startup torque state, bus timing, firmware configuration and device errors. `FeetechTransport` in `airtruck/raw_api/so101/transport.py` provides this implementation using the locked `feetech-servo-sdk` dependency. Supply your actual serial port explicitly; no device scanning or automatic connection occurs.
 
 Provide all six joint calibrations: actual servo ID, measured encoder tick at the hardware midpoint, direction (`-1` or `+1`), measured travel in hardware radians, and encoder counts per turn (4096 by default). Do not use the simulator's virtual offsets. Calibration crossing the absolute encoder wrap is rejected by this simple adapter; unwrap it in a more specialized driver before supporting such travel.
 
 ```python
-from airtruck.raw_controls.so101.controller import RealSO101, load_joint_calibrations
-from airtruck.raw_controls.so101.transport import FeetechTransport
+from airtruck.raw_api.so101.controller import RealSO101, load_joint_calibrations
+from airtruck.raw_api.so101.transport import FeetechTransport
 
 # port: your USB-to-TTL servo adapter's serial device path
 # Load the complete mapping produced by the guided calibration script.
@@ -78,7 +78,7 @@ port/packet boundary; they open no serial device and do not establish physical
 hardware operation. Run them with:
 
 ```sh
-uv run --locked pytest airtruck/raw_controls/so101/tests/test_transport.py
+uv run --locked pytest airtruck/raw_api/so101/tests/test_transport.py
 ```
 
 ## Guided hardware calibration

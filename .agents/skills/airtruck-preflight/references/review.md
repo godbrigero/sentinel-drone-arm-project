@@ -2,7 +2,7 @@
 
 ## Project-specific semantic review
 
-- `airtruck/raw_controls/`: device contracts and adapters; `RealSO101` must not gain simulation stepping or implicit hardware connections. Validate calibration/transport boundaries.
+- `airtruck/raw_api/`: device contracts and adapters; `RealSO101` must not gain simulation stepping or implicit hardware connections. Validate calibration/transport boundaries.
 - `airtruck/testing_util/`: shared world controls, scene loading, explicit pytest opt-in, contacts, lifecycle and tests. Ensure exactly one physics step per world tick, disjoint actuator ownership, no writable MuJoCo buffers in public views, bounded waits, and cleanup on partial failures.
 - `models/so101/runtime/servo-model.json`: controller/build inputs. `source/cad-manifest.json`: CAD rebuild/verification inputs. `information.json`: compact engineering references with unknowns explicit. Check moved/removed inputs against all consumers; don't duplicate computed values into new JSON without a clear need.
 - `worlds/`: environment plus system instances; paths relative to manifest, namespace isolation, initial joints, explicit contact policy. Collision-disabled demonstrations and convex-hull contact tests have different claims.

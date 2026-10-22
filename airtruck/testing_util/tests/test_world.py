@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 from airtruck.testing_util import Pose, WorldControl, load_world
 from airtruck.testing_util.mujoco_world import MujocoWorld
-from airtruck.raw_controls.so101.io import ArmController
+from airtruck.raw_api.so101.io import ArmController
 from airtruck.testing_util import simulation
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -253,7 +253,7 @@ def test_composition_preserves_so101_dynamics() -> None:
     import mujoco
     from airtruck.testing_util.adapters import SO101Adapter
     from airtruck.testing_util.loader import servo_spec
-    from airtruck.raw_controls.so101.controller import SimSO101
+    from airtruck.raw_api.so101.controller import SimSO101
     root = ROOT/'models/so101'
     model = mujoco.MjModel.from_xml_path(str(root/'so101.xml'))
     data = mujoco.MjData(model)

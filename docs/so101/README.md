@@ -32,7 +32,7 @@ Paths are relative to the repository root.
 | `models/so101/so101.xml` | Runtime physics model, SI units, including derived electrical parameters |
 | `models/so101/assets/` | Required native CAD visual meshes; all triangles retained, grouped by link/color |
 | `scripts/so101/build_model.py` | Rebuild XML with the onshape-to-robot exporter |
-| `airtruck/raw_controls/so101/controller.py` | Physical and simulated arm implementations; simulation uses scoped actuator bindings |
+| `airtruck/raw_api/so101/controller.py` | Physical and simulated arm implementations; simulation uses scoped actuator bindings |
 | `scripts/so101/run.py` | Live viewer, keyboard controls, small-motion demo and recording |
 | `scripts/so101/verify.py` | Fresh model/mesh reads, topology, axes, limits, inertia and six-motion checks |
 | `docs/so101/motor-model.md` | Research, equations, sources and fidelity limitations |
@@ -56,7 +56,7 @@ Use a world to own physics and retrieve a typed arm interface:
 
 ```python
 from airtruck.testing_util import load_world
-from airtruck.raw_controls.so101.io import ArmController
+from airtruck.raw_api.so101.io import ArmController
 
 with load_world("worlds/so101_bench") as world:
     arm = world.system("arm", ArmController)
@@ -95,7 +95,7 @@ The user confirmed the standard **7.4 V STS3215** follower profile; 345:1 gearin
 ```python
 import pytest
 from airtruck.testing_util import simulation, WorldControl
-from airtruck.raw_controls.so101.io import ArmController
+from airtruck.raw_api.so101.io import ArmController
 
 
 @simulation("worlds/so101_bench")
