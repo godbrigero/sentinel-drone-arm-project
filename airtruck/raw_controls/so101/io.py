@@ -1,6 +1,6 @@
 """Common position-control interface for physical and simulated arms.
 
-Angles are radians in the arm's calibrated CAD coordinate system.
+Angles are radians: the simulation uses CAD zero, while hardware uses its measured calibration zero.
 """
 
 from collections.abc import Mapping, Sequence

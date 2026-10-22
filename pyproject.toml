@@ -35,6 +35,7 @@ files = [
     "airtruck/raw_controls/so101/controller.py",
     "airtruck/raw_controls/so101/io.py",
     "airtruck/raw_controls/so101/transport.py",
+    "scripts/so101/so101_calibrate.py",
     "typings/smoke.py",
     "airtruck/testing_util",
 ]

@@ -79,6 +79,8 @@ prefix. It owns only the six resolved joint/actuator bindings. `update_control()
 writes those actuators without advancing time; `reset_control()` clears only its
 controller state. The world updates every controller, then steps physics once.
 The same `ArmController` contract is implemented by `RealSO101` for hardware.
+Its measured midpoint calibration is independent of CAD coordinates; see the
+[guided hardware calibration](../hardware/README.md#guided-hardware-calibration).
 
 ## Control semantics
 

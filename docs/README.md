@@ -16,7 +16,7 @@ All paths below are relative to the repository root.
 | `airtruck/raw_controls/so101/io.py` | `ArmController` abstract base class and `ServoTransport` protocol |
 | `airtruck/raw_controls/so101/transport.py` | Acknowledged Feetech STS3215 serial transport for `RealSO101` |
 | `models/so101/` | MJCF, mesh assets, CAD source manifest, reference data and runtime motor parameters |
-| `scripts/so101/` | Model rebuild, verification and viewer commands |
+| `scripts/so101/` | Model rebuild, verification, viewer commands, and guided hardware calibration |
 | `airtruck/testing_util/` | Shared testing utilities: typed worlds, controls, contacts, pytest decorator/fixtures, and utility tests |
 | `worlds/so101_bench/` | World manifest and environment scene |
 | `airtruck/raw_controls/so101/tests/` | Simulation and fake-transport regression tests |
@@ -28,7 +28,7 @@ Device controls live under `airtruck/raw_controls/<device>/`; SO-101 simulation 
 
 The controller receives its dependencies explicitly: `SimSO101(model, data, servo_spec=spec)`. Scripts and test fixtures load the model and configuration; the controller has no filesystem or environment knowledge.
 
-Both backends inherit `ArmController` from `airtruck.raw_controls.so101.io`. Its abstract methods and properties must be implemented before a subclass can be instantiated. Both backends expose `set_positions`, `positions`, `targets`, `limits`, `enabled` and `set_enabled`. Simulation time advances only through the world stepping methods. Physical motors run asynchronously through the supplied driver; the physical adapter deliberately has no simulated `step()` or automatic reset-to-zero.
+Both backends inherit `ArmController` from `airtruck.raw_controls.so101.io`. Its abstract methods and properties must be implemented before a subclass can be instantiated. Both backends expose `set_positions`, `positions`, `targets`, `limits`, `enabled` and `set_enabled`. Hardware calibration defines its own midpoint zero; it does not inherit the simulation CAD zero. Simulation time advances only through the world stepping methods. Physical motors run asynchronously through the supplied driver; the physical adapter deliberately has no simulated `step()` or automatic reset-to-zero.
 
 ```python
 from airtruck.raw_controls.so101.io import ArmController

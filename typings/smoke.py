@@ -4,6 +4,9 @@ import mujoco
 import mujoco.viewer
 import numpy as np
 from numpy.typing import NDArray
+from airtruck.testing_util import WorldControl, Pose, EntityHandle, Sample
+from airtruck.raw_controls.so101.io import ArmController, JointName
+from airtruck.raw_controls.so101.controller import JointCalibration, load_joint_calibrations
 
 def check_api(model: mujoco.MjModel, data: mujoco.MjData,
               handle: mujoco.viewer.Handle) -> None:
@@ -33,8 +36,6 @@ def controller(model: mujoco.MjModel, data: mujoco.MjData) -> None:
     data.ctrl[:] = 0.0
 
 
-from airtruck.testing_util import WorldControl, Pose, EntityHandle, Sample
-from airtruck.raw_controls.so101.io import ArmController, JointName
 
 
 def check_world_api(world: WorldControl) -> None:
@@ -49,3 +50,9 @@ def check_world_api(world: WorldControl) -> None:
     arm.set_positions({"not_a_joint": 0.1})  # type: ignore[dict-item]
     arm.step()  # type: ignore[attr-defined]
     world.data.qpos[:] = 0  # type: ignore[attr-defined]
+
+
+
+
+def check_calibration_api(path: str) -> None:
+    assert_type(load_joint_calibrations(path), dict[JointName, JointCalibration])
