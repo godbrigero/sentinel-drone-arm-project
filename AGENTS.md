@@ -21,6 +21,10 @@
 
 - The user-requested `.venv/` is the persistent uv project environment; keep it ignored by Git. Manage dependencies in `pyproject.toml` and lock them in `uv.lock`. These are the dependency sources of truth for this uv project. `requirements.txt` is optional: generate it from the lockfile only when a compatibility workflow needs it. Do not require it or flag its absence as a preflight error.
 
+## Python conventions
+
+- Keep imports at module scope at the top of the file so dependencies are immediately visible. Do not place imports inside functions or methods, including lazy imports inside connection or initialization methods. Apply this convention to application code and tests.
+
 ## Documentation maintenance
 
 - Keep documentation clean, accurate, and up to date. After every major change, review all files under `docs/` and other project documentation for relevance, including paths, imports, commands, examples, behavior, and limitations. Update or remove stale or duplicated material rather than only appending new notes.

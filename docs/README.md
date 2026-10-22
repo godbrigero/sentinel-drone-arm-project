@@ -14,6 +14,7 @@ All paths below are relative to the repository root.
 |---|---|
 | `airtruck/raw_controls/so101/controller.py` | `SimSO101`, `RealSO101`, and hardware joint calibration |
 | `airtruck/raw_controls/so101/io.py` | `ArmController` abstract base class and `ServoTransport` protocol |
+| `airtruck/raw_controls/so101/transport.py` | Acknowledged Feetech STS3215 serial transport for `RealSO101` |
 | `models/so101/` | MJCF, mesh assets, CAD source manifest, reference data and runtime motor parameters |
 | `scripts/so101/` | Model rebuild, verification and viewer commands |
 | `airtruck/testing_util/` | Shared testing utilities: typed worlds, controls, contacts, pytest decorator/fixtures, and utility tests |

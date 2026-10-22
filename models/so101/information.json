@@ -185,7 +185,9 @@
       "no_load_speed_rad_s": 5.445427266222309,
       "encoder_counts": 4096,
       "installed_model": "Feetech STS3215, 7.4 V variant (user reported)",
-      "installed_supply_voltage_V": null
+      "installed_supply_voltage_V": null,
+      "sdk_protocol": 0,
+      "installed_baudrate": null
     },
     "simulation_reference_mass_kg": 0.632006
   },
@@ -200,6 +202,7 @@
     "servo_reference": "runtime/servo-model.json",
     "manufacturer": "https://www.feetechrc.com/Data/feetechrc/upload/file/20200611/6372749961523760249976542.pdf",
     "simulation_reference_mass": "https://raw.githubusercontent.com/TheRobotStudio/SO-ARM100/main/Simulation/SO101/so101_new_calib.urdf",
-    "electrical_approximation": "so101.xml#custom"
+    "electrical_approximation": "so101.xml#custom",
+    "servo_bus_protocol": "https://github.com/huggingface/lerobot/blob/v0.4.4/src/lerobot/motors/feetech/tables.py"
   }
 }
