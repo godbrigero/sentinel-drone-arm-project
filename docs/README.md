@@ -39,6 +39,49 @@ def move_pan(arm: ArmController) -> None:
 
 Run `uv sync --locked` to create `.venv/` with the locked dependencies. The [SO-101 instructions](so101/README.md) describe model commands and the [physical adapter instructions](hardware/README.md) explain the hardware boundary.
 
+## Simple arm control
+
+`airtruck/main.py` provides a terminal angle console. Set `RUN_MODE` in
+`airtruck/constants.py` to `RunMode.SIMULATION` (default) or `RunMode.REAL`.
+
+Simulation on macOS:
+
+```sh
+uv run --locked mjpython -m airtruck.main
+```
+
+This opens the MuJoCo viewer and runs the bench world continuously while the
+terminal accepts commands. It is a local simulation loop, not a network server.
+The main thread owns physics and command handling. Exit with `quit` in the
+terminal or Ctrl-C; closing only the viewer does not stop the console.
+
+```text
+shoulder_pan 10
+wrist_roll -15
+show
+quit
+```
+
+Console angles and displayed limits are **degrees**; the shared controller API
+still uses radians. Invalid, non-finite or out-of-limit commands are rejected.
+Only the named joint target changes. Simulation zero is the saved CAD pose;
+hardware zero is the midpoint in your calibration file.
+
+For hardware, set `RUN_MODE = RunMode.REAL`, `PORT` to your USB adapter path,
+and `CALIBRATION` to your calibration JSON path in `airtruck/constants.py`. Then run:
+
+```sh
+uv run --locked python -m airtruck.main
+```
+
+Real mode requires the complete calibration mapping produced by the
+[calibration script](hardware/README.md#guided-hardware-calibration), defaulting to
+`models/so101/runtime/calibration.json`. These settings are constants, not command-line options.
+Confirm in the terminal to enable torque and hold the measured current pose.
+On exit the application attempts torque disable before closing the serial port.
+It never opens the simulation viewer in real mode. Hardware operation has not
+been physically verified.
+
 ## Static typing
 
 The root `pyrightconfig.json` selects `typings/` for Pyright/Pylance. Select `.venv/bin/python` in your editor. The stubs describe MuJoCo 3.16.0 and are not runtime modules.
@@ -48,6 +91,10 @@ uv run mypy
 ```
 
 `mypy` and `pytest` are in the default development dependency group.
+Mypy recursively discovers Python files from the project root (`files = "."`);
+new files do not need to be registered individually. This broader scope also
+checks scripts and tests previously omitted from the explicit file list.
+Existing typing errors in those files currently prevent a clean full-project check.
 
 ## Run and verify
 

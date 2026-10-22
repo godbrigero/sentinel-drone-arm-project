@@ -9,6 +9,7 @@ from contextlib import nullcontext
 from typing import Literal, cast
 import numpy as np
 import mujoco
+import mujoco.viewer
 from mujoco.viewer import Handle
 from airtruck.testing_util.adapters import SystemAdapter
 from airtruck.testing_util.interfaces import WorldControl
@@ -136,7 +137,6 @@ class MujocoWorld(WorldControl):
             if self._viewer.is_running():
                 return
             self._viewer.close()
-        import mujoco.viewer
         self._viewer = mujoco.viewer.launch_passive(
             self._model, self._data, show_right_ui=False)
 

@@ -31,14 +31,7 @@ python_version = "3.12"
 namespace_packages = true
 explicit_package_bases = true
 mypy_path = "$MYPY_CONFIG_FILE_DIR/typings"
-files = [
-    "airtruck/raw_api/so101/controller.py",
-    "airtruck/raw_api/so101/io.py",
-    "airtruck/raw_api/so101/transport.py",
-    "scripts/so101/so101_calibrate.py",
-    "typings/smoke.py",
-    "airtruck/testing_util",
-]
+files = "."
 check_untyped_defs = true
 disallow_untyped_defs = true
 warn_unused_ignores = true
