@@ -2,9 +2,9 @@ from enum import Enum
 
 
 class RunMode(Enum):
-    """The mode in which the application is running."""
+    """Select the follower backend; the application always reads a physical leader."""
 
     SIMULATION = "simulation"
-    """Run the application in simulation mode."""
+    """Drive a simulated follower from the physical leader."""
     REAL = "real"
-    """Run the application in real mode."""
+    """Drive a physical follower from the physical leader."""

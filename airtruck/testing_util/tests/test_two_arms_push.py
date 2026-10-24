@@ -31,7 +31,7 @@ def push(world: WorldControl) -> PushResult:
     world.advance(3.0)
     assert not world.contacts(), "The extended arms must start separated"
     start_x = world.pose(world.entity("weak_hand")).position_m[0]
-    start_pan = weak.positions["shoulder_pan"]
+    start_pan = weak.positions["shoulder_pan"].value
     weak_target = weak.targets.copy()
     # Same direction, dramatically different effort. Other joints hold extension.
     weak.set_motor_voltages({"shoulder_pan": -0.2})
@@ -51,7 +51,7 @@ def push(world: WorldControl) -> PushResult:
                 samples += 1
         peak_torque = max(peak_torque, abs(strong.motor_torques_nm["shoulder_pan"]))
     return PushResult(world.pose(world.entity("weak_hand")).position_m[0] - start_x,
-                      weak.positions["shoulder_pan"] - start_pan,
+                      weak.positions["shoulder_pan"].value - start_pan,
                       peak_force, peak_penetration, peak_torque, samples)
 
 

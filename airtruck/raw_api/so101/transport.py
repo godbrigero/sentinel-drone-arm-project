@@ -5,9 +5,12 @@ No EEPROM, calibration, mode, speed, acceleration, or torque changes on connect.
 """
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from threading import RLock
+import sys
 from typing import Protocol, cast
+
+from airtruck.raw_api.so101.io import ServoTransport
 
 import scservo_sdk as sdk  # type: ignore[import-untyped]
 
@@ -30,12 +33,16 @@ class FeetechTransportError(OSError):
     """A bus/device failure; earlier writes in a batch may already have applied."""
 
 
-class FeetechTransport:
+class FeetechTransport(ServoTransport):
     """Raw 0..4095 ticks; calibration and joint names belong to RealSO101.
 
     Construction is inert. Call connect() or use a context manager. close() only
     closes serial I/O: it does NOT disable torque. Disable through RealSO101 first.
     Batches are sequential acknowledged transactions, not simultaneous motion.
+    Voltage-only status replies warn and continue for every operation. A custom
+    voltage_warning callback can format the warning; otherwise it prints to stderr.
+    An explicitly configured gripper_servo_id also tolerates overload-only replies.
+    Other faults remain strict. Warnings are emitted once per servo per connection.
     """
 
     TORQUE_ENABLE = 40
@@ -43,16 +50,26 @@ class FeetechTransport:
     PRESENT_POSITION = 56
     BAUDRATES = {1_000_000, 500_000, 250_000, 128_000, 115_200, 57_600, 38_400, 19_200}
 
-    def __init__(self, port: str, *, baudrate: int = 1_000_000) -> None:
+    def __init__(
+        self, port: str, *, baudrate: int = 1_000_000,
+        voltage_warning: Callable[[str], None] | None = None,
+        gripper_servo_id: int | None = None,
+    ) -> None:
         if not isinstance(port, str) or not port.strip():
             raise ValueError("An explicit serial port is required")
         if type(baudrate) is not int or baudrate not in self.BAUDRATES:
             raise ValueError("Unsupported STS3215 baudrate")
         self.port = port
+        if gripper_servo_id is not None:
+            self._ids([gripper_servo_id])
+        self._gripper_servo_id = gripper_servo_id
+        self._warned_gripper_overload = False
         self.baudrate = baudrate
         self._port: _Port | None = None
         self._packet: _Packet | None = None
         self._lock = RLock()
+        self._voltage_warning = voltage_warning
+        self._warned_voltage_ids: set[int] = set()
 
     def connect(self) -> None:
         with self._lock:
@@ -74,6 +91,8 @@ class FeetechTransport:
         with self._lock:
             port = self._port
             self._port = self._packet = None
+            self._warned_voltage_ids.clear()
+            self._warned_gripper_overload = False
             if port is not None:
                 port.closePort()
 
@@ -98,8 +117,32 @@ class FeetechTransport:
             raise ValueError("Duplicate servo IDs")
         return ids
 
-    @staticmethod
-    def _check(packet: _Packet, servo_id: int, operation: str, result: int, error: int) -> None:
+    def _check(self, packet: _Packet, servo_id: int, operation: str,
+               result: int, error: int) -> None:
+        if result == 0 and error == 32 and servo_id == self._gripper_servo_id:
+            if not self._warned_gripper_overload:
+                print(
+                    f"\nWARNING: Gripper servo {servo_id} {operation}: overload "
+                    "(device=32). Continuing. Further gripper overload warnings "
+                    "are suppressed until reconnect.",
+                    file=sys.stderr, flush=True,
+                )
+                self._warned_gripper_overload = True
+            return
+        # Tolerate only valid replies containing exactly the voltage status bit.
+        if result == 0 and error == 1:
+            if servo_id not in self._warned_voltage_ids:
+                message = (
+                    f"Servo {servo_id} {operation}: input voltage error (device=1). "
+                    "Continuing; voltage may be too low or too high. "
+                    "Further voltage-only warnings for this servo are suppressed until reconnect."
+                )
+                if self._voltage_warning is None:
+                    print(f"\nWARNING: {message}", file=sys.stderr, flush=True)
+                else:
+                    self._voltage_warning(message)
+                self._warned_voltage_ids.add(servo_id)
+            return
         if result != 0 or error != 0:
             raise FeetechTransportError(
                 f"Servo {servo_id} {operation}: communication={result} "

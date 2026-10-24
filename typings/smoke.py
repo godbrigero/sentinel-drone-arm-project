@@ -1,12 +1,13 @@
 """Static-only usage examples; does not open a viewer or load external assets."""
 from typing import assert_type
+from airtruck.raw_api.so101.position import JointPosition, PositionUnit
 import mujoco
 import mujoco.viewer
 import numpy as np
 from numpy.typing import NDArray
 from airtruck.testing_util import WorldControl, Pose, EntityHandle, Sample
 from airtruck.raw_api.so101.io import ArmController, JointName
-from airtruck.raw_api.so101.controller import JointCalibration, load_joint_calibrations
+from airtruck.raw_api.so101.calibration import JointCalibration, load_joint_calibrations
 
 def check_api(model: mujoco.MjModel, data: mujoco.MjData,
               handle: mujoco.viewer.Handle) -> None:
@@ -41,13 +42,18 @@ def controller(model: mujoco.MjModel, data: mujoco.MjData) -> None:
 def check_world_api(world: WorldControl) -> None:
     arm = world.system("arm", ArmController)
     assert_type(arm, ArmController)
-    assert_type(arm.positions, dict[JointName, float])
+    assert_type(arm.positions, dict[JointName, JointPosition])
+    assert_type(arm.targets, dict[JointName, JointPosition])
+    assert_type(arm.normalized_positions, dict[JointName, JointPosition])
     assert_type(world.entity("arm"), EntityHandle)
     assert_type(world.pose(world.entity("arm")), Pose)
-    assert_type(world.record(lambda: arm.positions, 1.0), list[Sample[dict[JointName, float]]])
-    arm.set_positions({"shoulder_pan": 0.1})
+    assert_type(world.record(lambda: arm.positions, 1.0), list[Sample[dict[JointName, JointPosition]]])
+    arm.set_positions({"shoulder_pan": JointPosition(0.1, PositionUnit.RADIANS, arm.positions["shoulder_pan"].limits_rad)})
     # Negative static contracts: these ignores must remain necessary.
-    arm.set_positions({"not_a_joint": 0.1})  # type: ignore[dict-item]
+    arm.set_positions({"not_a_joint": JointPosition(0.1, PositionUnit.RADIANS, (-1.0, 1.0))})  # type: ignore[dict-item]
+    arm.set_positions({"shoulder_pan": 0.1})  # type: ignore[dict-item]
+    arm.set_positions([0.1] * 6)  # type: ignore[arg-type]
+    arm.set_normalized_positions({"shoulder_pan": 0.1})  # type: ignore[dict-item]
     arm.step()  # type: ignore[attr-defined]
     world.data.qpos[:] = 0  # type: ignore[attr-defined]
 

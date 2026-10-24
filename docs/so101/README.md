@@ -2,6 +2,23 @@
 
 This is a six-servo, fixed-base arm demonstration. It uses the actual 257 Onshape solids, seven native rigid groups, and six revolute mate axes and limits. `onshape-to-robot` 1.8.3 generates MJCF through a native-data adapter; no Onshape API keys are used. MuJoCo 3.16.0 runs the result. The Sentinel is not part of this scene.
 
+## Wrist camera mount in current Onshape CAD
+
+The live follower assembly contains 258 solids, including the original
+[TheRobotStudio hex-nut wrist-camera bracket](https://github.com/TheRobotStudio/SO-ARM100/tree/a758567c3978dfeefe282ede0500085a48fe8f78/Optional/SO101_Wrist_Cam_Hex-Nut_Mount_32x32_UVC_Module).
+Its STEP geometry is imported unchanged and attached to `fix_hand` through the
+wrist-roll housing's two mounting holes (8.1 mm spacing). It supports the published
+32 × 32 mm UVC board format with a 27 × 27 mm camera screw pattern. The bracket
+moves with the hand; the six joint definitions and existing part poses are unchanged.
+The camera board and mounting screws are not modeled. The supplied photographs
+match the board-camera/mount style, but do not establish the exact camera model
+or measured dimensions. CAD mass, center of mass and inertia remain unassigned.
+
+The simulation below remains pinned to its earlier 257-part CAD export and does
+not include the new bracket or a camera sensor. Rebuilding its XML alone does not
+update those meshes. Current CAD geometry and source links are recorded in
+`models/so101/information.json`.
+
 ## Run
 
 From the project root:
@@ -32,7 +49,7 @@ Paths are relative to the repository root.
 | `models/so101/so101.xml` | Runtime physics model, SI units, including derived electrical parameters |
 | `models/so101/assets/` | Required native CAD visual meshes; all triangles retained, grouped by link/color |
 | `scripts/so101/build_model.py` | Rebuild XML with the onshape-to-robot exporter |
-| `airtruck/raw_api/so101/controller.py` | Physical and simulated arm implementations; simulation uses scoped actuator bindings |
+| `airtruck/raw_api/so101/controller.py` | Follower control, human-operated leader reader, and simulated arm; simulation uses scoped actuator bindings |
 | `scripts/so101/run.py` | Live viewer, keyboard controls, small-motion demo and recording |
 | `scripts/so101/verify.py` | Fresh model/mesh reads, topology, axes, limits, inertia and six-motion checks |
 | `docs/so101/motor-model.md` | Research, equations, sources and fidelity limitations |
@@ -42,6 +59,9 @@ The runtime loader reads `so101.xml` and `runtime/servo-model.json`. It passes t
 performs no file I/O. The builder also uses the published servo data and gripper
 current fraction to generate actuator parameters. Changing build inputs requires
 rebuilding `so101.xml`; changing Python PID/profile tuning requires a fresh session.
+Current simulation tuning uses Kp = 50 V/rad, Ki = 12 V/(rad·s),
+Kd = 2 V·s/rad, target speed 3 rad/s and target acceleration 5 rad/s².
+These settings affect simulation only; they are not hardware firmware gains.
 The remaining metadata in the servo file documents sources and unmeasured values.
 
 There is no separate electrical-fit JSON: derived values are stored under
@@ -57,21 +77,29 @@ Use a world to own physics and retrieve a typed arm interface:
 ```python
 from airtruck.testing_util import load_world
 from airtruck.raw_api.so101.io import ArmController
+from airtruck.raw_api.so101.position import JointPosition, PositionUnit
 
 with load_world("worlds/so101_bench") as world:
     arm = world.system("arm", ArmController)
-    arm.set_positions({"shoulder_pan": 0.0872665, "wrist_roll": -0.174533})
+    arm.set_positions({
+        "shoulder_pan": JointPosition(0.0872665, PositionUnit.RADIANS, arm.positions["shoulder_pan"].limits_rad),
+        "wrist_roll": JointPosition(-0.174533, PositionUnit.RADIANS, arm.positions["wrist_roll"].limits_rad),
+    })
     world.advance(3.0)
     print(arm.positions)
     print(arm.targets)
-    print(arm.limits)
+    print({name: position.range for name, position in arm.positions.items()})
     world.reset()
 ```
 
 `world.system(name, Interface)` returns a typed, runtime-checked control interface.
-Arm feedback is copied; the public interface exposes neither MuJoCo buffers nor
-physics stepping. Joint names are statically checked `JointName` literals. Targets
-can also be six-element vectors in `JOINTS` order. Unknown joints and non-finite
+Arm feedback is copied as immutable `JointPosition` values with explicit units
+and ranges; the public interface exposes neither MuJoCo buffers nor
+physics stepping. Joint names are statically checked `JointName` literals. Commands
+accept only `Mapping[JointName, JointPosition]`; numeric mappings and vectors raise
+`TypeError`. For leader/follower exchange,
+`normalized_positions` and `set_normalized_positions({...})` use dimensionless
+`[-1, 1]` values, with zero at the midpoint of each joint’s own limits. Unknown joints and non-finite
 values raise `ValueError` before any command is applied.
 
 Internally, `SimSO101` receives model/data, validated servo settings, and a namespace
@@ -79,7 +107,9 @@ prefix. It owns only the six resolved joint/actuator bindings. `update_control()
 writes those actuators without advancing time; `reset_control()` clears only its
 controller state. The world updates every controller, then steps physics once.
 The same `ArmController` contract is implemented by `RealSO101` for hardware.
-Its measured midpoint calibration is independent of CAD coordinates; see the
+`LeaderSO101` provides human-operated hardware feedback after explicitly disabling
+torque with `start()`. Calibrate both physical arms with `--arm both`; each has
+its own calibration file. Their measured midpoint calibration is independent of CAD coordinates; see the
 [guided hardware calibration](../hardware/README.md#guided-hardware-calibration).
 
 ## Control semantics
@@ -96,15 +126,18 @@ The user confirmed the standard **7.4 V STS3215** follower profile; 345:1 gearin
 import pytest
 from airtruck.testing_util import simulation, WorldControl
 from airtruck.raw_api.so101.io import ArmController
+from airtruck.raw_api.so101.position import JointPosition, PositionUnit
 
 
 @simulation("worlds/so101_bench")
 def test_pan_reaches_target(world: WorldControl) -> None:
     arm = world.system("arm", ArmController)
     world.advance(3.0)
-    arm.set_positions({"shoulder_pan": 0.1})
+    arm.set_positions({
+        "shoulder_pan": JointPosition(0.1, PositionUnit.RADIANS, arm.positions["shoulder_pan"].limits_rad)
+    })
     history = world.record(lambda: arm.positions, 3.0, sample_period_s=0.1)
-    assert history[-1].value["shoulder_pan"] == pytest.approx(0.1, abs=0.01)
+    assert history[-1].value["shoulder_pan"].value == pytest.approx(0.1, abs=0.01)
 ```
 
 The decorator selects a directory containing `world.json` and `scene.xml`; paths

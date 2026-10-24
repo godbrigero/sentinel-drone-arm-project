@@ -89,7 +89,9 @@ def arrange(world: WorldControl) -> None:
 
 `Pose` is immutable: meters, a unit quaternion in `wxyz` order, and world
 coordinates for runtime placement/observation. Returned observations never expose
-live MuJoCo array views. Recording deep-copies each observation.
+live MuJoCo array views. SO-101 joint feedback uses immutable `JointPosition`
+objects; read `.value` for numeric radians or `.to(PositionUnit.DEGREES)` for
+explicit unit conversion. Recording deep-copies each observation.
 
 Placement is an immediate test setup operation, not a motor command:
 

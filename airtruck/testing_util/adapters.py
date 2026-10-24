@@ -1,6 +1,7 @@
 """Backend adapters; public views keep physics buffers out of test controls."""
 from collections.abc import Callable, Mapping
 from typing import Protocol
+from airtruck.raw_api.so101.position import JointPosition
 from airtruck.raw_api.so101.controller import SimSO101
 from airtruck.raw_api.so101.io import ArmController, SimulatedArmController, JointName, PositionCommand
 
@@ -42,19 +43,23 @@ class ArmView(SimulatedArmController):
         return dict(zip(self._backend.names, map(float, self._backend.data.actuator_force[self._backend._actuators])))
 
     @property
-    def positions(self) -> dict[JointName, float]:
+    def positions(self) -> dict[JointName, JointPosition]:
         self._require_open()
         return self._backend.positions
 
     @property
-    def targets(self) -> dict[JointName, float]:
+    def targets(self) -> dict[JointName, JointPosition]:
         self._require_open()
         return self._backend.targets
 
     @property
-    def limits(self) -> dict[JointName, tuple[float, float]]:
+    def normalized_positions(self) -> dict[JointName, JointPosition]:
         self._require_open()
-        return self._backend.limits
+        return self._backend.normalized_positions
+
+    def set_normalized_positions(self, positions: PositionCommand) -> None:
+        self._require_open()
+        self._backend.set_normalized_positions(positions)
 
     @property
     def enabled(self) -> bool:

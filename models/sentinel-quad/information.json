@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-21",
+  "updated": "2026-10-22",
   "frame": {
     "name": "Onshape upright assembly world",
     "unit": "mm",
@@ -494,7 +494,7 @@
   "so101": {
     "model": "SO-101 follower",
     "frame": "Separate SO-101 assembly world, Z up",
-    "solid_parts": 257,
+    "solid_parts": 258,
     "rigid_links": 7,
     "revolute_joints": 6,
     "mate_connectors": 12,
@@ -502,11 +502,11 @@
       -55.462500000000006,
       -226.47026710066868,
       0.39429553422084646,
-      55.462499999999984,
+      95.40731653739262,
       92.88056618377242,
       253.82651468520694
     ],
-    "CAD_volume_mm3": 839798.3426704261,
+    "CAD_volume_mm3": 850646.4143442147,
     "CAD_mass_g": null,
     "measured_mass_g": null,
     "CAD_center_of_mass_mm": null,
@@ -636,7 +636,11 @@
       "installed_model": "Feetech STS3215, 7.4 V variant (user reported)",
       "installed_supply_voltage_V": null
     },
-    "simulation_reference_mass_kg": 0.632006
+    "simulation_reference_mass_kg": 0.632006,
+    "wrist_camera_mount": {
+      "source_record": "../so101/information.json#/so101/wrist_camera_mount"
+    },
+    "CAD_geometry_source": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/m/f3563d68a18cc6d16ae973b9/e/65a095efa0767c21c8f6caae"
   },
   "modular_platform": {
     "interface": "twin under-floor dovetail rails",
@@ -651,12 +655,12 @@
       0
     ],
     "usable_length_width_mm": [
-      63.422246063,
-      107.018399098
+      105,
+      155
     ],
     "tray_outer_length_width_mm": [
-      68.422246063,
-      112.018399098
+      110,
+      160
     ],
     "floor_top_z_mm": -20,
     "floor_thickness_mm": 4,
@@ -686,9 +690,9 @@
     "carrier_drone_mounts": "platform.mounts",
     "material": "PETG",
     "density_g_cm3": 1.27,
-    "carrier_CAD_mass_g": 34.916976862,
-    "tray_CAD_mass_g": 52.427362755,
-    "printed_parts_CAD_mass_g": 87.344339616,
+    "carrier_CAD_mass_g": 34.77940804507229,
+    "tray_CAD_mass_g": 106.31867625585079,
+    "printed_parts_CAD_mass_g": 141.09808430092306,
     "printed_mass_g": null,
     "hardware_mass_g": null,
     "payload_rating_g": null,
@@ -730,13 +734,63 @@
     "parts": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/9633876d7ae93db34c1791d4",
     "extracted_view": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/decb8eda10fae487b7a31af3",
     "design": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/4f59b60ba6e55595486c14cc",
-    "verified_geometry_microversion": "843d943a1d18a9995efdd756",
+    "verified_geometry_microversion": "ca0634adcc4371f785dad0d2",
     "sources": {
       "screw": "https://www.mouser.com/datasheet/3/3668/1/2685970.pdf",
       "nut": "https://www.pgb-europe.com/en-gb/242805/hexagon-nut-6-din-934-m3"
     },
     "beam_end_radius_mm": 8,
     "ear_root_blend_radius_mm": 1.2,
-    "rear_beam_edge_radius_mm": 0.6
+    "rear_beam_edge_radius_mm": 0.6,
+    "carrier_CAD_volume_mm3": 27385.350059490404,
+    "middle_mount_slots": {
+      "count": 2,
+      "width_mm": 3,
+      "length_mm": 6,
+      "centerline_travel_mm": 3,
+      "extension_axis": [
+        1,
+        0,
+        0
+      ],
+      "original_centers_xy_mm": [
+        [
+          183.08660369116453,
+          -74.4475948273436
+        ],
+        [
+          183.14726309990562,
+          -43.647654560581195
+        ]
+      ],
+      "centerline_offset_range_mm": [
+        0,
+        3
+      ],
+      "ear_thickness_mm": 6,
+      "entrance_radius_mm": 0.25,
+      "physical_fit_verified": false,
+      "source": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/9633876d7ae93db34c1791d4"
+    },
+    "tray_flat_floor_length_width_mm": [
+      103.8,
+      153.8
+    ],
+    "tray_surface_bounds_xy_mm": [
+      210,
+      -139,
+      320,
+      21
+    ],
+    "tray_surface_rearward_offset_mm": 15,
+    "tray_overall_bounds_mm": [
+      201,
+      -139,
+      -29.2,
+      320,
+      21,
+      -14
+    ],
+    "tray_CAD_volume_mm3": 83715.19236094815
   }
 }

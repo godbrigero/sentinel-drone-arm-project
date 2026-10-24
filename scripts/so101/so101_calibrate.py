@@ -1,4 +1,4 @@
-"""Manually teach SO-101 joint IDs, endpoints, direction and zero; never drive motors."""
+"""Sweep SO-101 joints by hand to learn IDs, encoder ranges and midpoint zero."""
 from __future__ import annotations
 
 import argparse
@@ -20,9 +20,8 @@ import tty
 from serial.tools import list_ports  # type: ignore[import-untyped]
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from airtruck.raw_api.so101.controller import (
-    JOINTS, JointCalibration, joint_calibrations_dict, load_joint_calibrations,
-)
+from airtruck.raw_api.so101.joints import JOINTS
+from airtruck.raw_api.so101.calibration import JointCalibration, joint_calibrations_dict, load_joint_calibrations
 from airtruck.raw_api.so101.io import JointName, ServoTransport
 from airtruck.raw_api.so101.transport import FeetechTransport
 
@@ -107,10 +106,20 @@ class Motion:
     distance: dict[int, float] = field(default_factory=dict)
     wrapped: set[int] = field(default_factory=set)
 
+    minimum: dict[int, int] = field(init=False)
+    maximum: dict[int, int] = field(init=False)
+
+    def __post_init__(self) -> None:
+        self.previous = dict(self.previous)
+        self.minimum = dict(self.previous)
+        self.maximum = dict(self.previous)
+
     def update(self, values: Mapping[int, int]) -> None:
         if set(values) != set(self.previous):
             raise ValueError("Motor replies changed during recording")
         for servo_id, value in values.items():
+            self.minimum[servo_id] = min(self.minimum[servo_id], value)
+            self.maximum[servo_id] = max(self.maximum[servo_id], value)
             delta = value - self.previous[servo_id]
             if abs(delta) > COUNTS / 2:
                 self.wrapped.add(servo_id)
@@ -166,29 +175,21 @@ def keyboard() -> Iterator[Callable[[], str]]:
 
 
 def capture(bus: ServoTransport, ids: list[int], motion: Motion,
-            key: Callable[[], str], label: str, *, choose_end: bool = False) -> tuple[str, dict[int, int]]:
+            key: Callable[[], str]) -> None:
+    """Record the whole sweep, retaining extrema even if the joint returns to center."""
     ui = TerminalUI()
-    ui.line(f"  Record {label} endpoint", "1;33")
-    ui.line("  Move gently to the endpoint, hold still, then press [SPACE].")
-    if choose_end:
-        ui.line("  [L] LOW first   [H] HIGH first   [Q] Quit", "2")
-    else:
-        ui.line("  [Q] Quit", "2")
+    ui.line("  Move this joint through its full safe range in BOTH directions.", "1;33")
+    ui.line("  Either direction first. Press [SPACE] once after reaching both ends.")
+    ui.line("  [Q] Quit", "2")
     try:
         while True:
-            values = dict(bus.read_positions(ids))
-            motion.update(values)
-            pressed = key()
-            if choose_end and pressed.lower() in ("l", "h"):
-                label = "LOW" if pressed.lower() == "l" else "HIGH"
-                ui.line(f"  Selected {label} first. Hold there and press [SPACE].", "33")
-            if pressed == " ":
-                # Read again after the key, not a stale pre-key sample.
-                values = dict(bus.read_positions(ids))
-                motion.update(values)
-                ui.line(f"  ✓ {label} captured", "32")
-                return label, values
-            ui.activity(label, motion)
+            motion.update(bus.read_positions(ids))
+            if key() == " ":
+                # Include a fresh sample after completion, without losing earlier extrema.
+                motion.update(bus.read_positions(ids))
+                ui.line("  ✓ Sweep recorded", "32")
+                return
+            ui.activity("SWEEP", motion)
             time.sleep(0.02)
     finally:
         ui.clear()
@@ -222,18 +223,16 @@ def calibrate(bus: ServoTransport, ids: list[int], output: Path,
             if name == "wrist_roll":
                 ui.line("  Use safe usable endpoints; do not assume a physical hard stop.", "33")
             motion = Motion(dict(bus.read_positions(ids)))
-            first_label, first = capture(bus, ids, motion, key, "LOW", choose_end=True)
-            second_label = "HIGH" if first_label == "LOW" else "LOW"
-            _, second = capture(bus, ids, motion, key, second_label)
+            capture(bus, ids, motion, key)
             try:
                 servo_id = motion.winner({c.servo_id for c in result.values()})
-                low, high = (first[servo_id], second[servo_id]) if first_label == "LOW" else (second[servo_id], first[servo_id])
+                low, high = motion.minimum[servo_id], motion.maximum[servo_id]
                 ui.line(f"  Detected servo {servo_id} · {motion.distance[servo_id]:.3f} rad total motion", "36")
                 zero = round((low + high) / 2)
                 result[name] = make_calibration(servo_id, low, high, zero)
             except ValueError as exc:
                 ui.line(f"  Not saved: {exc}", "1;31")
-                ui.line("  Repeat both endpoints for this joint. [Q] quits.", "33")
+                ui.line("  Repeat the full sweep for this joint. [Q] quits.", "33")
                 continue
             save_checkpoint(output, result)
             c = result[name]
@@ -243,33 +242,22 @@ def calibrate(bus: ServoTransport, ids: list[int], output: Path,
     return load_joint_calibrations(output)
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--port", help="USB-to-TTL adapter path; omit for interactive selection")
-    parser.add_argument("--baudrate", type=int, default=1_000_000)
-    parser.add_argument("--ids", type=int, nargs="+", default=list(range(1, 7)), help="Candidate IDs; joint assignment is discovered by movement")
-    parser.add_argument("--output", type=Path, default=Path(__file__).resolve().parents[2]/"models/so101/runtime/calibration.json")
-    args = parser.parse_args()
-    if len(args.ids) != 6 or len(set(args.ids)) != 6 or any(not 0 <= i <= 253 for i in args.ids):
-        parser.error("Supply exactly six unique configured motor IDs in 0..253")
-    if args.output.exists():
-        parser.error("Output already exists; choose a new --output to preserve it")
-    if not sys.stdin.isatty():
-        parser.error("Run in an interactive macOS/Linux terminal for SPACE capture")
+def calibrate_arm(role: str, port: str | None, baudrate: int,
+                  ids: list[int], output: Path) -> None:
     ui = TerminalUI()
-    ui.heading("SO-101  /  HARDWARE CALIBRATION")
+    ui.heading(f"SO-101  /  {role.upper()} CALIBRATION")
     ui.line("  Teach six joints by hand · no commanded motion", "2")
-    args.port = select_port(args.port, ui)
-    ui.line(f"  Adapter  {args.port}  ·  {args.baudrate:,} baud")
-    ui.line(f"  IDs      {', '.join(map(str, args.ids))}")
-    ui.line(f"  Save to  {args.output}")
+    port = select_port(port, ui)
+    ui.line(f"  Adapter  {port}  ·  {baudrate:,} baud")
+    ui.line(f"  IDs      {', '.join(map(str, ids))}")
+    ui.line(f"  Save to  {output}")
     ui.heading("HOW IT WORKS")
     for step, name in enumerate(ORDER, 1):
         ui.line(f"  {step}. {name.replace('_', ' ')}")
     ui.line()
-    ui.line("  LOW = your negative endpoint; HIGH = your positive endpoint.")
-    ui.line("  These are angle directions, not height or encoder numbers.")
-    ui.line("  Record either end first with [L]/[H], then capture with [SPACE].")
+    ui.line("  Move only the named joint to both safe ends, in either order.")
+    ui.line("  Press [SPACE] once when done; encoder minimum/maximum are recorded automatically.")
+    ui.line("  Positive angles follow increasing encoder ticks (direction +1).")
     ui.line("  Zero = midpoint of your endpoints, rounded to one encoder tick.")
     ui.line("  Each completed joint is saved. All six are needed to control the arm.")
     ui.line("  [Q] or [Ctrl-C] exits during recording.", "2")
@@ -280,17 +268,59 @@ def main() -> None:
     if answer.strip().lower() == "q":
         raise KeyboardInterrupt
     ui.line("  Connecting and checking all six motor replies…", "36")
-    with FeetechTransport(args.port, baudrate=args.baudrate) as bus:
-        bus.read_positions(args.ids)  # Require a reply from every candidate before recording.
+    with FeetechTransport(
+        port, baudrate=baudrate,
+        voltage_warning=lambda message: ui.line(f"\n  WARNING: {message}", "1;33"),
+    ) as bus:
+        bus.read_positions(ids)  # Require a reply from every candidate before recording.
         try:
-            bus.set_torque_enabled(args.ids, False)
+            bus.set_torque_enabled(ids, False)
             with keyboard() as key:
-                calibrate(bus, args.ids, args.output, key)
+                calibrate(bus, ids, output, key)
         finally:
-            bus.set_torque_enabled(args.ids, False)
+            bus.set_torque_enabled(ids, False)
     ui.heading("✓ CALIBRATION COMPLETE  /  6 of 6 saved")
-    ui.line(f"  {args.output}", "32")
+    ui.line(f"  {output}", "32")
     ui.line("  Torque remains disabled. Support the arm before disconnecting.")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--arm", choices=("follower", "leader", "both"), default="follower",
+                        help="Calibrate one arm or follower then leader (default: follower)")
+    parser.add_argument("--port", help="Adapter for a single arm, or the follower in both mode")
+    parser.add_argument("--baudrate", type=int, default=1_000_000)
+    parser.add_argument("--ids", type=int, nargs="+", default=list(range(1, 7)),
+                        help="Candidate IDs; joint assignment is discovered by movement")
+    parser.add_argument("--output", type=Path, help="Single-arm output, or follower output in both mode")
+    parser.add_argument("--leader-port", help="Leader adapter in both mode; omit to choose interactively")
+    parser.add_argument("--leader-baudrate", type=int, default=1_000_000)
+    parser.add_argument("--leader-ids", type=int, nargs="+", default=list(range(1, 7)))
+    parser.add_argument("--leader-output", type=Path, help="Leader output in both mode")
+    args = parser.parse_args()
+    runtime = Path(__file__).resolve().parents[2] / "models/so101/runtime"
+    role = "leader" if args.arm == "leader" else "follower"
+    default_name = "leader-calibration.json" if role == "leader" else "calibration.json"
+    sessions = [(role, args.port, args.baudrate, args.ids, args.output or runtime / default_name)]
+    if args.arm == "both":
+        sessions.append(("leader", args.leader_port, args.leader_baudrate, args.leader_ids,
+                         args.leader_output or runtime / "leader-calibration.json"))
+    elif any(option.split("=")[0].startswith("--leader-") for option in sys.argv[1:]):
+        parser.error("--leader-* options require --arm both; use --port/--ids/--output for a single arm")
+    outputs = [session[4].resolve() for session in sessions]
+    if len(set(outputs)) != len(outputs):
+        parser.error("Follower and leader outputs must be different files")
+    for role, port, baudrate, ids, output in sessions:
+        if len(ids) != 6 or len(set(ids)) != 6 or any(not 0 <= i <= 253 for i in ids):
+            parser.error(f"{role}: supply exactly six unique configured motor IDs in 0..253")
+        if baudrate <= 0:
+            parser.error(f"{role}: baudrate must be positive")
+        if output.exists():
+            parser.error(f"Output already exists: {output}; choose a new output to preserve it")
+    if not sys.stdin.isatty():
+        parser.error("Run in an interactive macOS/Linux terminal for SPACE capture")
+    for role, port, baudrate, ids, output in sessions:
+        calibrate_arm(role, port, baudrate, ids, output)
 
 
 if __name__ == "__main__":

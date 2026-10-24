@@ -3,9 +3,6 @@
 from __future__ import annotations
 
 import math
-import json
-from pathlib import Path
-from dataclasses import dataclass, asdict
 from collections.abc import Mapping
 from typing import TypedDict
 import numpy as np
@@ -13,11 +10,16 @@ from numpy.typing import NDArray
 import mujoco
 
 from airtruck.raw_api.so101.io import (
-    ArmController,
     ServoTransport,
     JointName,
     PositionCommand,
 )
+
+from airtruck.raw_api.so101.base import PositionReader, PositionController
+from airtruck.raw_api.so101.calibration import JointCalibration
+from airtruck.raw_api.so101.joints import JOINTS
+from airtruck.raw_api.so101.position import JointPosition, PositionUnit
+from airtruck.raw_api.so101.utils import validate_position_command
 
 
 class ServoDatasheet(TypedDict):
@@ -38,7 +40,7 @@ class ServoSpec(TypedDict):
     controller_demo_tuning: ControllerTuning
 
 
-class SimSO101(ArmController):
+class SimSO101(PositionController):
     """Control a caller-supplied six-joint SO-101 simulation in CAD radians.
 
     The caller supplies matching model/data objects and servo parameters.
@@ -188,31 +190,33 @@ class SimSO101(ArmController):
     def set_positions(self, positions: PositionCommand) -> None:
         """Set joint targets in CAD radians.
 
-        A mapping names joints and leaves other joints unchanged. A six-element
-        vector follows ``JOINTS`` order. Values outside the CAD range are clamped.
+        A mapping of JointPosition values names joints and leaves others unchanged.
+        Units are decoded explicitly; values outside the CAD range are clamped.
         Validate the whole command before updating any target.
         """
-        positions = joint_positions(positions)
-        for name, radians in positions.items():
-            if name not in self.names:
-                raise ValueError(f"Unknown SO-101 joint: {name}")
-            if not np.isfinite(radians):
-                raise ValueError("Targets must be finite")
-        for name, radians in positions.items():
-            self.command_radians(name, radians)
+        validate_position_command(positions, self.names)
+        # Resolve all typed commands before touching the simulation targets.
+        commands = [(name, position.to_native(self._limits_rad[name]))
+                    for name, position in positions.items()]
+        for name, position in commands:
+            self.command_radians(name, position.value)
 
     @property
-    def positions(self) -> dict[JointName, float]:
+    def positions(self) -> dict[JointName, JointPosition]:
         """Actual unquantized joint positions in CAD radians."""
-        return dict(zip(self.names, map(float, self.data.qpos[self._qpos])))
+        return {
+            name: JointPosition(float(angle), PositionUnit.RADIANS, self._limits_rad[name])
+            for name, angle in zip(self.names, self.data.qpos[self._qpos], strict=True)
+        }
 
     @property
-    def targets(self) -> dict[JointName, float]:
+    def targets(self) -> dict[JointName, JointPosition]:
         """Copy of commanded joint positions in CAD radians."""
-        return dict(zip(self.names, map(float, self.target)))
+        return {name: JointPosition(float(angle), PositionUnit.RADIANS, self._limits_rad[name])
+                for name, angle in zip(self.names, self.target, strict=True)}
 
     @property
-    def limits(self) -> dict[JointName, tuple[float, float]]:
+    def _limits_rad(self) -> dict[JointName, tuple[float, float]]:
         """Joint travel limits in CAD radians."""
         return {
             name: (
@@ -247,144 +251,8 @@ class SimSO101(ArmController):
         self.model.actuator_biasprm[self._actuators] = self._bias
 
 
-JOINTS: tuple[JointName, ...] = (
-    "shoulder_pan",
-    "shoulder_lift",
-    "elbow_flex",
-    "wrist_flex",
-    "wrist_roll",
-    "gripper",
-)
-
-
-@dataclass(frozen=True)
-class JointCalibration:
-    """Measured hardware radians to absolute encoder ticks; zero is calibration-defined."""
-
-    servo_id: int
-    zero_tick: int
-    direction: int
-    limits_rad: tuple[float, float]
-    counts_per_revolution: int = 4096
-
-    def __post_init__(self) -> None:
-        if any(type(v) is not int for v in (self.servo_id, self.zero_tick, self.direction, self.counts_per_revolution)):
-            raise ValueError("Calibration IDs, ticks, direction and resolution must be integers")
-        if len(self.limits_rad) != 2 or any(isinstance(v, bool) or not isinstance(v, (int, float)) for v in self.limits_rad):
-            raise ValueError("limits_rad must contain two numbers")
-        if not 0 <= self.servo_id <= 253:
-            raise ValueError("servo_id must be between 0 and 253")
-        if self.direction not in (-1, 1):
-            raise ValueError("direction must be -1 or +1")
-        if self.counts_per_revolution <= 0:
-            raise ValueError("counts_per_revolution must be positive")
-        lo, hi = self.limits_rad
-        if not math.isfinite(lo) or not math.isfinite(hi) or lo >= hi:
-            raise ValueError("limits_rad must be finite and increasing")
-        if not 0 <= self.zero_tick < self.counts_per_revolution:
-            raise ValueError("zero_tick is outside the encoder range")
-        for angle in (lo, hi):
-            tick = (
-                self.zero_tick
-                + self.direction * angle * self.counts_per_revolution / math.tau
-            )
-            if not 0 <= tick <= self.counts_per_revolution - 1:
-                raise ValueError("Calibrated travel crosses the absolute encoder wrap")
-
-    def to_radians(self, ticks: int) -> float:
-        if not 0 <= ticks < self.counts_per_revolution:
-            raise ValueError("Encoder feedback is outside its calibrated range")
-        return (
-            self.direction
-            * (ticks - self.zero_tick)
-            * math.tau
-            / self.counts_per_revolution
-        )
-
-    def to_ticks(self, radians: float) -> int:
-        if not math.isfinite(radians):
-            raise ValueError("Joint targets must be finite")
-        lo, hi = self.limits_rad
-        angle = min(hi, max(lo, radians))
-        # Keep quantization within the calibrated mechanical interval.
-        end_ticks = [
-            self.zero_tick + self.direction * a * self.counts_per_revolution / math.tau
-            for a in (lo, hi)
-        ]
-        # Endpoints derived from ticks can round a few ulps across an integer.
-        end_ticks = [float(round(t)) if math.isclose(t, round(t), rel_tol=0, abs_tol=1e-9) else t
-                     for t in end_ticks]
-        minimum, maximum = math.ceil(min(end_ticks)), math.floor(max(end_ticks))
-        tick = round(
-            self.zero_tick
-            + self.direction * angle * self.counts_per_revolution / math.tau
-        )
-        return min(maximum, max(minimum, tick))
-
-
-def load_joint_calibrations(path: str | Path) -> dict[JointName, JointCalibration]:
-    """Load a complete joint-name mapping; reject partial or ambiguous records."""
-    def unique(pairs: list[tuple[str, object]]) -> dict[str, object]:
-        result: dict[str, object] = {}
-        for key, value in pairs:
-            if key in result:
-                raise ValueError(f"Duplicate calibration key: {key}")
-            result[key] = value
-        return result
-
-    raw = json.loads(Path(path).read_text(), object_pairs_hook=unique)
-    if not isinstance(raw, dict) or set(raw) != set(JOINTS):
-        raise ValueError("Calibration must contain exactly all six joint names")
-    result: dict[JointName, JointCalibration] = {}
-    fields = {"servo_id", "zero_tick", "direction", "limits_rad", "counts_per_revolution"}
-    for name in JOINTS:
-        record = raw[name]
-        if not isinstance(record, dict) or set(record) != fields:
-            raise ValueError(f"Invalid calibration fields for {name}")
-        limits = record["limits_rad"]
-        if not isinstance(limits, list) or len(limits) != 2:
-            raise ValueError(f"Invalid limits_rad for {name}")
-        result[name] = JointCalibration(
-            servo_id=record["servo_id"], zero_tick=record["zero_tick"],
-            direction=record["direction"], limits_rad=tuple(limits),
-            counts_per_revolution=record["counts_per_revolution"],
-        )
-    if len({c.servo_id for c in result.values()}) != len(JOINTS):
-        raise ValueError("Calibration servo IDs must be unique")
-    return result
-
-
-def joint_calibrations_dict(calibration: Mapping[JointName, JointCalibration]) -> dict[str, object]:
-    """JSON-ready mapping; also supports progressive calibration checkpoints."""
-    return {name: asdict(value) for name, value in calibration.items()}
-
-
-def joint_positions(values: PositionCommand) -> Mapping[JointName, float]:
-    """Map a command onto ``JOINTS`` order.
-
-    A mapping is left unchanged, so named commands stay available. A vector of
-    six radians is assigned, in order, to shoulder_pan, shoulder_lift,
-    elbow_flex, wrist_flex, wrist_roll, and gripper.
-    """
-    if isinstance(values, Mapping):
-        return values
-    angles = np.asarray(values, dtype=np.float64)
-    if angles.ndim != 1 or angles.shape != (len(JOINTS),):
-        raise ValueError(
-            "Expected six joint targets in JOINTS order: " + ", ".join(JOINTS)
-        )
-    if not np.isfinite(angles).all():
-        raise ValueError("Targets must be finite")
-    return {name: float(angle) for name, angle in zip(JOINTS, angles, strict=True)}
-
-
-class RealSO101(ArmController):
-    """Hardware arm controller. All calibration entries are required.
-
-    Constructing the adapter performs no I/O. Call set_enabled(True) explicitly;
-    this reads the current pose and queues matching targets before enabling torque.
-    Hardware transport failures propagate and may have partially applied at the bus.
-    """
+class _CalibratedSO101(PositionReader):
+    """Shared calibration validation and feedback conversion; construction does no I/O."""
 
     def __init__(
         self,
@@ -398,19 +266,21 @@ class RealSO101(ArmController):
             raise ValueError("Each joint must use a unique servo ID")
         self._transport = transport
         self._calibration = dict(calibration)
-        self._targets: dict[JointName, float] = {}
-        self._enabled = False
 
     @property
-    def limits(self) -> dict[JointName, tuple[float, float]]:
+    def _limits_rad(self) -> dict[JointName, tuple[float, float]]:
         return {name: c.limits_rad for name, c in self._calibration.items()}
 
     @property
-    def enabled(self) -> bool:
-        return self._enabled
+    def positions(self) -> dict[JointName, JointPosition]:
+        """Fresh feedback in radians, clamped to each joint's calibrated limits."""
+        return {
+            name: JointPosition(angle, PositionUnit.RADIANS, self._calibration[name].limits_rad).clamped()
+            for name, angle in self._read_positions().items()
+        }
 
-    @property
-    def positions(self) -> dict[JointName, float]:
+    def _read_positions(self) -> dict[JointName, float]:
+        """Unclamped feedback for validating the pose before enabling torque."""
         raw = self._transport.read_positions(
             [self._calibration[n].servo_id for n in JOINTS]
         )
@@ -419,8 +289,65 @@ class RealSO101(ArmController):
             for n in JOINTS
         }
 
+
+class LeaderSO101(_CalibratedSO101):
+    """Read a human-operated arm in its own calibrated radians.
+
+    Support the arm, then call start() to disable torque before reading. The caller
+    owns the transport and must not enable its motors through another adapter.
+    This reader exposes no target commands or torque-enable operation.
+    """
+
+    def __init__(
+        self,
+        transport: ServoTransport,
+        calibration: Mapping[JointName, JointCalibration],
+    ) -> None:
+        super().__init__(transport, calibration)
+        self._started = False
+
+    def start(self) -> None:
+        """Disable all six motors; a failed request leaves reading unavailable.
+
+        Call again after reconnecting. This is a bus request, not torque telemetry.
+        """
+        self._started = False
+        self._transport.set_torque_enabled(
+            [self._calibration[n].servo_id for n in JOINTS], False
+        )
+        self._started = True
+
     @property
-    def targets(self) -> dict[JointName, float]:
+    def positions(self) -> dict[JointName, JointPosition]:
+        """Fresh joint feedback, clamped to calibrated travel."""
+        if not self._started:
+            raise RuntimeError("Call start() to disable leader torque before reading")
+        return super().positions
+
+
+class RealSO101(_CalibratedSO101, PositionController):
+    """Hardware arm controller. All calibration entries are required.
+
+    Constructing the adapter performs no I/O. Call set_enabled(True) explicitly;
+    this reads the current pose and queues matching targets before enabling torque.
+    Hardware transport failures propagate and may have partially applied at the bus.
+    """
+
+    def __init__(
+        self,
+        transport: ServoTransport,
+        calibration: Mapping[JointName, JointCalibration],
+    ) -> None:
+        super().__init__(transport, calibration)
+        self._targets: dict[JointName, JointPosition] = {}
+        self._enabled = False
+
+    @property
+    def enabled(self) -> bool:
+        return self._enabled
+
+    @property
+    def targets(self) -> dict[JointName, JointPosition]:
         return self._targets.copy()
 
     def set_positions(self, positions: PositionCommand) -> None:
@@ -428,15 +355,13 @@ class RealSO101(ArmController):
             raise RuntimeError(
                 "Enable the hardware controller before commanding positions"
             )
-        positions = joint_positions(positions)
+        validate_position_command(positions, self._calibration)
         ticks: dict[int, int] = {}
-        targets: dict[JointName, float] = {}
-        for name, angle in positions.items():
-            if name not in self._calibration:
-                raise ValueError(f"Unknown SO-101 joint: {name}")
+        targets: dict[JointName, JointPosition] = {}
+        for name, position in positions.items():
             c = self._calibration[name]
-            ticks[c.servo_id] = c.to_ticks(angle)
-            targets[name] = c.to_radians(ticks[c.servo_id])
+            ticks[c.servo_id] = c.position_to_ticks(position)
+            targets[name] = JointPosition(c.to_radians(ticks[c.servo_id]), PositionUnit.RADIANS, c.limits_rad)
         if ticks:
             self._transport.write_positions(ticks)
             self._targets.update(targets)
@@ -446,20 +371,37 @@ class RealSO101(ArmController):
             return
         ids = [self._calibration[n].servo_id for n in JOINTS]
         if enabled:
-            positions = self.positions
+            raw = self._transport.read_positions(ids)
+            positions = {
+                name: c.to_radians(raw[c.servo_id])
+                for name, c in self._calibration.items()
+            }
             # Refuse an out-of-calibration pose rather than command a jump on enable.
-            if any(
-                not self.limits[n][0] <= q <= self.limits[n][1]
-                for n, q in positions.items()
-            ):
-                raise ValueError("Current hardware pose is outside calibrated travel")
+            outside = []
+            for name, angle in positions.items():
+                c = self._calibration[name]
+                lo, hi = c.limits_rad
+                if not lo <= angle <= hi:
+                    endpoints = sorted((c.to_ticks(lo), c.to_ticks(hi)))
+                    outside.append(
+                        f"{name} (servo {c.servo_id}): tick {raw[c.servo_id]}, "
+                        f"allowed ticks {endpoints[0]}..{endpoints[1]}"
+                    )
+            if outside:
+                raise ValueError(
+                    "Current hardware pose is outside calibrated travel: "
+                    + "; ".join(outside)
+                )
             ticks = {
                 self._calibration[n].servo_id: self._calibration[n].to_ticks(q)
                 for n, q in positions.items()
             }
             self._transport.write_positions(ticks)
             self._transport.set_torque_enabled(ids, True)
-            self._targets = positions
+            self._targets = {
+                name: JointPosition(angle, PositionUnit.RADIANS, self._calibration[name].limits_rad)
+                for name, angle in positions.items()
+            }
         else:
             self._transport.set_torque_enabled(ids, False)
         self._enabled = enabled

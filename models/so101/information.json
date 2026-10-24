@@ -1,9 +1,9 @@
 {
-  "updated": "2026-10-20",
+  "updated": "2026-10-22",
   "so101": {
     "model": "SO-101 follower",
     "frame": "Separate SO-101 assembly world, Z up",
-    "solid_parts": 257,
+    "solid_parts": 258,
     "rigid_links": 7,
     "revolute_joints": 6,
     "mate_connectors": 12,
@@ -11,11 +11,11 @@
       -55.462500000000006,
       -226.47026710066868,
       0.39429553422084646,
-      55.462499999999984,
+      95.40731653739262,
       92.88056618377242,
       253.82651468520694
     ],
-    "CAD_volume_mm3": 839798.3426704261,
+    "CAD_volume_mm3": 850646.4143442147,
     "CAD_mass_g": null,
     "measured_mass_g": null,
     "CAD_center_of_mass_mm": null,
@@ -189,7 +189,52 @@
       "sdk_protocol": 0,
       "installed_baudrate": null
     },
-    "simulation_reference_mass_kg": 0.632006
+    "simulation_reference_mass_kg": 0.632006,
+    "wrist_camera_mount": {
+      "model": "SO-ARM101_camera_wrist_mount",
+      "source_STEP": "https://github.com/TheRobotStudio/SO-ARM100/blob/a758567c3978dfeefe282ede0500085a48fe8f78/Optional/SO101_Wrist_Cam_Hex-Nut_Mount_32x32_UVC_Module/stl/SO-ARM101_camera_wrist_mount.step",
+      "installation_guide": "https://github.com/TheRobotStudio/SO-ARM100/blob/a758567c3978dfeefe282ede0500085a48fe8f78/Optional/SO101_Wrist_Cam_Hex-Nut_Mount_32x32_UVC_Module/README.md",
+      "onshape_part_studio": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/40ff2fd68fd4f81109e83415",
+      "part_id": "JFD",
+      "assembly_occurrence": "MwDaa1csICErEtRZS",
+      "rigid_group": "fix_hand",
+      "camera_reference_board_mm": [
+        32,
+        32
+      ],
+      "camera_hole_spacing_mm": [
+        27,
+        27
+      ],
+      "wrist_hole_spacing_mm": 8.1,
+      "wrist_clearance_hole_diameter_mm": 3.3,
+      "CAD_volume_mm3": 10848.06659877624,
+      "CAD_mass_g": null,
+      "measured_mass_g": null,
+      "CAD_center_of_mass_mm": null,
+      "CAD_inertia_kg_m2": null,
+      "camera_model": null,
+      "camera_measured_dimensions_mm": null,
+      "source_to_assembly_row_major_transform_m": [
+        -0.9998477009189216,
+        6.645215739986641e-07,
+        -0.017452076286362816,
+        0.03131995465083518,
+        0.00015296068483688251,
+        -0.9999612556431758,
+        -0.008801353052341676,
+        -0.15354793712829562,
+        -0.017451405965580754,
+        -0.008802682095900145,
+        0.9998089623611818,
+        0.137196477260784,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "CAD_geometry_source": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/m/f3563d68a18cc6d16ae973b9/e/65a095efa0767c21c8f6caae"
   },
   "onshape": {
     "assembly": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/65a095efa0767c21c8f6caae",

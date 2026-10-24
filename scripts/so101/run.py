@@ -4,16 +4,20 @@ from pathlib import Path
 import argparse, json, time, subprocess
 import numpy as np
 import mujoco
+from mujoco import viewer as mjviewer
+from PIL import Image, ImageDraw
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from airtruck.raw_api.so101.controller import JOINTS
+from airtruck.raw_api.so101.joints import JOINTS
+from airtruck.raw_api.so101.position import JointPosition, PositionUnit
 from airtruck.raw_api.so101.io import ArmController
 from airtruck.testing_util import load_world
+from airtruck.testing_util.mujoco_world import MujocoWorld
 
 
 
-def camera():
+def camera() -> mujoco.MjvCamera:
     c = mujoco.MjvCamera()
     c.lookat[:] = [0, -0.06, 0.13]
     c.distance = 0.65
@@ -23,7 +27,7 @@ def camera():
     return c
 
 
-def main():
+def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--demo", action="store_true")
     p.add_argument("--record", type=Path)
@@ -33,7 +37,7 @@ def main():
         run(args, world)
 
 
-def run(args, world):
+def run(args: argparse.Namespace, world: MujocoWorld) -> None:
     bus = world.system("arm", ArmController)
     # Rendering is backend integration; application commands use ArmController.
     m, d = world._model, world._data
@@ -41,16 +45,16 @@ def run(args, world):
     world.step(3000)
     selected = [0]
 
-    def key(code):
+    def key(code: int) -> None:
         if 49 <= code <= 54:
             selected[0] = code - 49
             print("Selected", JOINTS[selected[0]], flush=True)
         elif code in (91, 93):
             i = selected[0]
-            bus.set_positions({JOINTS[i]: bus.targets[JOINTS[i]] + (np.pi / 36 if code == 93 else -np.pi / 36)})
+            bus.set_positions({JOINTS[i]: JointPosition(bus.targets[JOINTS[i]].value + (np.pi / 36 if code == 93 else -np.pi / 36), PositionUnit.RADIANS, bus.positions[JOINTS[i]].limits_rad)})
         elif code in (82, 114):
             for n in JOINTS:
-                bus.set_positions({n: 0})
+                bus.set_positions({n: JointPosition(0, PositionUnit.RADIANS, bus.positions[n].limits_rad)})
 
     print(
         "MuJoCo SO-101: keys 1–6 select motor; [ / ] move target by 0.0872665 rad; R returns to CAD pose.",
@@ -61,7 +65,7 @@ def run(args, world):
     frame = 0
     start = d.time
 
-    def advance():
+    def advance() -> None:
         nonlocal frame
         elapsed = d.time - start
         if args.demo:
@@ -69,13 +73,13 @@ def run(args, world):
             idx = min(int(elapsed // 3), 5)
             phase = elapsed % 3
             for i, n in enumerate(JOINTS):
-                bus.set_positions({n: np.pi / 36 if i == idx and 0.3 < phase < 1.6 else 0})
+                bus.set_positions({n: JointPosition(np.pi / 36 if i == idx and 0.3 < phase < 1.6 else 0, PositionUnit.RADIANS, bus.positions[n].limits_rad)})
         world.step(33)
         if args.record:
             rows.append(
                 {
                     "time_s": float(d.time - start),
-                    "target_rad": list(bus.targets.values()),
+                    "target_rad": [position.value for position in bus.targets.values()],
                     "actual_rad": d.qpos.tolist(),
                     "voltage_V": d.ctrl.tolist(),
                 }
@@ -109,13 +113,12 @@ def run(args, world):
             ],
             stdin=subprocess.PIPE,
         )
+        assert proc.stdin is not None
         with mujoco.Renderer(m, height=720, width=960) as render:
             while d.time - start < args.seconds:
                 advance()
                 render.update_scene(d, camera=cam)
                 pixels = render.render()
-                from PIL import Image, ImageDraw
-
                 img = Image.fromarray(pixels)
                 draw = ImageDraw.Draw(img)
                 draw.rectangle((0, 0, 960, 98), fill=(18, 24, 32))
@@ -128,7 +131,7 @@ def run(args, world):
                 active = min(int((d.time - start) // 3), 5)
                 draw.text(
                     (20, 45),
-                    f"Motor {active + 1}: {JOINTS[active]}   target {bus.targets[JOINTS[active]]:.4f} rad   actual {d.qpos[active]:.4f} rad",
+                    f"Motor {active + 1}: {JOINTS[active]}   target {bus.targets[JOINTS[active]].value:.4f} rad   actual {d.qpos[active]:.4f} rad",
                     fill=(94, 220, 190),
                     font_size=20,
                 )
@@ -141,8 +144,6 @@ def run(args, world):
                 pixels = np.array(img)
                 proc.stdin.write(pixels.tobytes())
                 if frame in (1, 30):
-                    from PIL import Image
-
                     Image.fromarray(pixels).save(
                         args.record.parent
                         / ("mujoco-start.png" if frame == 1 else "mujoco-moved.png")
@@ -153,8 +154,6 @@ def run(args, world):
             json.dumps({"joints": JOINTS, "frames": rows}, indent=2) + "\n"
         )
     else:
-        from mujoco import viewer as mjviewer
-
         with mjviewer.launch_passive(
             m, d, key_callback=key, show_right_ui=False
         ) as viewer:

@@ -26,11 +26,11 @@
     "thermal_time_constant_s": null
   },
   "controller_demo_tuning": {
-    "kp_V_per_rad": 25,
+    "kp_V_per_rad": 50,
     "ki_V_per_rad_s": 12,
-    "kd_V_s_per_rad": 0.5,
-    "target_speed_rad_s": 0.5,
-    "target_acceleration_rad_s2": 2,
+    "kd_V_s_per_rad": 2,
+    "target_speed_rad_s": 3,
+    "target_acceleration_rad_s2": 5,
     "gripper_current_fraction": 0.5
   },
   "model_method": "Output-shaft quasi-static DC approximation. R_series=V/Istall-R_terminal; Kt=8*0.0980665; omega0=52*2*pi/60; Ke=(V-(R_terminal+R_series)*I0)/omega0. Coulomb=Kt*Istall-tau_stall; viscous=(Kt*I0-Coulomb)/omega0. These derived loss and back-EMF values fit published endpoints, not independently identified physics. Firmware PID gains are not SI gains. No inductance, thermal or backlash model.",

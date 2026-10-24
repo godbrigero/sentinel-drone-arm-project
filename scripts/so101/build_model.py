@@ -5,16 +5,16 @@ import sys
 from tempfile import TemporaryDirectory
 import json, math, xml.etree.ElementTree as ET
 import numpy as np
-from onshape_to_robot.robot import Robot, Link, Part, Joint
-from onshape_to_robot.geometry import Mesh
-from onshape_to_robot.config import Config
-from onshape_to_robot.exporter_mujoco import ExporterMuJoCo
+from onshape_to_robot.robot import Robot, Link, Part, Joint  # type: ignore[import-untyped]
+from onshape_to_robot.geometry import Mesh  # type: ignore[import-untyped]
+from onshape_to_robot.config import Config  # type: ignore[import-untyped]
+from onshape_to_robot.exporter_mujoco import ExporterMuJoCo  # type: ignore[import-untyped]
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 ROOT = Path(__file__).resolve().parents[2] / "models" / "so101"
 
 
-def build():
+def build() -> None:
     c = json.loads((ROOT / "source/cad-manifest.json").read_text())
     s = json.loads((ROOT / "runtime/servo-model.json").read_text())
     d = s["datasheet"]
@@ -91,18 +91,25 @@ def build():
     xml.insert(
         0,
         ET.Comment(
-            "Native CAD geometry; reference inertias; datasheet motor constants plus explicitly estimated electrical/loss fit. Use scripts/run.py for servo position commands."
-        ),
+            # ElementTree comments have a callable tag, supported at runtime.
+            "Native CAD geometry; reference inertias; datasheet motor constants plus explicitly estimated electrical/loss fit. Use scripts/so101/run.py for servo position commands."
+        ),  # type: ignore[arg-type]
     )
     defaults = xml.find("default/default")
-    defaults.find("joint").attrib.update(
+    assert defaults is not None
+    joint = defaults.find("joint")
+    position = defaults.find("position")
+    assert joint is not None and position is not None
+    joint.attrib.update(
         frictionloss=str(fc), armature="0", damping=str(b)
     )
-    defaults.remove(defaults.find("position"))
+    defaults.remove(position)
 
     for mesh in xml.findall("asset/mesh"):
         mesh.set("inertia", "shell")
-    xml.find("compiler").set("inertiafromgeom", "false")
+    compiler = xml.find("compiler")
+    assert compiler is not None
+    compiler.set("inertiafromgeom", "false")
     ET.SubElement(
         xml, "option", timestep="0.001", integrator="implicitfast", gravity="0 0 -9.81"
     )
@@ -116,6 +123,7 @@ def build():
         data="Published R and Kt; estimated Ke, driver losses and friction; reference link inertias; unidentified rotor inertia omitted; no collisions.",
     )
     act = xml.find("actuator")
+    assert act is not None
     act.clear()
     for j in c["joints"]:
         maxforce = (
@@ -143,6 +151,7 @@ def build():
             forcerange=f"-{maxforce} {maxforce}",
         )
     world = xml.find("worldbody")
+    assert world is not None
     ET.SubElement(world, "light", pos="0 -0.2 1", dir="0 0 -1", diffuse=".8 .8 .8")
     ET.SubElement(
         world,
@@ -155,8 +164,7 @@ def build():
         contype="0",
         conaffinity="0",
     )
-    ET.SubElement(xml, "visual")
-    vis = xml.find("visual")
+    vis = ET.SubElement(xml, "visual")
     ET.SubElement(vis, "global", offwidth="1280", offheight="960")
     ET.SubElement(vis, "quality", shadowsize="2048")
     ET.indent(xml, space="  ")

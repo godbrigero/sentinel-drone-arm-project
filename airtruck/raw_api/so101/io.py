@@ -1,48 +1,49 @@
 """Common position-control interface for physical and simulated arms.
 
-Angles are radians: the simulation uses CAD zero, while hardware uses its measured calibration zero.
+Feedback values carry units and native ranges. Radian commands use CAD zero in
+simulation and measured calibration zero on hardware.
 """
 
 from collections.abc import Mapping, Sequence
 from abc import ABC, abstractmethod
-from typing import Protocol, Literal, TypeAlias
-import numpy as np
-from numpy.typing import NDArray
-
-JointName: TypeAlias = Literal[
-    "shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"
-]
-PositionCommand: TypeAlias = Mapping[JointName, float] | Sequence[float] | NDArray[np.float64]
+from typing import Protocol
+from airtruck.raw_api.so101.joints import JointName as JointName, PositionCommand as PositionCommand
+from airtruck.raw_api.so101.position import JointPosition
 
 
-class ArmController(ABC):
-    """Transport-independent interface; time stepping belongs to simulation only."""
+class ArmReader(ABC):
+    """Abstract joint feedback; units and ranges belong to each JointPosition."""
+
+    @property
+    @abstractmethod
+    def positions(self) -> dict[JointName, JointPosition]:
+        """Read positions with their units and ranges."""
+        ...
+
+    @property
+    @abstractmethod
+    def normalized_positions(self) -> dict[JointName, JointPosition]:
+        """Read positions in the shared normalized representation."""
+        ...
+
+
+class ArmController(ArmReader):
+    """Abstract commands and state for a physical or simulated arm."""
+
+    @abstractmethod
+    def set_normalized_positions(self, positions: PositionCommand) -> None:
+        """Command typed positions in normalized units."""
+        ...
 
     @abstractmethod
     def set_positions(self, positions: PositionCommand) -> None:
-        """Command joint targets in radians, clamping to calibrated limits.
-
-        A mapping selects joints by name. A six-element vector uses the default
-        joint order and commands every joint.
-        """
+        """Command typed positions; unspecified joints retain their targets."""
         ...
 
     @property
     @abstractmethod
-    def positions(self) -> dict[JointName, float]:
-        """Read joint feedback in radians."""
-        ...
-
-    @property
-    @abstractmethod
-    def targets(self) -> dict[JointName, float]:
-        """Return the last commanded targets in radians."""
-        ...
-
-    @property
-    @abstractmethod
-    def limits(self) -> dict[JointName, tuple[float, float]]:
-        """Return calibrated joint travel in radians."""
+    def targets(self) -> dict[JointName, JointPosition]:
+        """Return commanded positions with their units and ranges."""
         ...
 
     @property
@@ -64,10 +65,13 @@ class ServoTransport(Protocol):
     Construction of an SO101 adapter never invokes these methods.
     """
 
+    @abstractmethod
     def read_positions(self, servo_ids: Sequence[int]) -> Mapping[int, int]: ...
 
+    @abstractmethod
     def write_positions(self, positions: Mapping[int, int]) -> None: ...
 
+    @abstractmethod
     def set_torque_enabled(self, servo_ids: Sequence[int], enabled: bool) -> None: ...
 
 

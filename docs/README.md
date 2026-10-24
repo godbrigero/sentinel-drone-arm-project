@@ -6,13 +6,15 @@
 from airtruck.raw_api.so101.io import ArmController  # Shared typed control interface
 from airtruck.raw_api.so101.controller import SimSO101  # Explicit simulation backend
 from airtruck.raw_api.so101.controller import RealSO101 # Explicit physical backend
+from airtruck.raw_api.so101.controller import LeaderSO101 # Human-operated leader feedback
 ```
 
 All paths below are relative to the repository root.
 
 | Folder | Responsibility |
 |---|---|
-| `airtruck/raw_api/so101/controller.py` | `SimSO101`, `RealSO101`, and hardware joint calibration |
+| `airtruck/raw_api/so101/controller.py` | `SimSO101`, `RealSO101`, and `LeaderSO101` adapters |
+| `airtruck/raw_api/so101/calibration.py` | Hardware calibration records and JSON serialization |
 | `airtruck/raw_api/so101/io.py` | `ArmController` abstract base class and `ServoTransport` protocol |
 | `airtruck/raw_api/so101/transport.py` | Acknowledged Feetech STS3215 serial transport for `RealSO101` |
 | `models/so101/` | MJCF, mesh assets, CAD source manifest, reference data and runtime motor parameters |
@@ -28,59 +30,128 @@ Device controls live under `airtruck/raw_api/<device>/`; SO-101 simulation and h
 
 The controller receives its dependencies explicitly: `SimSO101(model, data, servo_spec=spec)`. Scripts and test fixtures load the model and configuration; the controller has no filesystem or environment knowledge.
 
-Both backends inherit `ArmController` from `airtruck.raw_api.so101.io`. Its abstract methods and properties must be implemented before a subclass can be instantiated. Both backends expose `set_positions`, `positions`, `targets`, `limits`, `enabled` and `set_enabled`. Hardware calibration defines its own midpoint zero; it does not inherit the simulation CAD zero. Simulation time advances only through the world stepping methods. Physical motors run asynchronously through the supplied driver; the physical adapter deliberately has no simulated `step()` or automatic reset-to-zero.
+Both backends inherit `ArmController` from `airtruck.raw_api.so101.io`. Its methods and properties are abstract; shared normalization behavior lives in `base.py`, separately from the contracts in `io.py`. Required members must be implemented before a subclass can be instantiated. Both backends expose `set_positions`, `positions`, `targets`, `normalized_positions`, `enabled` and `set_enabled`. Hardware calibration defines its own midpoint zero; it does not inherit the simulation CAD zero. Simulation time advances only through the world stepping methods. Physical motors run asynchronously through the supplied driver; the physical adapter deliberately has no simulated `step()` or automatic reset-to-zero.
 
 ```python
 from airtruck.raw_api.so101.io import ArmController
+from airtruck.raw_api.so101.position import JointPosition, PositionUnit
 
 def move_pan(arm: ArmController) -> None:
-    arm.set_positions({"shoulder_pan": 0.0872665})
+    arm.set_positions({
+        "shoulder_pan": JointPosition(0.0872665, PositionUnit.RADIANS, arm.positions["shoulder_pan"].limits_rad)
+    })
 ```
 
 Run `uv sync --locked` to create `.venv/` with the locked dependencies. The [SO-101 instructions](so101/README.md) describe model commands and the [physical adapter instructions](hardware/README.md) explain the hardware boundary.
 
-## Simple arm control
+## Leader/follower control
 
-`airtruck/main.py` provides a terminal angle console. Set `RUN_MODE` in
-`airtruck/constants.py` to `RunMode.SIMULATION` (default) or `RunMode.REAL`.
+`airtruck/main.py` reads a human-operated physical leader and continuously copies
+its six named joint angles into a follower. `RUN_MODE` in `airtruck/constants.py`
+selects the follower backend: `RunMode.SIMULATION` or `RunMode.REAL` (the checked-in default).
+The leader is physical in both modes.
 
-Simulation on macOS:
+Configure `LEADER_PORT`, `LEADER_BAUDRATE` and `LEADER_CALIBRATION` for the leader.
+Real mode additionally requires `FOLLOWER_PORT`, `FOLLOWER_BAUDRATE` and
+`FOLLOWER_CALIBRATION`. Use separate USB adapters and calibration files for the
+two physical arms. Default calibration paths are
+`models/so101/runtime/leader-calibration.json` and
+`models/so101/runtime/calibration.json`; both baudrates default to 1,000,000.
+These settings are constants, not command-line options. Ports must be explicitly
+selected; the application does not guess which connected adapter is the leader.
+Missing settings, calibration or leader communication stop startup.
+
+Teach both arms with the [calibration script](hardware/README.md#guided-hardware-calibration):
+
+```sh
+uv run --locked python scripts/so101/so101_calibrate.py --arm both
+```
+
+For a physical leader driving the MuJoCo follower on macOS, first set
+`RUN_MODE = RunMode.SIMULATION`:
 
 ```sh
 uv run --locked mjpython -m airtruck.main
 ```
 
-This opens the MuJoCo viewer and runs the bench world continuously while the
-terminal accepts commands. It is a local simulation loop, not a network server.
-The main thread owns physics and command handling. Exit with `quit` in the
-terminal or Ctrl-C; closing only the viewer does not stop the console.
+Simulation requires only the leader's port and calibration. After your terminal
+confirmation, startup disables leader torque and verifies all six replies, then
+opens the bench world and viewer. Each loop reads normalized leader feedback in `[-1, 1]` and sends it to
+the simulated follower, which converts it to its own CAD joint coordinates and advances physics by 0.02 seconds. Targets are
+motor commands, not instantaneous pose changes. The loop runs at up to 50 Hz;
+serial and rendering work can reduce that rate.
 
-```text
-shoulder_pan 10
-wrist_roll -15
-show
-quit
-```
-
-Console angles and displayed limits are **degrees**; the shared controller API
-still uses radians. Invalid, non-finite or out-of-limit commands are rejected.
-Only the named joint target changes. Simulation zero is the saved CAD pose;
-hardware zero is the midpoint in your calibration file.
-
-For hardware, set `RUN_MODE = RunMode.REAL`, `PORT` to your USB adapter path,
-and `CALIBRATION` to your calibration JSON path in `airtruck/constants.py`. Then run:
+For a physical follower, set `RUN_MODE = RunMode.REAL`, configure its settings,
+and run:
 
 ```sh
 uv run --locked python -m airtruck.main
 ```
 
-Real mode requires the complete calibration mapping produced by the
-[calibration script](hardware/README.md#guided-hardware-calibration), defaulting to
-`models/so101/runtime/calibration.json`. These settings are constants, not command-line options.
-Confirm in the terminal to enable torque and hold the measured current pose.
-On exit the application attempts torque disable before closing the serial port.
-It never opens the simulation viewer in real mode. Hardware operation has not
-been physically verified.
+The start confirmation releases leader torque and authorizes follower motion.
+The follower first enables at its current pose, then follows the leader. The
+application attempts follower torque disable on exit, communication failure or
+partial enable failure, before closing both connections. The leader stays
+unpowered. Real mode does not load simulation.
+
+Enter `show` to display follower angles and limits in degrees, or `quit` / Ctrl-C
+to stop; EOF also exits. Closing only the viewer does not stop following.
+Manual angle commands have been replaced by continuous leader input.
+
+Leader and follower exchange **dimensionless `[-1, 1]` positions** for each named
+joint: `-1` is the lower endpoint, `0` the range midpoint, and `+1` the upper
+endpoint. `leader.normalized_positions` converts the leader’s own calibrated
+radians into this representation. `follower.set_normalized_positions(...)`
+converts it into the follower’s own radians, using CAD limits in simulation or
+measured calibration limits on hardware. Both modes use the same application
+loop; neither arm needs to know the other’s limits.
+
+`positions` and `normalized_positions` return `dict[JointName, JointPosition]`.
+Each immutable value carries `.value`, `.unit`, `.limits_rad`, and `.range` in
+its current units. Converting units preserves the original range so conversion
+back from normalized values remains unambiguous:
+
+```python
+from airtruck.raw_api.so101.position import PositionUnit
+
+position = leader.positions["shoulder_lift"]
+degrees = position.to(PositionUnit.DEGREES)
+normalized = position.to(PositionUnit.NORMALIZED)
+print(degrees.value, degrees.unit, degrees.range)
+assert normalized.to(PositionUnit.RADIANS).limits_rad == position.limits_rad
+```
+
+The class is in `position.py`; joint names/order are in `joints.py`, calibration
+records and JSON helpers in `calibration.py`, and command validation in `utils.py`,
+all under `airtruck/raw_api/so101/`. Import these from their own modules.
+
+`JointName` is a `Literal` type for static name checking. `JOINTS` is the runtime
+ordered tuple used to bind joints/actuators, read servos consistently, and validate
+complete calibration records. They intentionally contain the same names; tests
+check that the runtime tuple matches the type's names without duplicates.
+
+`targets` returns `JointPosition` objects just like `positions`. There is no
+separate public `limits` property: each position or target carries its `.range`
+in its own units and `.limits_rad` for explicit backend conversion. Both command methods accept
+exactly `Mapping[JointName, JointPosition]`; bare floats, lists, and arrays are
+rejected. `set_positions` converts degree values to radians and decodes normalized
+values using the receiving arm’s range. `set_normalized_positions` additionally
+requires normalized units and rejects angular objects to prevent unit mixing. Entire batches
+are validated before commanding motion. Unnamed joints stay unchanged. Commands remain
+`JointPosition` objects through validation. `to_native(receiver_limits)` resolves a
+typed value at the backend boundary; simulation extracts radians there, while
+hardware uses `JointCalibration.position_to_ticks()` to produce encoder ticks.
+There is no intermediate dictionary of radian floats.
+
+`position.clamped()` returns a bounded copy. `position.for_range(destination_limits)`
+explicitly transfers its normalized fraction into another native radian range;
+`.to(unit)` only converts units within the original range. Simulation feedback
+preserves actual measured positions even beyond a mechanical limit; hardware
+feedback retains its calibrated clamping. Normalized feedback/commands clamp to
+`[-1, 1]`. Zero normalized means range midpoint, not necessarily zero radians.
+New calibration sweeps define positive as increasing encoder ticks. Verify that
+positive corresponds to matching physical directions between arms; normalization
+does not infer axis direction. Physical teleoperation remains unverified.
 
 ## Static typing
 
@@ -94,7 +165,7 @@ uv run mypy
 Mypy recursively discovers Python files from the project root (`files = "."`);
 new files do not need to be registered individually. This broader scope also
 checks scripts and tests previously omitted from the explicit file list.
-Existing typing errors in those files currently prevent a clean full-project check.
+The full-project preflight checks scripts, tests, and runtime code together.
 
 ## Run and verify
 
@@ -148,8 +219,8 @@ Import `simulation`, `WorldControl`, `load_world`, `Pose`, and `Contact` from
 `airtruck.testing_util`. The pytest plugin is
 `airtruck.testing_util.pytest_plugin`; its tests and world integration tests live
 in `airtruck/testing_util/tests/`. Scripts, the two-arm launcher, and static checks
-use this same package. Importing its world API does not import pytest; calling the
-decorator does.
+use this same package. The public package imports pytest through its decorator module; pytest is
+provided by the default development dependency group.
 
 `MUJOCO_LOG.TXT` is generated diagnostic output, not a model input. The removed log
 contained attachment warnings from the original 1 ms arm timestep versus the

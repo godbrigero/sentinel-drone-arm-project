@@ -1,4 +1,12 @@
 """World behavior, including independent control and state ownership."""
+from collections.abc import Mapping
+import mujoco
+from airtruck.testing_util.adapters import SystemAdapter
+from airtruck.testing_util.adapters import SO101Adapter
+from airtruck.testing_util.loader import servo_spec
+from airtruck.raw_api.so101.controller import SimSO101
+from airtruck.testing_util.loader import _so101
+from airtruck.raw_api.so101.position import JointPosition, PositionUnit
 from collections.abc import Callable
 import json
 import math
@@ -43,18 +51,18 @@ def test_two_arms_one_clock_and_independent_actuators(tmp_path: Path) -> None:
         # The free joint before both arms makes qpos/dof/joint indices differ.
         world.advance(3)
         baseline = right.positions
-        left.set_positions({'shoulder_pan': 0.1})
-        assert right.targets['shoulder_pan'] == 0
+        left.set_positions({'shoulder_pan': JointPosition(0.1, PositionUnit.RADIANS, left.positions['shoulder_pan'].limits_rad)})
+        assert right.targets['shoulder_pan'].value == 0
         before = world.time_s
         world.step()
         assert world.time_s - before == pytest.approx(.001)
         world.advance(3)
-        assert left.positions['shoulder_pan'] == pytest.approx(.1, abs=.01)
-        assert right.positions['shoulder_pan'] == pytest.approx(baseline['shoulder_pan'], abs=.01)
+        assert left.positions['shoulder_pan'].value == pytest.approx(.1, abs=.01)
+        assert right.positions['shoulder_pan'].value == pytest.approx(baseline['shoulder_pan'].value, abs=.01)
         left.set_enabled(False)
-        right.set_positions({'shoulder_pan': -.1})
+        right.set_positions({'shoulder_pan': JointPosition(-.1, PositionUnit.RADIANS, right.positions['shoulder_pan'].limits_rad)})
         world.advance(3)
-        assert right.positions['shoulder_pan'] == pytest.approx(-.1, abs=.01)
+        assert right.positions['shoulder_pan'].value == pytest.approx(-.1, abs=.01)
         li = world._model.actuator('left/shoulder_pan').id
         ri = world._model.actuator('right/shoulder_pan').id
         assert world._data.actuator_force[li] == 0
@@ -62,10 +70,10 @@ def test_two_arms_one_clock_and_independent_actuators(tmp_path: Path) -> None:
         world.reset()
         assert world.time_s == 0
         assert left.enabled and right.enabled
-        assert all(v == 0 for v in (*left.positions.values(), *right.positions.values()))
-        left.set_positions({'shoulder_pan': .1})
+        assert all(v.value == 0 for v in (*left.positions.values(), *right.positions.values()))
+        left.set_positions({'shoulder_pan': JointPosition(.1, PositionUnit.RADIANS, left.positions['shoulder_pan'].limits_rad)})
         world.advance(3)
-        assert left.positions['shoulder_pan'] == pytest.approx(.1, abs=.01)
+        assert left.positions['shoulder_pan'].value == pytest.approx(.1, abs=.01)
 
 
 @pytest.mark.sim
@@ -178,9 +186,6 @@ def test_cleanup_attempts_every_adapter(world: WorldControl, monkeypatch: pytest
 @pytest.mark.sim
 def test_mixed_system_adapter_registry(tmp_path: Path) -> None:
     """A non-arm system gets a different typed interface in the same world."""
-    from collections.abc import Mapping
-    import mujoco
-    from airtruck.testing_util.adapters import SystemAdapter
 
     class SlideControl:
         def __init__(self, command: Callable[[float], None]) -> None:
@@ -236,10 +241,10 @@ def test_mixed_system_adapter_registry(tmp_path: Path) -> None:
         arm = world.system('left', ArmController)
         slide = world.system('stage', SlideControl)
         slide.set_force(1)
-        arm.set_positions({'shoulder_pan': .1})
+        arm.set_positions({'shoulder_pan': JointPosition(.1, PositionUnit.RADIANS, arm.positions['shoulder_pan'].limits_rad)})
         world.advance(.1)
         assert world.pose(world.entity('stage')).position_m[0] > 0
-        assert arm.targets['shoulder_pan'] == pytest.approx(.1, abs=.001)
+        assert arm.targets['shoulder_pan'].value == pytest.approx(.1, abs=.001)
         with pytest.raises(TypeError):
             world.system('stage', ArmController)
         world.reset()
@@ -250,17 +255,15 @@ def test_mixed_system_adapter_registry(tmp_path: Path) -> None:
 
 @pytest.mark.sim
 def test_composition_preserves_so101_dynamics() -> None:
-    import mujoco
-    from airtruck.testing_util.adapters import SO101Adapter
-    from airtruck.testing_util.loader import servo_spec
-    from airtruck.raw_api.so101.controller import SimSO101
     root = ROOT/'models/so101'
     model = mujoco.MjModel.from_xml_path(str(root/'so101.xml'))
     data = mujoco.MjData(model)
     controller = SimSO101(model, data, servo_spec=servo_spec(json.loads((root/'runtime/servo-model.json').read_text())))
     with MujocoWorld(model, data, {'arm': SO101Adapter(controller)}, {}) as original, load_world(ROOT/'worlds/so101_bench') as composed:
         for w in (original, composed):
-            w.system('arm', ArmController).set_positions([.1, .1, .1, .1, .1, .1])
+            arm = w.system('arm', ArmController)
+            arm.set_positions({name: JointPosition(.1, PositionUnit.RADIANS, position.limits_rad)
+                               for name, position in arm.positions.items()})
             w.advance(1)
         np.testing.assert_allclose(data.qpos, composed._data.qpos, rtol=0, atol=1e-12)
         np.testing.assert_allclose(model.body_mass, composed._model.body_mass, rtol=0, atol=1e-12)
@@ -276,10 +279,6 @@ def test_duplicate_actuator_ownership_rejected() -> None:
 
 @pytest.mark.sim
 def test_loader_cleans_up_after_partial_binding_failure(tmp_path: Path) -> None:
-    from collections.abc import Mapping
-    import mujoco
-    from airtruck.testing_util.loader import _so101
-    from airtruck.testing_util.adapters import SystemAdapter
     make_world(tmp_path)
     called: list[str] = []
 

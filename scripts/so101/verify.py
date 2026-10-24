@@ -71,7 +71,7 @@ for idx in range(6):
         }
     )
     assert np.isfinite(d.qpos).all() and error < np.pi / 180 and other < np.pi / 180, (idx, errors[-1])
-    assert not any(x.number for x in d.warning)
+    assert not np.any(d.warning.number)
 # Enforce target limits at the bus and voltage/current bounds at actuators.
 for n in bus.names:
     bus.command_radians(n, 10000)

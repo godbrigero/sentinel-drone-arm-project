@@ -1,0 +1,62 @@
+{
+  "gripper": {
+    "servo_id": 6,
+    "zero_tick": 2617,
+    "direction": 1,
+    "limits_rad": [
+      -0.8943107993373288,
+      0.8943107993373288
+    ],
+    "counts_per_revolution": 4096
+  },
+  "wrist_roll": {
+    "servo_id": 5,
+    "zero_tick": 2044,
+    "direction": 1,
+    "limits_rad": [
+      -2.9222334009221465,
+      2.9237673817100323
+    ],
+    "counts_per_revolution": 4096
+  },
+  "wrist_flex": {
+    "servo_id": 4,
+    "zero_tick": 1902,
+    "direction": 1,
+    "limits_rad": [
+      -1.7763497523715726,
+      1.7778837331594581
+    ],
+    "counts_per_revolution": 4096
+  },
+  "elbow_flex": {
+    "servo_id": 3,
+    "zero_tick": 1954,
+    "direction": 1,
+    "limits_rad": [
+      -1.6352235198860934,
+      1.6367575006739792
+    ],
+    "counts_per_revolution": 4096
+  },
+  "shoulder_lift": {
+    "servo_id": 2,
+    "zero_tick": 2066,
+    "direction": 1,
+    "limits_rad": [
+      -1.8285050991596843,
+      1.8300390799475699
+    ],
+    "counts_per_revolution": 4096
+  },
+  "shoulder_pan": {
+    "servo_id": 1,
+    "zero_tick": 2090,
+    "direction": 1,
+    "limits_rad": [
+      -2.086213871524472,
+      2.086213871524472
+    ],
+    "counts_per_revolution": 4096
+  }
+}
