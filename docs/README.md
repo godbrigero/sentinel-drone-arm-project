@@ -24,13 +24,19 @@ with MujocoDriver([left, right]) as driver:
 ```sh
 uv sync --locked
 uv run --locked python -m airtruck.main
-uv run --locked mjpython -m airtruck.main --render human
+uv run --locked mjpython -m airtruck.main --render
+uv run --locked python -m airtruck.examples.two_arms
 ```
 
-The default example runs two arms for eight simulated seconds, reports contacts
-and exits without serial connections. `--world` selects a base MJCF template
-without attached systems. `--benchmark` skips contact-force extraction. Rendering
-is optional; headless simulation does not sleep.
+`airtruck.main` runs leader/follower teleoperation for 30 seconds by default.
+Both objects stay simulated unless their hardware flags are supplied; `--render`
+opens the viewer. Calibration and hardware options are described in the
+[hardware guide](hardware/README.md).
+
+`airtruck.examples.two_arms` runs independent motion for eight simulated seconds,
+reports contacts and exits without serial connections. Its `--world` option selects
+a base MJCF template without attached systems, and `--benchmark` skips contact-force
+extraction. Rendering is optional; the headless example does not sleep.
 
 ## Code and configuration
 
@@ -41,7 +47,7 @@ is optional; headless simulation does not sleep.
 - `airtruck/simulation/gymnasium.py`: Gymnasium packing, flattening names and episode boundary.
 - `airtruck/examples/two_arms.py`: individual objects controlled before one shared step.
 - `airtruck/examples/act.py`: local LeRobot record → native ACT trainer → checkpoint rollout.
-- `airtruck/hardware.py`: teleoperation through the same objects, using hardware flags.
+- `airtruck/main.py`: teleoperation and calibration through the same objects, using hardware flags.
 - `worlds/bench/scene.xml`: the default base world; each system supplies its own model and placement.
 - `worlds/so101/scene.xml`, `worlds/two_arms/scene.xml`: standalone native reference scenes for model verification.
 
@@ -73,4 +79,5 @@ uv run --locked python scripts/so101/verify.py
 Tests cover mixed systems, contact effects, native LeRobot on fake buses, backend
 switching and real ACT checkpoint training/reload. Physical ports are never opened.
 See [simulation and ACT](simulation.md), [hardware](hardware/README.md),
-[CAD provenance](so101/README.md) and [model fidelity](so101/motor-model.md).
+[CAD provenance](so101/README.md), [model fidelity](so101/motor-model.md) and
+[Sentinel CAD](sentinel/README.md).

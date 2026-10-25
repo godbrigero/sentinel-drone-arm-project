@@ -78,9 +78,9 @@ separate ports and stable IDs. Standard motor IDs 1–6 and compatible STS3215 s
 are required; see the [SO-101 guide](https://huggingface.co/docs/lerobot/v0.6.1/en/so101).
 
 ```sh
-uv run --locked python -m airtruck.hardware --calibrate both --leader-port /dev/YOUR_LEADER --follower-port /dev/YOUR_FOLLOWER
-uv run --locked python -m airtruck.hardware --leader-hardware --leader-port /dev/YOUR_LEADER --seconds 30
-uv run --locked python -m airtruck.hardware --leader-hardware --follower-hardware --leader-port /dev/YOUR_LEADER --follower-port /dev/YOUR_FOLLOWER --seconds 30
+uv run --locked python -m airtruck.main --calibrate both --leader-port /dev/YOUR_LEADER --follower-port /dev/YOUR_FOLLOWER
+uv run --locked python -m airtruck.main --leader-hardware --leader-port /dev/YOUR_LEADER --seconds 30
+uv run --locked python -m airtruck.main --leader-hardware --follower-hardware --leader-port /dev/YOUR_LEADER --follower-port /dev/YOUR_FOLLOWER --seconds 30
 ```
 
 The second command drives a simulated follower; the third drives a physical one.

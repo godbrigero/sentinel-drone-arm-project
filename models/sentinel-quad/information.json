@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-22",
+  "updated": "2026-10-25",
   "frame": {
     "name": "Onshape upright assembly world",
     "unit": "mm",
@@ -468,7 +468,8 @@
     "fastener_length_mm": null,
     "CAD_volume_mm3": 44834.182568536,
     "source": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/69e6d700e255a86b7a80e46c",
-    "verified_microversion": "5f0de1e76a4028c7fc8d09a7"
+    "verified_microversion": "5f0de1e76a4028c7fc8d09a7",
+    "in_assembly": false
   },
   "onshape": {
     "assembly": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/1600b2c66d3b102227c2adfb",
@@ -477,7 +478,9 @@
     "so101_assembly": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/65a095efa0767c21c8f6caae",
     "so101_parts": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/a684cdbe0b1ef07365f24a6b",
     "propellers": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/84661d42c430185df2cdea65",
-    "propellers_verified_microversion": "62b73d9e93ece0d701a74f28"
+    "propellers_verified_microversion": "62b73d9e93ece0d701a74f28",
+    "underbody_carrier": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/8473a6615ca5dd4a494eb7fa",
+    "landing_legs": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/1afc70e8648d8e79edcf13c1"
   },
   "_sources": {
     "evidence": null,
@@ -792,5 +795,246 @@
       -14
     ],
     "tray_CAD_volume_mm3": 83715.19236094815
+  },
+  "landing_gear": {
+    "installed_model": "YoungRC F450 landing skid legs (salvaged from F450 kit ASIN B0776WLHX7)",
+    "replaces": "RB5_Landing_Gear_v2 (suppressed in Sentinel_Drone assembly)",
+    "count": 4,
+    "CAD_model": "public F450 leg (Julien Ragot, F450 legs.SLDPRT)",
+    "CAD_geometry_official": false,
+    "CAD_height_mm": 143.293,
+    "CAD_volume_mm3": 10147.695,
+    "flange_hole_diameter_mm": 3.24,
+    "flange_hole_pattern_local_mm": [
+      [
+        88.15,
+        -15.5
+      ],
+      [
+        98.35,
+        -12.07
+      ],
+      [
+        98.35,
+        2.07
+      ],
+      [
+        88.15,
+        5.5
+      ]
+    ],
+    "flange_top_z_mm": -1.5,
+    "ground_plane_z_mm": -144.793,
+    "placement_verified": false,
+    "plate_hole_match_found": false,
+    "legs": [
+      {
+        "location": "front_left",
+        "flange_center_mm": [
+          96,
+          -110,
+          -1.5
+        ],
+        "outward_direction": [
+          -0.707106781,
+          -0.707106781,
+          0
+        ],
+        "foot_center_mm": [
+          34.835,
+          -171.165,
+          -144.79
+        ]
+      },
+      {
+        "location": "rear_left",
+        "flange_center_mm": [
+          138,
+          -110,
+          -1.5
+        ],
+        "outward_direction": [
+          0.707106781,
+          -0.707106781,
+          0
+        ],
+        "foot_center_mm": [
+          199.165,
+          -171.165,
+          -144.79
+        ]
+      },
+      {
+        "location": "front_right",
+        "flange_center_mm": [
+          96,
+          -8,
+          -1.5
+        ],
+        "outward_direction": [
+          -0.707106781,
+          0.707106781,
+          0
+        ],
+        "foot_center_mm": [
+          34.835,
+          53.165,
+          -144.79
+        ]
+      },
+      {
+        "location": "rear_right",
+        "flange_center_mm": [
+          138,
+          -8,
+          -1.5
+        ],
+        "outward_direction": [
+          0.707106781,
+          0.707106781,
+          0
+        ],
+        "foot_center_mm": [
+          199.165,
+          53.165,
+          -144.79
+        ]
+      }
+    ],
+    "material": null,
+    "CAD_mass_g": null,
+    "measured_mass_g": null,
+    "source": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/1afc70e8648d8e79edcf13c1",
+    "CAD_geometry_source": "https://cad.onshape.com/documents/4f17d27754cc97401d1a5981/v/a57a48a1cdeb26e86eab5a73/e/8cbafa1e4a39b948ef8ab07c",
+    "product_reference": "https://www.amazon.com/dp/B0776WLHX7"
+  },
+  "underbody_carrier": {
+    "interface": "two separate side bars bolted to the bottom plate; tray bolted to the bars",
+    "material": "PETG",
+    "density_g_cm3": 1.27,
+    "side_bar": {
+      "quantity": 2,
+      "CAD_mass_g_each": 19.811,
+      "CAD_volume_mm3_each": 15598.965,
+      "CAD_center_of_mass_mm": [
+        [
+          98.5,
+          -85.753,
+          -61.702
+        ],
+        [
+          98.5,
+          -32.247,
+          -61.702
+        ]
+      ],
+      "CAD_inertia_at_com_kg_m2": [
+        4.078644e-05,
+        4.372882e-05,
+        3.42426e-06
+      ],
+      "bounds_mm": [
+        79,
+        -96,
+        -121.5,
+        118,
+        -82,
+        -1.5
+      ],
+      "second_instance": "rotated 180 deg about Z through [98.5,-59]",
+      "length_mm": 39,
+      "height_mm": 120,
+      "web_thickness_mm": 4,
+      "tab_thickness_mm": 5,
+      "plate_holes_xy_mm": [
+        [
+          85,
+          -90
+        ],
+        [
+          112,
+          -90
+        ],
+        [
+          85,
+          -28
+        ],
+        [
+          112,
+          -28
+        ]
+      ],
+      "plate_hole_diameter_mm": 2.8,
+      "top_screw": "M2.5 from above into captive nut, length unverified",
+      "captive_nut_pocket_af_depth_mm": [
+        5.2,
+        2.2
+      ],
+      "tray_screw": "M3 with nut, length unverified",
+      "tray_hole_diameter_mm": 3.3
+    },
+    "tray": {
+      "CAD_mass_g": 59.47,
+      "CAD_volume_mm3": 46826.439,
+      "CAD_center_of_mass_mm": [
+        98.5,
+        -59.0,
+        -122.516
+      ],
+      "CAD_inertia_at_com_kg_m2": [
+        5.573484e-05,
+        0.0001050134,
+        0.0001604397
+      ],
+      "bounds_mm": [
+        28.5,
+        -109.0,
+        -124.5,
+        168.5,
+        -9.0,
+        -116.5
+      ],
+      "length_width_mm": [
+        140,
+        100
+      ],
+      "top_z_mm": -121.5,
+      "drop_below_plate_mm": 120,
+      "thickness_mm": 3,
+      "rim_height_mm": 5,
+      "rim_thickness_mm": 2.5,
+      "fixture_hole_grid_pitch_mm": 20,
+      "fixture_hole_diameter_mm": 3.2,
+      "ground_clearance_mm": 20.293
+    },
+    "printed_parts_CAD_mass_g": 99.092,
+    "printed_parts_CAD_center_of_mass_mm": [
+      98.5,
+      -59.0,
+      -98.198
+    ],
+    "printed_mass_g": null,
+    "payload_rating_g": null,
+    "min_clearance_landing_legs_mm": 2.37,
+    "tray_to_legs_min_clearance_mm": 53.67,
+    "checked_configurations_mm": [
+      [
+        140,
+        100,
+        120
+      ],
+      [
+        160,
+        120,
+        130
+      ]
+    ],
+    "physical_fit_verified": false,
+    "assembly": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/1600b2c66d3b102227c2adfb",
+    "parts": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/8473a6615ca5dd4a494eb7fa",
+    "design": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/099f8589e0fe20d49e1dfde8",
+    "verified_microversion": "7c04afe7304f6301f9694c18",
+    "tray_min_clearance_drone_mm": 100.71,
+    "side_bar_contact": "flush on bottom-plate underside; no other drone part within 3 mm"
   }
 }

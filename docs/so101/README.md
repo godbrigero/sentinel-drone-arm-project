@@ -24,13 +24,13 @@ and reference link inertias.
 
 ```sh
 uv sync --locked
-uv run --locked python -m airtruck.main
-uv run --locked mjpython -m airtruck.main --render human
+uv run --locked python -m airtruck.examples.two_arms
+uv run --locked mjpython -m airtruck.examples.two_arms --render human
 uv run --locked python scripts/so101/build_model.py
 uv run --locked python scripts/so101/verify.py
 ```
 
-The default example controls two arm objects before advancing one shared world.
+The two-arm example controls both objects before advancing one shared world.
 It runs for eight simulated seconds and exits. `two_arms()` in the example creates
 names, placements and initial joint poses. `MujocoDriver` attaches the objects to
 `worlds/bench/scene.xml`; `--world` selects another base template. Instantiate one
