@@ -23,8 +23,8 @@ Array dtype is represented; dimensions, contiguity, writability, and physical un
 The workspace typechecker configuration supplies this directory as the stub path. To check independently from the project root:
 
 ```sh
-MYPYPATH=typings uv run mypy --explicit-package-bases typings/smoke.py airtruck/raw_api/so101/controller.py
-uv run mypy --follow-imports=skip typings/mujoco
+uv run --locked mypy
+uv run --locked mypy --follow-imports=skip typings/mujoco
 ```
 
 `smoke.py` is a static usage example, not a simulation entry point. `assert_type` checks ensure important views and arrays remain concrete rather than silently becoming `Any`. An additional negative check confirmed that reversed model/data parameters, an invalid control callback, a string viewer flag, and assigning a joint array to a string are rejected. No runtime import of this directory is required.

@@ -1,0 +1,10 @@
+<mujoco model="bench">
+  <compiler angle="radian" inertiafromgeom="false"/>
+  <option timestep="0.0005" integrator="implicitfast" gravity="0 0 -9.81"/>
+  <size memory="32M"/>
+  <worldbody>
+    <light pos="0 -.2 1" dir="0 0 -1"/>
+    <geom name="floor" type="plane" size="1 1 .1" rgba=".17 .20 .24 1"/>
+  </worldbody>
+  <visual><global offwidth="1280" offheight="960"/></visual>
+</mujoco>

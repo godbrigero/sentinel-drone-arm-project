@@ -2,10 +2,11 @@
 
 ## Project-specific semantic review
 
-- `airtruck/raw_api/`: device contracts and adapters; `RealSO101` must not gain simulation stepping or implicit hardware connections. Validate calibration/transport boundaries.
-- `airtruck/testing_util/`: shared world controls, scene loading, explicit pytest opt-in, contacts, lifecycle and tests. Ensure exactly one physics step per world tick, disjoint actuator ownership, no writable MuJoCo buffers in public views, bounded waits, and cleanup on partial failures.
-- `models/so101/runtime/servo-model.json`: controller/build inputs. `source/cad-manifest.json`: CAD rebuild/verification inputs. `information.json`: compact engineering references with unknowns explicit. Check moved/removed inputs against all consumers; don't duplicate computed values into new JSON without a clear need.
-- `worlds/`: environment plus system instances; paths relative to manifest, namespace isolation, initial joints, explicit contact policy. Collision-disabled demonstrations and convex-hull contact tests have different claims.
+- `airtruck/systems/`: system-owned controls/state, model bindings and optional hardware. SO-101 leader/follower classes inherit the native LeRobot roles; validate calibration, backend transitions, normalized units, input-only leader behavior and cleanup after partial failures. Hardware activation must be explicit; ordinary simulation must not open ports.
+- `airtruck/simulation/`: `MujocoDriver` owns the shared world and clock; system updates install controls before one native physics advance. The separate Gymnasium adapter owns packing; standard wrappers own flattening and episode limits. Check namespace isolation, disjoint actuator ownership, copied observations, deterministic reset and cleanup. Public native model/data access is an explicit diagnostic escape hatch.
+- `airtruck/examples/` and `airtruck/hardware.py`: exercise the same object API. Check dataset observation/action alignment, native LeRobot training/checkpoint consumers and hardware-free rollout metadata. Mixed-system fixtures do not establish a real Sentinel model or flight-controller integration.
+- `models/so101/source/cad-manifest.json`: CAD rebuild/verification inputs. `so101.xml`: native actuators, action-unit metadata, collision pieces and exclusions. `information.json`: compact engineering references with unknowns explicit. LeRobot owns device calibration and training configurations. Check moved/removed inputs against all consumers; do not restore retired runtime JSON or duplicate computed values without a clear need.
+- `worlds/`: base templates and standalone native reference scenes. Check relative asset paths, namespace isolation, initial joints and native contact policy. Reference scenes already contain robots and must not be passed as object-assembly templates. Collision-disabled diagnostics and decomposed convex contacts have different claims.
 - `scripts/`: launchers/builders/verifiers. Verify executable bits, paths, dependency entrypoints, and no stale package imports. A successful import is not a successful GUI run; run GUI checks only when relevant and available.
 - `typings/`: local MuJoCo stubs, not runtime PYTHONPATH. Check scope of mypy versus all source, including otherwise untested entrypoints.
 - `.venv/`, `uv.lock`, `pyproject.toml`, `requirements.txt`: preserve the user-requested persistent environment. Treat `requirements.txt` as an optional compatibility export; its absence is not an error. Check dependency consistency when it is present; don't regenerate a lockfile merely to make preflight pass.
@@ -21,17 +22,17 @@ The inventory excludes `.git`, `.venv*`, caches and tool/account metadata direct
   "summary": "What changed, why it matters, and the readiness verdict.",
   "reviewed_documents": ["AGENTS.md", "docs/README.md"],
   "changes": [
-    {"title": "One world owns physics", "detail": "Verified before/after behavior and why it changed", "paths": ["airtruck/testing_util/mujoco_world.py"]}
+    {"title": "One world owns physics", "detail": "Verified before/after behavior and why it changed", "paths": ["airtruck/simulation/driver.py"]}
   ],
   "findings": [
     {"severity": "warning", "path": "airtruck/main.py:1", "message": "Concrete finding with effect and next action"}
   ],
   "flow": [
-    {"label": "Typed test", "detail": "@simulation selects a world"},
-    {"label": "World", "detail": "Controllers update, then physics steps once"}
+    {"label": "Systems", "detail": "Objects own controls, observations and hardware flags"},
+    {"label": "Driver", "detail": "Validate every command, dispatch all systems, then advance one shared world"}
   ],
   "examples": [
-    {"title": "Current public API", "code": "from airtruck.testing_util import simulation, WorldControl"}
+    {"title": "Current public API", "code": "from airtruck.simulation.driver import MujocoDriver"}
   ],
   "limitations": ["GUI not exercised in this headless preflight"]
 }

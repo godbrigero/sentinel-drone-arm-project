@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-22",
+  "updated": "2026-10-24",
   "so101": {
     "model": "SO-101 follower",
     "frame": "Separate SO-101 assembly world, Z up",
@@ -244,10 +244,10 @@
   "_sources": {
     "CAD_geometry_record": "../sentinel-quad/information.json#/so101",
     "CAD_export": "source/cad-manifest.json",
-    "servo_reference": "runtime/servo-model.json",
+    "servo_reference": "https://www.feetechrc.com/Data/feetechrc/upload/file/20200611/6372749961523760249976542.pdf",
     "manufacturer": "https://www.feetechrc.com/Data/feetechrc/upload/file/20200611/6372749961523760249976542.pdf",
     "simulation_reference_mass": "https://raw.githubusercontent.com/TheRobotStudio/SO-ARM100/main/Simulation/SO101/so101_new_calib.urdf",
-    "electrical_approximation": "so101.xml#custom",
-    "servo_bus_protocol": "https://github.com/huggingface/lerobot/blob/v0.4.4/src/lerobot/motors/feetech/tables.py"
+    "servo_bus_protocol": "https://github.com/huggingface/lerobot/blob/v0.6.1/src/lerobot/motors/feetech/tables.py",
+    "position_servo": "so101.xml#actuator"
   }
 }

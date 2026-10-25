@@ -11,6 +11,7 @@ import json
 import os
 from pathlib import Path
 import re
+import signal
 import subprocess
 import sys
 import tempfile
@@ -75,7 +76,6 @@ def command(root: Path, output: Path, name: str, argv: list[str], timeout: int =
                 code = proc.wait(timeout=timeout)
                 status = 'pass' if code == 0 else 'fail'
             except subprocess.TimeoutExpired:
-                import signal
                 os.killpg(proc.pid, signal.SIGKILL)
                 proc.wait()
                 code, status = None, 'timeout'
@@ -182,7 +182,7 @@ def inspect(root: Path, files: list[dict]) -> tuple[list[dict], list[str], list[
                     target = unquote(target.split('#')[0])
                     if target and not (path.parent/target).exists():
                         finding('error', relative, f'Broken local documentation link: {target}')
-                if re.search(r'airtruck[./](testing|simulation)\b|models/so101/config/', text):
+                if re.search(r'airtruck[./](raw_api|testing_util|testing)\b|models/so101/(config|runtime)/', text):
                     finding('warning', relative, 'Retired package/config path mentioned; check whether this is intentional migration guidance.')
         except (ValueError, SyntaxError, ET.ParseError, UnicodeError) as error:
             finding('error', relative, f'Parse/example validation failed: {error}')

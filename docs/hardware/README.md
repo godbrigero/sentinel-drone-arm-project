@@ -1,254 +1,94 @@
-# Physical SO-101 adapters
+# SO-101 systems: simulation and LeRobot hardware
 
-`RealSO101` in `airtruck/raw_api/so101/controller.py` provides the physical implementation of Airtruck's shared position-control interface. It is tested against a fake transport; this preflight does not verify physical operation.
-
-- `airtruck/raw_api/so101/controller.py`: `RealSO101` and `LeaderSO101` adapters.
-- `airtruck/raw_api/so101/calibration.py`: immutable `JointCalibration` records and JSON load/save helpers.
-- `airtruck/raw_api/so101/position.py`: immutable `JointPosition` values, units and conversions.
-- `airtruck/raw_api/so101/utils.py`: command validation helpers.
-- `airtruck/raw_api/so101/io.py`: `ServoTransport`, the contract a selected Feetech/serial driver must implement.
-- `airtruck/raw_api/so101/tests/test_hardware.py`: calibration, command validation, communication-failure and enable/disable tests.
-
-The caller supplies an already configured transport implementing `read_positions(servo_ids)`, `write_positions({servo_id: raw_ticks})` and `set_torque_enabled(servo_ids, enabled)`. It must raise on failed communication rather than fabricate feedback. The caller owns connection lifecycle, startup torque state, bus timing, firmware configuration and device errors. `FeetechTransport` in `airtruck/raw_api/so101/transport.py` provides this implementation using the locked `feetech-servo-sdk` dependency. Supply your actual serial port explicitly; no device scanning or automatic connection occurs.
-
-Provide all six joint calibrations: actual servo ID, measured encoder tick at the hardware midpoint, direction (`-1` or `+1`), measured travel in hardware radians, and encoder counts per turn (4096 by default). Do not use the simulator's virtual offsets. Calibration crossing the absolute encoder wrap is rejected by this simple adapter; unwrap it in a more specialized driver before supporting such travel.
+Use the same `SO101Follower` or `SO101Leader` object for both backends. These classes
+inherit the corresponding native LeRobot class and share `SO101Arm` simulation
+bindings. No separate hardware controller hierarchy or serial protocol is added.
 
 ```python
-from airtruck.raw_api.so101.controller import RealSO101
-from airtruck.raw_api.so101.position import JointPosition, PositionUnit
-from airtruck.raw_api.so101.calibration import load_joint_calibrations
-from airtruck.raw_api.so101.transport import FeetechTransport
+from airtruck.simulation.driver import MujocoDriver
+from airtruck.systems.so101 import SO101Follower, SO101Leader
 
-# port: your USB-to-TTL servo adapter's serial device path
-# Load the complete mapping produced by the guided calibration script.
-calibration = load_joint_calibrations("models/so101/runtime/calibration.json")
-with FeetechTransport(port, baudrate=1_000_000) as transport:
-    arm = RealSO101(transport, calibration)
-    try:
-        arm.set_enabled(True)  # Read current pose, queue it, then enable torque
-        arm.set_positions({
-            "shoulder_pan": JointPosition(0.0872665, PositionUnit.RADIANS, arm.positions["shoulder_pan"].limits_rad)
-        })
-        print(arm.positions)  # Feedback, not proof the requested motion has finished
-        # Keep this scope open while your application monitors/controls the arm.
-    finally:
-        arm.set_enabled(False)
+leader = SO101Leader("leader", hardware=True, port="/dev/YOUR_LEADER",
+                     id="airtruck_leader", position=(-0.25, 0, 0))
+follower = SO101Follower("follower", hardware=False, port="/dev/YOUR_FOLLOWER",
+                         id="airtruck_follower", position=(0.25, 0, 0))
+
+with MujocoDriver([leader, follower]) as driver:
+    driver.reset()
+
+    def update():
+        follower.controls.update(leader.get_action())
+
+    driver.run(update=update, realtime=True)
 ```
 
+Set `follower.hardware=True` to use the physical follower. Setting the flag after
+creation applies the transition at the next driver tick; `hardware_active` reports
+the connected backend. Keep a port configured if you intend to switch later.
+Hardware failures raise errors; there is no silent fallback to simulation.
 
-Position feedback is clamped to each joint’s calibrated limits. Enabling still checks
-the unclamped feedback and refuses poses outside calibrated travel. The error lists
-each offending joint, servo ID, current encoder tick and allowed tick interval;
-no goal or torque-enable writes occur for an out-of-range pose. Check that the
-follower port and calibration belong to the same arm. A calibration command that
-refuses an existing output has not recalibrated the arm; use a new `--output` path
-and update `FOLLOWER_CALIBRATION` to use the new file.
-The main program prints full exception details, including individual servo failures
-inside a torque-disable exception group and any earlier error that triggered cleanup.
-Failed torque-disable requests leave the affected motors' torque state unconfirmed.
-Position batches are validated before any write; successful writes update the adapter's remembered targets. Transport failures propagate; a real bus may have partially applied a failed batch, so reads and driver recovery are necessary before retrying. Torque state is the adapter's last successful request, not independent hardware telemetry. Disabling always sends the request, including directly after construction.
+Both backends use local LeRobot keys such as `shoulder_pan.pos`, five body channels
+in [-100,100], and gripper in [0,100]. `controls` holds desired targets; `state`
+holds measured feedback. `send_action()` retains immediate target dispatch and
+returns LeRobot's accepted targets if relative-target limiting clips the request.
+It does not advance the simulation clock. `get_observation()` and leader
+`get_action()` work through the current backend. A real leader stays input-only in
+the driver loop. The bridge currently requires `use_degrees=False` and no cameras.
+Native config objects may be passed with `config=` for SDK options such as PID
+coefficients and `max_relative_target`.
 
-Test without hardware:
+## Connection, switching and reset
+
+Constructing an object creates no serial connection. The driver context connects
+hardware-enabled systems. Explicit `connect()` also supports hardware-only use
+without a simulation driver. SDK compatibility does not make a simulator advance
+automatically: a simulation still needs driver ticks or a running driver loop.
+
+Normal connection requires a saved LeRobot calibration that matches the motors.
+The follower disables torque, reads raw positions, rejects positions outside the
+calibrated range, and queues the current raw pose before native SDK configuration
+enables position control. Normal connection never starts interactive calibration. Virtual arms report
+`is_calibrated=True` from their prepared model limits; `configure()` and
+`calibrate()` perform no hardware I/O in simulation. Explicit hardware
+`connect(calibrate=True)` may run LeRobot's interactive calibration.
+
+On activation, the bridge reads and holds the measured pose. `reset()` re-reads
+hardware and clears pending arm targets to that measured pose; it does not home
+physical hardware. On deactivation it releases/closes hardware and resumes
+simulation from the last measured pose. Cleanup attempts all motors, cameras and
+systems even when startup or another cleanup operation fails.
+
+Measured hardware pose is mirrored into the MuJoCo body. Native tracking
+constraints hold the proxy between samples, and its simulated motor gains are
+disabled during hardware tracking. Simulation contacts can affect virtual objects;
+those calculated forces are not sent to physical motors. Proxy velocities are not
+physical velocity measurements. A real arm is not physically constrained by
+virtual obstacles, and physical devices run on wall time rather than simulated time.
+
+## Calibration and CLI
+
+LeRobot owns calibration and stores separate device IDs under its native cache:
+
+- `~/.cache/huggingface/lerobot/calibration/teleoperators/so_leader/<id>.json`
+- `~/.cache/huggingface/lerobot/calibration/robots/so_follower/<id>.json`
+
+LeRobot environment variables can override these cache locations. Calibration
+uses LeRobot's interactive procedure and writes homing/range settings. Supply
+separate ports and stable IDs. Standard motor IDs 1–6 and compatible STS3215 servos
+are required; see the [SO-101 guide](https://huggingface.co/docs/lerobot/v0.6.1/en/so101).
 
 ```sh
-uv run pytest -k hardware
+uv run --locked python -m airtruck.hardware --calibrate both --leader-port /dev/YOUR_LEADER --follower-port /dev/YOUR_FOLLOWER
+uv run --locked python -m airtruck.hardware --leader-hardware --leader-port /dev/YOUR_LEADER --seconds 30
+uv run --locked python -m airtruck.hardware --leader-hardware --follower-hardware --leader-port /dev/YOUR_LEADER --follower-port /dev/YOUR_FOLLOWER --seconds 30
 ```
 
-## Human-operated leader reader
+The second command drives a simulated follower; the third drives a physical one.
+Hardware flags explicitly request connection. Add `--render` with `mjpython` on
+macOS. Without hardware flags the objects remain simulated. There is no `--real`
+branch or alternate simulation-following API.
 
-`LeaderSO101` reads the same six named joints as `JointPosition` objects in
-calibrated radians, carrying their units and ranges, and exposes
-`positions` and `normalized_positions`. It has no position commands, targets, or torque-enable
-method and does not implement `ArmController`. Construction performs no I/O.
-Support the leader, then call `start()` to disable all six motors; reads are
-blocked until that request succeeds. A failed start/restart blocks further reads
-and propagates the transport error. Each `positions` access reads fresh feedback,
-clamped to the taught limits (below LOW becomes LOW; above HIGH becomes HIGH).
-
-```python
-from airtruck.raw_api.so101.controller import LeaderSO101
-from airtruck.raw_api.so101.calibration import load_joint_calibrations
-from airtruck.raw_api.so101.transport import FeetechTransport
-
-calibration = load_joint_calibrations("models/so101/runtime/leader-calibration.json")
-with FeetechTransport(leader_port, baudrate=1_000_000) as transport:
-    leader = LeaderSO101(transport, calibration)
-    leader.start()  # Support the arm first; disables torque without commanding motion
-    print(leader.positions)
-```
-
-The caller owns the connection and must call `start()` again after reconnecting.
-Do not share the leader's motors with a controller that enables torque. A
-successful disable is a bus acknowledgement, not independent torque telemetry.
-Use the leader's own measured calibration, never the follower's file. New sweeps use increasing encoder ticks as positive on both arms; verify that
-these correspond to matching physical directions before following. Their endpoint midpoints and
-travel can differ; this reader does not implement follower teleoperation or an
-automatic coordinate/range mapping. The [application entry point](../README.md#leaderfollower-control)
-exchanges normalized `[-1, 1]` joint positions in both simulation and real mode.
-`LeaderSO101.normalized_positions` encodes its own range; each follower’s
-`set_normalized_positions()` decodes using its own limits. Radian APIs remain available.
-
-## STS3215 serial transport
-
-The [official SO-101 guide](https://github.com/huggingface/lerobot/blob/main/docs/source/so101.mdx)
-specifies six STS3215 servos with 345:1 gearing for the follower. Leader gearing
-is different. This project's user-reported follower uses the 7.4 V variant.
-The [LeRobot register table](https://github.com/huggingface/lerobot/blob/v0.4.4/src/lerobot/motors/feetech/tables.py)
-identifies SDK protocol 0, 4096 encoder counts, torque enable at address 40,
-goal position at 42 (two bytes), and feedback position at 56 (two bytes).
-The [SDK](https://github.com/Adam-Software/FEETECH-Servo-Python-SDK) handles
-packet encoding, checksums and receive timeouts.
-
-`FeetechTransport(port, baudrate=1_000_000)` explicitly inherits `ServoTransport`.
-This protocol also accepts structurally compatible transports (including test
-fakes). Declared subclasses must implement its abstract methods.
-Construction does no I/O; `connect()` or context entry opens the serial port.
-Use a suitable USB-to-TTL Feetech bus adapter and the installed servos' supply.
-Motor IDs must already be unique, baudrates must match, servos must be in
-single-turn position mode, and status responses must acknowledge writes.
-The transport does not configure or verify those firmware settings, rewrite
-EEPROM, set motor IDs, or invent calibration. Speed and acceleration registers
-retain their existing hardware values; simulation tuning is not applied to them.
-
-Each operation serializes access to the bus. Reads and writes use individual
-acknowledged transactions; batch commands are not simultaneous or atomic.
-All input IDs and target ticks are validated before transmission. IDs are 0..253;
-broadcast is disallowed. Raw positions must be integers 0..4095. Signed or
-multi-turn feedback is rejected instead of silently wrapped. Missing replies,
-corrupt responses and device error flags outside the warning exceptions below
-raise exceptions; writes are not retried
-automatically because a timed-out write may already have applied.
-
-Enabling stops on the first error; earlier motors may already be enabled.
-Disabling attempts every requested motor and raises an `ExceptionGroup` for
-failures. `close()` is idempotent and only closes serial I/O: it does not disable
-torque. The caller must explicitly disable, including after partial enable
-failure, as shown above. A lost connection cannot guarantee torque removal.
-
-`tests/test_transport.py` under the SO-101 control folder tests SDK calls,
-register addresses, protocol selection, validation, device/communication errors,
-partial batches, cleanup, and integration with `RealSO101`. Tests replace the SDK
-port/packet boundary; they open no serial device and do not establish physical
-hardware operation. Run them with:
-
-```sh
-uv run --locked pytest airtruck/raw_api/so101/tests/test_transport.py
-```
-
-Successful replies carrying exactly status `1` (input voltage) print a console
-warning and continue for all operations: position reads/writes and torque enable/
-disable. This applies by default to calibration and both application modes.
-Warnings print to stderr once per servo per connection; an optional
-`voltage_warning=callback` customizes their presentation. Communication failures,
-combined or other error flags, and invalid position values still fail, except that
-real following configures `gripper_servo_id` from the follower calibration to warn
-and continue on overload-only status `32` for that gripper. This includes torque-off
-requests. Other joints still fail on overload; standalone transports remain strict
-unless explicitly given a gripper ID. Overload warnings print once per connection.
-Continuing
-does not clear or override any protection applied by the servo’s firmware, or
-establish whether the voltage fault is transient.
-
-## Guided hardware calibration
-
-Run the single interactive script from the project root in a macOS/Linux terminal:
-
-```sh
-uv run --locked python scripts/so101/so101_calibrate.py --arm both
-```
-
-`--arm both` teaches the follower first, closes its connection, then teaches the
-leader with a separate adapter selection and support/torque-disable confirmation.
-Use `--arm leader` or `--arm follower` for just one arm; omitting `--arm` preserves
-the follower-only workflow. Each arm has its own six-ID mapping, so IDs may repeat
-across separate buses.
-
-Choose the USB adapter from the numbered serial-port list, or enter its `/dev/...`
-path. For a single arm, `--port`, `--baudrate`, `--ids` and `--output` select that
-arm's settings. In both mode those options select the follower, while
-`--leader-port`, `--leader-baudrate`, `--leader-ids` and `--leader-output` select
-the leader. Both baudrates default to 1,000,000 and both ID sets to 1..6.
-Both output paths and ID sets are validated before either session starts.
-Listing ports does not open them; connection follows your start confirmation.
-
-The terminal UI has colored sections, numbered joint steps, a live most-moving
-servo/tick indicator and per-ID cumulative travel in radians, plus saved direction
-and limit summaries. The live line is clipped to the terminal width. Redirected
-output stays plain without live redraws; `NO_COLOR=1` disables colors. All UI code
-lives in the calibration script and uses no additional dependency.
-
-The prompts follow the physical chain from its tip toward the fixed base:
-**gripper → wrist roll → wrist flex → elbow flex → shoulder lift → shoulder pan**.
-This is a distal-to-proximal order, independent of which joint is currently highest
-in space. Each prompt names the joint and describes the mechanism to move.
-Support the arm before confirming torque disable. Calibration commands no motion
-and attempts to leave torque disabled, including on interruption.
-
-Calibration prints a warning and stays connected for voltage-only status replies,
-including the final read after Space and torque-disable requests. It uses the
-returned position if it passes the usual range checks; it does not retry or use a
-stale sample. The warning does not establish whether voltage is low or high, or
-whether the condition is transient. Other failures still stop the session.
-
-For each named joint, move it gently through its full safe travel in **both
-directions**, in either order, then press **Space once** when done. The script
-records the smallest and largest encoder values observed throughout the sweep;
-you can return to the middle before finishing. There are no LOW/HIGH choices or
-separate endpoint captures. Move only the named mechanism as much as possible.
-Use safe usable limits for wrist roll; do not assume it has physical hard stops.
-The script records observed travel; it cannot prove you reached the full range.
-
-The script reads all six candidate motors during motion. Default candidate IDs
-are 1..6; supply `--ids 7 8 9 10 11 12` for another configured set. It discovers
-which ID belongs to each named joint by **accumulated absolute angular travel**
-over the whole sweep, not by assuming the standard joint/ID assignment.
-One-count jitter is ignored. Other motors can move accidentally; the selected
-motor must move most, by at least 0.02 rad, with at least 0.05 rad total motion.
-Ambiguity, insufficient endpoint separation, or selection of an already assigned
-ID causes a retry. It requires replies from every candidate; it does not scan the
-bus for unknown IDs or change IDs/baudrates.
-
-Calibration is independent of CAD. Zero is the midpoint of the measured endpoints,
-rounded to an encoder tick. New sweeps use direction +1: lower encoder ticks
-are negative and higher ticks are positive, independent of sweep order. Encoder
-feedback alone cannot infer a physical positive direction such as opening the
-gripper or lifting the arm. Existing signed calibration files remain supported;
-recalibrating an arm previously using direction -1 changes its angle convention. The two `limits_rad` values are computed relative to that zero using
-4096 counts per revolution, the STS3215 encoder specification. Resolution cannot
-be inferred from two arbitrary stops. No CAD angles, geometry, or simulation
-zero offsets are consulted. Hardware angles require an explicit coordinate mapping
-if they are later compared with simulation angles.
-
-The follower default output is `models/so101/runtime/calibration.json`; the leader
-default is `models/so101/runtime/leader-calibration.json`. Each is a direct
-mapping from joint name to these fields (illustrative numbers only):
-
-```json
-{
-  "gripper": {
-    "servo_id": 6,
-    "zero_tick": 2000,
-    "direction": 1,
-    "limits_rad": [-1.533980787885641, 1.533980787885641],
-    "counts_per_revolution": 4096
-  }
-}
-```
-
-Each completed joint is atomically checkpointed into its arm’s file. Q or
-Ctrl-C stops recording and preserves completed entries. Existing output files
-are refused; choose another `--output` (or `--leader-output` in both mode) when
-restarting or recalibrating. If interrupted during the leader session, the completed
-follower file is retained; restart with `--arm leader` and a fresh output. There is
-no automatic resume. `load_joint_calibrations(path)` returns a typed
-`dict[JointName, JointCalibration]` only when all six unique joints and servo IDs
-are present; partial, duplicate-key or invalid records are rejected.
-
-The existing hardware controller represents only single-turn, non-wrapping
-encoder intervals. A detected 0/4095 crossing is rejected for the selected motor;
-the script does not wrap it into a plausible but incorrect calibration or rewrite
-firmware homing offsets. Move slowly enough for continuous sampling. Tests cover
-shuffled IDs, incidental motion, signed calibration conversion, either sweep order,
-interruption checkpoints, JSON round trips and endpoint precision. The checked-in follower and leader calibration files contain arm-specific encoder
-records; their physical endpoint coverage and matching directions were not
-independently verified in this preflight.
+Tests use fake buses while exercising native LeRobot connect/configure/read/write
+methods. They do not open physical ports. Physical calibration, installed voltage,
+real timing, dynamics and motion remain unverified. Cleanup cannot guarantee an
+unreachable device is unpowered; errors remain visible.

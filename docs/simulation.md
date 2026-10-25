@@ -1,173 +1,205 @@
-# Testing utilities: simulation worlds and typed systems
+# System objects and the shared MuJoCo driver
 
-All world utilities and pytest integration live in `airtruck/testing_util/`.
-Use one public import:
-
-```python
-from airtruck.testing_util import simulation, WorldControl, load_world, Pose, Contact
-```
-
-`pytest_plugin.py` provides fixtures and CLI options; `decorators.py` supplies the
-opt-in marker. `loader.py`, `mujoco_world.py`, `interfaces.py`, `types.py`, and
-`adapters.py` implement typed world loading and control. `tests/` contains their
-regression tests and the visual demos.
-
-A **world** owns a scene, its physics state, and one simulation clock. A **system**
-is a controllable mechanism: an arm, drone, or composite assembly. Retrieve it with
-`world.system("name", Interface)`. The result implements that interface and is
-checked at runtime. Retrieving an arm as an incompatible interface raises
-`TypeError`; an unknown name raises `KeyError`.
-
-A world supports multiple systems, each with its own controller and actuator
-bindings. The supplied adapter is SO-101. Other controller types can be registered
-explicitly; a drone flight controller/model is not included. Systems can interact
-physically while their commands remain independently scoped. Overlapping actuator
-ownership and unowned actuators are rejected.
-
-## Directory layout
-
-`worlds/so101_bench/world.json` selects `scene.xml`, then declares its systems:
-
-```json
-{
-  "schema_version": 1,
-  "scene": "scene.xml",
-  "systems": [
-    {
-      "name": "arm",
-      "model": "../../models/so101/so101.xml",
-      "root_body": "base",
-      "controller": "so101",
-      "controller_config": "../../models/so101/runtime/servo-model.json",
-      "pose": {"position_m": [0, 0, 0], "quaternion_wxyz": [1, 0, 0, 0]},
-      "placement": "fixed"
-    }
-  ],
-  "entities": []
-}
-```
-
-All file paths resolve relative to the world directory. Add a second system entry
-with a different name to load another instance. Each instance receives a namespace
-such as `arm/`; local joint and actuator names stay unchanged in its control API.
-Only the selected root body and its dependencies are attached. Lighting, floor,
-solver settings, and timestep belong to the world scene, not each robot instance.
-The default bench and gesture worlds leave contact disabled. The push world
-explicitly enables inter-system contacts as described below.
-
-Optional `parent_body` attaches the system under an existing scene body or a
-previously declared system body (for example `carrier/mount`). Its manifest pose
-is relative to that parent. Without a parent, the pose is in world coordinates.
-This supports physically mounted systems without merging their controllers. Model
-names, including assets and references, are namespaced during attachment.
-
-The loader validates schema version, names, controller types, placement
-capabilities, runtime servo fields, and duplicate/unknown manifest fields. It
-compiles the assembled world and binds every controller afterward. Contact-enabled
-loading also compiles source models to classify volumetric mesh geometry. It does not import Python
-modules named in JSON. Scene topology is fixed for the lifetime of the world.
-
-## Placement and observation
-
-An entity handle identifies a scene body. Systems automatically expose their root
-body under their system name; additional bodies are declared in `entities`:
-
-```json
-{"name": "block", "body": "block_body", "placement": "free"}
-```
+Each `SimSystem` owns its model binding, control schema, observations and optional
+hardware connection. `MujocoDriver` owns one MuJoCo model/data pair and physics clock.
+It does not interpret arm joints, drone forces, units or controller types.
 
 ```python
-from airtruck.testing_util import Pose, WorldControl
+from airtruck.simulation.driver import MujocoDriver
+from airtruck.systems.so101 import SO101Follower
 
+left = SO101Follower("left", position=(-0.25, 0, 0))
+right = SO101Follower("right", position=(0.25, 0, 0))
 
-def arrange(world: WorldControl) -> None:
-    block = world.entity("block")
-    world.place(block, Pose(position_m=(0.2, 0.0, 0.05)), clear_velocity=True)
-    pose = world.pose(block)
-    assert pose.position_m == (0.2, 0.0, 0.05)
+with MujocoDriver([left, right], control_dt=0.02) as driver:
+    driver.reset()
+    left.controls["shoulder_pan.pos"] = 20
+    right.controls["shoulder_pan.pos"] = -10
+    driver.step()
+    print(left.state, right.state, driver.info)
 ```
 
-`Pose` is immutable: meters, a unit quaternion in `wxyz` order, and world
-coordinates for runtime placement/observation. Returned observations never expose
-live MuJoCo array views. SO-101 joint feedback uses immutable `JointPosition`
-objects; read `.value` for numeric radians or `.to(PositionUnit.DEGREES)` for
-explicit unit conversion. Recording deep-copies each observation.
+`controls` holds persistent desired targets. Unchanged fields retain their targets;
+`state` contains observed values, not desired targets. Editing controls does not
+advance physics. `driver.step()` synchronizes pending backend switches, refreshes
+inputs, runs an optional update callback, validates **all** control snapshots,
+dispatches them through the systems, then advances the shared model once. Every
+system moves and exchanges contact forces during the same MuJoCo substeps.
 
-Placement is an immediate test setup operation, not a motor command:
+The default world uses a 0.0005 s timestep and a 32 MiB solver arena. A 0.02 s control
+period means 40 native physics steps per driver tick. Headless `step()` does not
+sleep. Models use meters and wxyz unit quaternions for placements.
 
-- `fixed`: reject runtime placement; choose initial pose in the manifest.
-- `free`: requires a free root joint. Placement optionally clears its six velocity
-  components, leaving articulated child joint coordinates unchanged.
-- `kinematic`: requires a mocap body; update its prescribed pose.
+## Continuous control
 
-Arbitrary articulated child links cannot be teleported. Handles are world-specific,
-remain valid across reset, and fail after closure. Python private implementation
-attributes are not a security boundary.
+```python
+with MujocoDriver([left, right]) as driver:
+    driver.reset()
 
-## Time and lifecycle
+    def update():
+        left.controls["shoulder_pan.pos"] = 20
+        right.controls["shoulder_pan.pos"] = -10
 
-Each tick updates all system controls and calls MuJoCo stepping once. Commands and
-feedback reads never advance time. Duration methods round up to whole timesteps.
-`record()` includes the initial sample and the final integrated state; intervals
-also round up. Waiting checks immediately, then after each step until its bound.
-Reset restores the initial physics state and clears controller profiles/integrals.
-All commands and observations through public handles fail after close.
+    driver.run(update=update, realtime=True, steps=100)
+```
 
-Use `with load_world(path) as world:` outside pytest. Within pytest use
-`@simulation(path)` and annotate the `world` fixture as `WorldControl`; use
-`world_factory: Callable[[], WorldControl]` for multiple independent sessions.
-Viewer failures and controller cleanup errors are reported after attempting every
-cleanup. No hardware transport is opened by the built-in simulation adapter.
+`run()` is a blocking loop; it does not start hidden worker threads. The callback
+runs after fresh input observations and before command validation. Omit `steps` to
+run until `driver.stop()` or interruption. Use `realtime=False` for accelerated
+simulation. Hardware loops require real-time pacing. Physical devices continue on
+their own clocks, and dispatch across serial devices is not an atomic transaction.
 
-## Adding a controller type
+## Systems and native worlds
 
-Pass `adapters={"controller_name": factory}` to `load_world`. The typed
-`AdapterFactory` receives `(model, data, prefix, config)` and returns a
-`SystemAdapter` providing:
+The base contract is in `airtruck/systems/base.py`: `attach`, `bind`, `reset`, `step`
+and `observe`. `prepare_step` validates and snapshots a system's pending controls.
+A system's `step(dt)` applies its local inputs; it must never call `mujoco.mj_step`.
+New system types implement their own action and observation spaces. Scalar and
+array controls can coexist; the driver contains no fixed channel counts.
 
-- `actuator_ids`: the exact actuators owned by the system.
-- `interface(require_open)`: a typed public control view that checks world lifetime
-  before every command/read and exposes no writable physics state.
-- `update_control()`: update owned actuator commands without stepping physics.
-- `reset_control()`: clear controller state after the world restores physics.
-- `disable()`: disable owned actuators on cleanup, without advancing time.
+Each object supplies its prepared MJCF model and placement. The driver attaches
+its root body under the object's name using native `MjSpec` frames, then compiles
+one world. `world=` accepts a base MJCF template without those systems; the default
+is `worlds/bench/scene.xml`. Model geometry and collision preparation remain in the
+model builder, not the driver.
 
-The factory validates its own configuration and joint/actuator relationships. It
-must clean up resources it creates if it fails before returning. Returned adapters
-are cleaned up by the world loader if a later binding fails. Adapters execute
-sequentially and must not reset shared state or write another system's actuators.
-The SO-101 adapter demonstrates this implementation; the mixed-system test adds a
-force-controlled linear stage alongside arms.
+The standalone `worlds/so101/scene.xml` and `worlds/two_arms/scene.xml` remain native
+MuJoCo reference scenes used by `scripts/so101/verify.py`. They already contain
+robots and are not base templates for object-based assembly.
 
-`world.system()` accepts interface classes without constructing them. Its callable
-class-token annotation allows abstract classes with mypy; the runtime requires an
-actual class and checks the returned view with `isinstance`. Static examples and
-negative checks live in `typings/smoke.py`.
+`reset()` restores native initial data and asks every system to reset its own
+local state. The driver seeds `system.rng` for reproducible object-owned reset
+randomization. SO-101 `initial_qpos` optionally supplies initial joint positions in
+radians. Hardware-enabled arms read and hold their measured pose; reset does not
+command real hardware to a simulated initial pose. Context exit closes every
+system and rendering resource, including after partial connection failures.
 
-## Contact experiments
+## SO-101 and LeRobot
 
-Set `inter_system_collisions: true` in a world manifest to enable inter-system
-convex-hull contact on volumetric meshes. Collision masks exclude contacts within
-each system. Non-volumetric decorative meshes remain visual-only; imported
-primitive geoms are not enabled by this mesh-specific option. The world's scene
-`<default><geom .../></default>` supplies contact friction, `solref`, and `solimp`.
-The world owns the timestep. Ordinary worlds retain their existing collision setup.
-[MuJoCo describes the convex-hull approximation here](https://mujoco.readthedocs.io/en/stable/computation/#collision-detection).
+`SO101Arm` contains the arm mapping. `SO101Follower` and `SO101Leader` inherit it
+and the corresponding LeRobot classes. The SDK still owns motor communication,
+calibration and hardware configuration. The bridge currently supports joint-state
+observations, `use_degrees=False`, and no cameras.
 
-A system may specify `initial_joint_positions_rad`, mapping local hinge names to
-initial angles. Values must be finite and within configured joint limits. These
-positions are applied before controllers are created, and restored on world reset.
+Local keys are LeRobot keys such as `shoulder_pan.pos` and `gripper.pos`. Five body
+channels use [-100,100]; the gripper uses [0,100]. The model's actuator `user` fields
+store those same bounds. They map to the native actuator control ranges in radians.
+Equal normalized travel does not establish matching real joint directions; physical
+calibration must be checked before following.
 
-`world.contacts()` returns immutable `Contact` snapshots with body names, normal
-force in newtons, and penetration in meters, computed from the current physics
-state. It does not fabricate contact events from proximity.
+A follower exposes `send_action()` and `get_observation()`. A leader exposes
+`get_action()` and `send_feedback()`. `send_action()` applies a target immediately
+and returns the target accepted by LeRobot, including native relative-target
+clipping. It never advances the simulation clock. Use `controls` plus `driver.step()`
+for coordinated ticks. A real leader remains an input device: ordinary driver
+steps read it and never command its motors. Simulated leader controls pose its
+virtual input device. Leaders are observations, not Gymnasium action channels.
 
-For explicitly simulated motor experiments, retrieve
-`world.system(name, SimulatedArmController)` from `airtruck.raw_api.so101.io`.
-`set_motor_voltages({...})` overrides the selected position loops, rejecting values
-outside the supply range. Other joints keep their position control. Voltage and
-output torque feedback are available as `motor_voltages` and `motor_torques_nm`.
-`use_position_control()` clears overrides and holds the measured pose; world reset
-also clears overrides. Position targets on overridden joints do not take effect
-until overrides are cleared. This interface is not implemented by the physical
-hardware adapter.
+See [hardware usage](hardware/README.md) for flags, calibration and teleoperation.
+
+## Drone control
+
+`airtruck/systems/drone.py` supplies a separate free-body controller. It requires a
+caller-supplied, prepared model; it does not create or simplify Sentinel geometry.
+There is currently no local Sentinel MJCF or flight-controller implementation.
+
+```python
+from airtruck.systems.drone import Drone
+
+arm = SO101Follower("arm")
+drone = Drone("drone", model="/path/to/prepared-drone.xml", position=(0.4, 0, 0.5))
+
+with MujocoDriver([arm, drone]) as driver:
+    driver.reset()
+    arm.controls["shoulder_pan.pos"] = 20
+    drone.controls["thrust_n"] = 4
+    drone.controls["yaw_torque_nm"] = 0.02
+    driver.step()
+    print(drone.state["position"])
+```
+
+The drone root body needs one free joint, assigned inertia, and four native site
+actuators named `thrust_n`, `roll_torque_nm`, `pitch_torque_nm`, `yaw_torque_nm`.
+They must be stateless, unit-gain, bias-free motor actuators. Their gears are respectively `0 0 1 0 0 0`, `0 0 0 1 0 0`, `0 0 0 0 1 0`,
+`0 0 0 0 0 1`. They share a body-aligned site at the root's center of mass and
+finite native `ctrlrange` limits. MuJoCo rotates these local wrenches as the body
+moves; no Python force integration or collision solver is implemented.
+
+State contains world position of the root body frame, wxyz quaternion, world
+linear velocity of that same origin in m/s, and world angular velocity in rad/s.
+Center-of-mass offsets do not change the reported velocity reference point. A `DroneHardware` implementation supplies
+`connect`, `disconnect`, `get_observation`, and `send_action` in this SI schema.
+Connecting the backend must not arm an aircraft. Reset preserves existing hardware
+wrench targets; a simulated reset clears them to zero. Enabling hardware without a
+backend raises an error. Reference aircraft weights are not assigned CAD inertia.
+
+The analytic free-body fixture in `airtruck/tests/conftest.py` tests thrust, torque,
+rotated forces, floor contact and backend tracking. It is not a Sentinel model.
+`airtruck.examples.mixed_systems` runs an arm with a supplied drone model.
+
+## Gymnasium and ACT
+
+```python
+with MujocoDriver([left, right]) as driver:
+    env = driver.as_gymnasium(max_episode_steps=1000, flatten=True)
+    observation, info = env.reset(seed=42)
+    observation, reward, terminated, truncated, info = env.step(env.action_space.sample())
+```
+
+The adapter packs each system's spaces. By default actions/observations are nested
+by system name; `flatten=True` uses standard Gymnasium flattening wrappers.
+`TimeLimit` owns episode truncation. There is no manipulation objective: the base
+adapter returns zero reward and no task termination. Task-specific rewards and
+success conditions belong in a separate Gymnasium wrapper.
+
+Use Gymnasium `SyncVectorEnv` or `AsyncVectorEnv` with factories that create fresh
+systems and drivers for each worker. Each worker owns an independent whole world;
+the interacting objects within one world are not separate workers. Async factories
+need the usual `if __name__ == "__main__":` entry point. One system instance cannot
+belong to two drivers.
+
+```sh
+uv run --locked python -m airtruck.examples.act record --output /tmp/airtruck-dataset --episodes 4 --seconds 8
+uv run --locked python -m airtruck.examples.act train --dataset /tmp/airtruck-dataset --output /tmp/airtruck-act --steps 1000
+uv run --locked python -m airtruck.examples.act rollout --checkpoint /tmp/airtruck-act/checkpoints/last/pretrained_model
+```
+
+The example records a standard LeRobot v3 dataset, calls LeRobot's Python trainer,
+and reloads native ACT checkpoints/preprocessors. The first arm supplies
+`observation.state`; the other arm supplies `observation.environment_state`.
+Both are measured positions available through the same object API in simulation
+or hardware. Stock ACT requires an image or environment-state input. This example
+uses numerical state, without synthetic hardware velocity measurements or vision
+weight downloads. Demonstrations pair observations at t with commands at t before
+physics advances. They demonstrate infrastructure, not task expertise.
+
+`act_training_config(dataset, output, steps=1000, device="cpu")` returns native
+LeRobot configuration dataclasses. `train(config)` returns the saved checkpoint.
+The trainer handles normalization, action chunks, optimization and checkpointing.
+Model sources, object placements, channels and timing are checked on rollout.
+Old checkpoint metadata is not supported. Nothing is uploaded to the Hub.
+
+The example uses a small 128-dimensional ACT, 16-action chunks and per-step
+inference with temporal ensembling. Three updates only check plumbing, not a
+learned skill. Use fresh output directories. Available accelerators can be chosen
+with `--device mps` or `--device cuda`.
+
+## Rendering and contact fidelity
+
+`render_mode="human"` opens a passive MuJoCo viewer; on macOS use `mjpython`.
+`render_mode="rgb_array"` lets `driver.render()` return RGB uint8 frames.
+The driver only renders when requested. Native `driver.model` and `driver.data`
+remain available for diagnostics; direct writes bypass the object API.
+
+The builder emits collision geometry and mating-link exclusions into
+`models/so101/so101.xml`. Original CAD visual triangles and reference inertias stay
+unchanged. CoACD uses a 1 mm concavity target, not a certified global surface-error
+bound. Zero-thickness source surfaces remain visual-only. Nonadjacent self-contact,
+cross-system contact and floor contact are native MuJoCo physics.
+`collisions=False` uses MuJoCo's global contact-disable flag for diagnostics.
+`include_contacts=False` skips force extraction. Reported contact forces are
+simulation results, not physical force measurements.
+
+On macOS, LeRobot's video/OpenCV dependencies can emit duplicate FFmpeg Objective-C
+class warnings. They are not suppressed. Camera/video workflows are not validated
+by this joint-state example.

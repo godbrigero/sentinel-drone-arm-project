@@ -1,10 +1,15 @@
 <mujoco model="two_arms">
   <compiler angle="radian" inertiafromgeom="false"/>
-  <option timestep="0.001" integrator="implicitfast" gravity="0 0 -9.81"/>
-  <statistic center="0 0 0.13" extent="0.8"/>
+  <option timestep="0.0005" integrator="implicitfast" gravity="0 0 -9.81"/>
+  <size memory="32M"/>
+  <statistic center="0 0.12 0.10" extent="0.55"/>
+  <asset><model name="so101" file="../../models/so101/so101.xml"/></asset>
   <worldbody>
     <light pos="0 -0.2 1" dir="0 0 -1" diffuse=".8 .8 .8"/>
-    <geom name="floor_visual" type="plane" size="1 1 .1" rgba=".17 .20 .24 1" contype="0" conaffinity="0"/>
+    <geom name="floor" type="plane" size="1 1 .1" rgba=".17 .20 .24 1"/>
+    <frame pos="-0.08 0 0"><attach model="so101" body="base" prefix="left/"/></frame>
+    <frame pos="0.08 0 0"><attach model="so101" body="base" prefix="right/"/></frame>
   </worldbody>
-  <visual><global offwidth="1280" offheight="960" azimuth="90" elevation="-20"/><quality shadowsize="2048"/></visual>
+  <keyframe><key name="initial" qpos="0 0 -3.14 0 0 0 0 0 -3.14 0 0 0"/></keyframe>
+  <visual><global offwidth="1280" offheight="960"/><quality shadowsize="2048"/></visual>
 </mujoco>

@@ -1,16 +1,19 @@
-"""Static-only usage examples; does not open a viewer or load external assets."""
+"""Static examples for native MuJoCo and Gymnasium access."""
+
 from typing import assert_type
-from airtruck.raw_api.so101.position import JointPosition, PositionUnit
+
 import mujoco
 import mujoco.viewer
 import numpy as np
 from numpy.typing import NDArray
-from airtruck.testing_util import WorldControl, Pose, EntityHandle, Sample
-from airtruck.raw_api.so101.io import ArmController, JointName
-from airtruck.raw_api.so101.calibration import JointCalibration, load_joint_calibrations
 
-def check_api(model: mujoco.MjModel, data: mujoco.MjData,
-              handle: mujoco.viewer.Handle) -> None:
+from airtruck.simulation.driver import MujocoDriver
+from airtruck.systems.base import Values
+
+
+def check_api(
+    model: mujoco.MjModel, data: mujoco.MjData, handle: mujoco.viewer.Handle
+) -> None:
     assert_type(data.qpos, NDArray[np.float64])
     assert_type(model.body_mass, NDArray[np.float64])
     assert_type(data.joint("elbow").qvel, NDArray[np.float64])
@@ -25,40 +28,26 @@ def check_api(model: mujoco.MjModel, data: mujoco.MjData,
     mujoco.mj_forward(model, data)
     assert_type(mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, "elbow"), int)
     quat = np.zeros(4, dtype=np.float64)
-    mujoco.mju_axisAngle2Quat(quat, np.array([0., 0., 1.]), .1)
+    mujoco.mju_axisAngle2Quat(quat, np.array([0.0, 0.0, 1.0]), 0.1)
     mujoco.set_mjcb_control(controller)
     mujoco.set_mjcb_control(None)
     with mujoco.Renderer(model) as renderer:
         renderer.update_scene(data)
         pixels = renderer.render()
-        assert_type(pixels, np.ndarray)  # Modes select RGB, depth, or segmentation dtype.
+        assert_type(
+            pixels, np.ndarray
+        )  # Modes select RGB, depth, or segmentation dtype.
+
 
 def controller(model: mujoco.MjModel, data: mujoco.MjData) -> None:
     data.ctrl[:] = 0.0
 
 
-
-
-def check_world_api(world: WorldControl) -> None:
-    arm = world.system("arm", ArmController)
-    assert_type(arm, ArmController)
-    assert_type(arm.positions, dict[JointName, JointPosition])
-    assert_type(arm.targets, dict[JointName, JointPosition])
-    assert_type(arm.normalized_positions, dict[JointName, JointPosition])
-    assert_type(world.entity("arm"), EntityHandle)
-    assert_type(world.pose(world.entity("arm")), Pose)
-    assert_type(world.record(lambda: arm.positions, 1.0), list[Sample[dict[JointName, JointPosition]]])
-    arm.set_positions({"shoulder_pan": JointPosition(0.1, PositionUnit.RADIANS, arm.positions["shoulder_pan"].limits_rad)})
-    # Negative static contracts: these ignores must remain necessary.
-    arm.set_positions({"not_a_joint": JointPosition(0.1, PositionUnit.RADIANS, (-1.0, 1.0))})  # type: ignore[dict-item]
-    arm.set_positions({"shoulder_pan": 0.1})  # type: ignore[dict-item]
-    arm.set_positions([0.1] * 6)  # type: ignore[arg-type]
-    arm.set_normalized_positions({"shoulder_pan": 0.1})  # type: ignore[dict-item]
-    arm.step()  # type: ignore[attr-defined]
-    world.data.qpos[:] = 0  # type: ignore[attr-defined]
-
-
-
-
-def check_calibration_api(path: str) -> None:
-    assert_type(load_joint_calibrations(path), dict[JointName, JointCalibration])
+def check_driver(driver: MujocoDriver) -> None:
+    assert_type(driver.data.qpos, NDArray[np.float64])
+    driver.reset(seed=42)
+    observations = driver.step()
+    assert_type(observations, dict[str, Values])
+    env = driver.as_gymnasium(flatten=True)
+    env.reset(seed=42)
+    env.step(env.action_space.sample())

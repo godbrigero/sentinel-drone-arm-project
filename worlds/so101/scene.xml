@@ -1,0 +1,13 @@
+<mujoco model="so101_scene">
+  <compiler angle="radian" inertiafromgeom="false"/>
+  <option timestep="0.0005" integrator="implicitfast" gravity="0 0 -9.81"/>
+  <size memory="32M"/>
+  <statistic center="0 -0.06 0.13" extent="0.45"/>
+  <asset><model name="so101" file="../../models/so101/so101.xml"/></asset>
+  <worldbody>
+    <light pos="0 -0.2 1" dir="0 0 -1" diffuse=".8 .8 .8"/>
+    <geom name="floor" type="plane" size="1 1 .1" rgba=".17 .20 .24 1"/>
+    <attach model="so101" body="base" prefix="arm/"/>
+  </worldbody>
+  <visual><global offwidth="1280" offheight="960"/><quality shadowsize="2048"/></visual>
+</mujoco>
