@@ -144,11 +144,24 @@ with SystemDriver([arm, drone]) as driver:
     driver.run(steps=300, realtime=drone.hardware)
 ```
 
-Controls are `position` (three absolute local NED meters) and `yaw` (radians in
-[-pi, pi]). NED means north, east, down: negative Z requests height above the
-estimator's local origin. Positive yaw turns from north toward east. Positions
-are not automatically relative to the current pose or terrain. The constructor's
-`position=` and `quaternion=` still place a model in the MuJoCo Z-up world.
+`drone.controls` and `drone.state` are dictionaries typed by `DroneControls` and
+`DroneState` (`airtruck/systems/drone.py`), so editors complete their keys and
+type checkers reject unknown keys. Both use local NED: north, east, down, so
+negative Z is height above the simulation world origin or PX4 estimator origin.
+
+| Key | Meaning |
+| --- | --- |
+| `controls["position"]` | Target body origin `[north, east, down]` in meters (array or list) |
+| `controls["yaw"]` | Target heading in radians, [-pi, pi]: 0 north, positive toward east |
+| `state["position"]` | Measured body origin `[north, east, down]` in meters (`float32`) |
+| `state["quaternion"]` | wxyz attitude rotating body FRD into NED; `yaw_angle()` gives heading |
+| `state["linear_velocity_m_s"]` | Body-origin velocity `[north, east, down]` in m/s |
+| `state["angular_velocity_rad_s"]` | Rotation rate about the NED axes (not body FRD) in rad/s |
+| `state["armed"]`, `["offboard"]`, `["landed"]` | Measured flight flags, plain `bool` |
+
+Targets are absolute, not relative to the current pose or terrain: to move 1 m
+north, add `[1, 0, 0]` to the current target. The constructor's `position=` and
+`quaternion=` still place a model in the MuJoCo Z-up world.
 For drone conversion, world axes are north/west/up and the model body is
 forward/left/up: NED `[x, y, z]` maps to world `[x, -y, -z]`. Arm units are unchanged.
 
@@ -165,14 +178,13 @@ The flight methods do not advance physics:
   after one second of sustained ground contact. Landing is asynchronous: inspect
   `state["landed"]` and `state["armed"]` while continuing to step the driver.
 
-State contains NED position, a wxyz body-FRD-to-NED quaternion, NED linear and
-angular velocities, and measured `armed`, `offboard`, `landed` flags. Simulation
-reports body-origin velocity even with an offset COM. Backend changes seed a hold
-at the observed pose. A simulated reset disarms and restores the initial model;
-a hardware reset holds measured position without arming, homing, or changing its
-flight mode. A hardware-tracked proxy converts the measured pose into the native
-Z-up world and uses MuJoCo constraints between observations. Virtual contact forces
-are not sent back to real hardware.
+Simulation reports body-origin velocity even with an offset COM. Simulated
+`landed` means supporting contact below 0.15 m/s; hardware uses PX4's land
+detector. Backend changes seed a hold at the observed pose. A simulated reset
+disarms and restores the initial model; a hardware reset holds measured position
+without arming, homing, or changing its flight mode. A hardware-tracked proxy
+converts the measured pose into the native Z-up world and uses MuJoCo constraints
+between observations. Virtual contact forces are not sent back to real hardware.
 
 ### Simulation controller and model contract
 

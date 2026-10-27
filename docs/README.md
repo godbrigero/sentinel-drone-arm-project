@@ -53,10 +53,10 @@ and prints simulated detections from the global tag board, headless by default.
 
 ## Code and configuration
 
-- `airtruck/systems/base.py`: `SimSystem` lifecycle and numeric space validation.
+- `airtruck/systems/base.py`: `SimSystem` lifecycle, numeric space validation and typed `state`/`controls`.
 - `airtruck/systems/so101.py`: shared arm binding plus native LeRobot leader/follower subclasses.
 - `airtruck/systems/sentinel.py`: `SentinelDrone`, the Sentinel aircraft for simulation or PX4 hardware (`hardware=`), like `SO101Follower`.
-- `airtruck/systems/drone.py`: generic `Drone`: shared position/yaw flight commands, propeller spin, cameras and tag ingestion for a prepared free-body MJCF and PX4 hardware.
+- `airtruck/systems/drone.py`: generic `Drone` with `DroneState`/`DroneControls` keys: shared position/yaw flight commands, propeller spin, cameras and tag ingestion for a prepared free-body MJCF and PX4 hardware.
 - `airtruck/systems/flight.py`: NED frame conversion, flight schemas and simulation autopilot.
 - `airtruck/systems/px4.py`: typed ROS 2 offboard transport with confirmed commands, telemetry and `/tag_detections`.
 - `airtruck/systems/camera.py`: camera intrinsics, body mounting and latest-frame feed.

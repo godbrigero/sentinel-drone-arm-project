@@ -66,8 +66,8 @@ def yaw_angle(quaternion: np.ndarray) -> float:
 class FlightController:
     """Illustrative simulation tuning, not a reproduction of PX4 firmware gains."""
 
-    position_gain: float = 1.5
-    velocity_gain: float = 3.0
+    position_gain: float = 1.0
+    velocity_gain: float = 1.0
     attitude_gain: float = 36.0
     rate_gain: float = 12.0
     max_speed_m_s: float = 1.0

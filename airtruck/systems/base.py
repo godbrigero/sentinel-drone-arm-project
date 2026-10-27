@@ -6,7 +6,7 @@ import copy
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import mujoco
 import numpy as np
@@ -43,12 +43,20 @@ def space_values(space: spaces.Space, value: Any) -> Any:
     return copy.deepcopy(value)
 
 
-class SimSystem(ABC):
-    """A prepared physical model with its own command and observation schema."""
+class SimSystem[StateT: Mapping[str, Any], ControlsT: Mapping[str, Any]](ABC):
+    """A prepared physical model with its own command and observation schema.
+
+    `StateT`/`ControlsT` type `state` and `controls`; subclasses with fixed keys
+    pass TypedDicts so editors list each key with its units and frame.
+    """
 
     controllable = True
     action_space: spaces.Dict
     observation_space: spaces.Dict
+    controls: ControlsT
+    """Pending command, applied at the next driver step."""
+    state: StateT
+    """Latest measurement, refreshed by every driver reset/step."""
 
     def __init__(
         self,
@@ -78,8 +86,8 @@ class SimSystem(ABC):
         self.hardware = hardware
         self._hardware_active = False
         self.rng = np.random.default_rng()
-        self.controls: Values = {}
-        self.state: Values = {}
+        self.controls = cast(ControlsT, {})
+        self.state = cast(StateT, {})
         self._command: Values = {}
         self._model: mujoco.MjModel | None = None
         self._data: mujoco.MjData | None = None
@@ -122,8 +130,8 @@ class SimSystem(ABC):
             raise RuntimeError(f"{self.name} already belongs to a driver")
         self._model, self._data = model, data
 
-    def validate_controls(self, controls: Values | None = None) -> Values:
-        command = copy.deepcopy(self.controls if controls is None else controls)
+    def validate_controls(self, controls: Mapping[str, Any] | None = None) -> Values:
+        command = copy.deepcopy(dict(self.controls if controls is None else controls))
         space_values(self.action_space, command)
         return command
 
@@ -179,7 +187,7 @@ class SimSystem(ABC):
         """Apply the prepared command locally; never call mj_step here."""
 
     @abstractmethod
-    def observe(self) -> Values: ...
+    def observe(self) -> StateT: ...
 
     def close(self) -> None:
         try:

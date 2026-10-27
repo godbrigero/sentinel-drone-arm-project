@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 import time
 from pathlib import Path
-from typing import Any, Literal, Protocol
+from typing import Any, Literal, Protocol, TypedDict
 
 import mujoco
 import numpy as np
@@ -33,6 +33,43 @@ from airtruck.systems.flight import (
 from airtruck.systems.px4 import PX4Backend, PX4Config
 
 
+class DroneState(TypedDict):
+    """`drone.state` and `get_observation()`: the latest measurement.
+
+    Refreshed by every driver reset/step (and by flight commands). Positions and
+    velocities use local NED (north, east, down; heights are negative), relative
+    to the simulation world origin or the PX4 estimator origin.
+    """
+
+    position: NDArray[np.float32]
+    """Body origin [north, east, down] in meters."""
+    quaternion: NDArray[np.float32]
+    """Attitude, wxyz, rotating body FRD vectors into NED; `yaw_angle()` gives heading."""
+    linear_velocity_m_s: NDArray[np.float32]
+    """Body-origin velocity [north, east, down] in m/s."""
+    angular_velocity_rad_s: NDArray[np.float32]
+    """Body rotation rate about the NED axes in rad/s (not body FRD)."""
+    armed: bool
+    """Motors armed."""
+    offboard: bool
+    """Offboard (position target) flight mode is active."""
+    landed: bool
+    """On the ground: supporting contact and below 0.15 m/s, or PX4's land detector."""
+
+
+class DroneControls(TypedDict):
+    """`drone.controls`: the target sent at the next driver step.
+
+    Absolute local NED, the same frame as `DroneState`; never relative to the
+    current pose. Flight commands (`takeoff()`, `hold()`, `land()`, resets) set it.
+    """
+
+    position: NDArray[np.floating[Any]] | list[float]
+    """Target body origin [north, east, down] in meters; -1.0 down = 1 m above origin."""
+    yaw: float
+    """Target heading in radians, [-pi, pi]: 0 north, positive turns toward east."""
+
+
 class DroneHardware(Protocol):
     """Local NED/FRD telemetry and position/yaw flight commands."""
 
@@ -49,10 +86,11 @@ class DroneHardware(Protocol):
         ...
 
 
-class Drone(SimSystem):
+class Drone(SimSystem[DroneState, DroneControls]):
     """Position targets and flight lifecycle shared by simulation and PX4.
 
     Public positions/velocities use NED; attitudes rotate body FRD into NED.
+    `state` keys are listed in `DroneState`; `controls` keys in `DroneControls`.
     The supplied MuJoCo model uses Z-up NWU and body FLU with native wrench
     actuators. A simulation autopilot tracks targets without pose teleports.
 
@@ -349,7 +387,7 @@ class Drone(SimSystem):
         """Stop communication (also done on driver exit); never lands or disarms."""
         self.close()
 
-    def get_observation(self) -> Values:
+    def get_observation(self) -> DroneState:
         return self.observe()
 
     def send_action(self, action: Values) -> Values:
@@ -357,7 +395,10 @@ class Drone(SimSystem):
         self.world
         self.sync_hardware()
         command = self.validate_controls({**self.controls, **action})
-        self.controls.update(command)
+        self.controls["position"], self.controls["yaw"] = (
+            command["position"],
+            command["yaw"],
+        )
         if self._hardware_active:
             return dict(self.backend.send_action(command))
         return command
@@ -442,7 +483,7 @@ class Drone(SimSystem):
         self.sync_hardware()
         self.observe()
         self._hold_target()
-        target = self.controls["position"].copy()
+        target = np.array(self.controls["position"], dtype=np.float64)
         target[2] -= height
         self.engage_offboard_mode()
         self.arm()
@@ -519,12 +560,22 @@ class Drone(SimSystem):
         )
         self._spin_rotors(data.ctrl[self._actuators])
 
-    def observe(self) -> Values:
+    def observe(self) -> DroneState:
         model, data = self.world
+        observation: DroneState
         if self._hardware_active:
-            observation = space_values(
+            measured = space_values(
                 self.observation_space, self.backend.get_observation()
             )
+            observation = {
+                "position": measured["position"],
+                "quaternion": measured["quaternion"],
+                "linear_velocity_m_s": measured["linear_velocity_m_s"],
+                "angular_velocity_rad_s": measured["angular_velocity_rad_s"],
+                "armed": bool(measured["armed"]),
+                "offboard": bool(measured["offboard"]),
+                "landed": bool(measured["landed"]),
+            }
             if not np.isclose(np.linalg.norm(observation["quaternion"]), 1):
                 raise ValueError("Drone quaternion must have unit length")
             position = NED_TO_WORLD * observation["position"]
@@ -566,17 +617,19 @@ class Drone(SimSystem):
                 ),
                 "armed": self._armed,
                 "offboard": self._offboard,
-                "landed": self._supported() and np.linalg.norm(velocity[3:]) < 0.15,
+                "landed": bool(
+                    self._supported() and np.linalg.norm(velocity[3:]) < 0.15
+                ),
             }
-        self._armed, self._offboard, self._landed = (
-            bool(observation[key]) for key in ("armed", "offboard", "landed")
-        )
+        self._armed = observation["armed"]
+        self._offboard = observation["offboard"]
+        self._landed = observation["landed"]
         self.state = observation
         if self._hardware_active:
             for record in self.backend.pop_tag_detections():
                 self._publish_tag(record, "ros")
         self._process_cameras()
-        return dict(self.state)
+        return self.state.copy()
 
     def capture(self, camera: str) -> NDArray[np.uint8]:
         """Render a simulated frame now, or return the latest published hardware frame."""

@@ -54,7 +54,7 @@ def release(device: Any) -> None:
         raise ExceptionGroup("Hardware cleanup failed", errors)
 
 
-class SO101Arm(SimSystem):
+class SO101Arm(SimSystem[Values, Values]):
     """SO-101 joint mapping and measured-pose tracking, shared by both roles."""
 
     bus: Any

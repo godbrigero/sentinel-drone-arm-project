@@ -397,6 +397,10 @@ def test_sentinel_hardware_uses_the_identical_api(graph: ROSGraph) -> None:
         assert drone.is_connected and drone.hardware_active  # Opened on entry.
         driver.reset()
         assert not drone.state["armed"]  # Connecting never arms.
+        # Flags are plain booleans on hardware, as in simulation (see DroneState).
+        state = drone.state
+        assert type(state["armed"]) is type(state["offboard"]) is type(state["landed"])
+        assert type(state["armed"]) is bool
         accepted = drone.send_action({"position": np.array([1.0, 2.0, -1.5])})
         np.testing.assert_allclose(accepted["position"], [1, 2, -1.5])
         assert backend._target is not None

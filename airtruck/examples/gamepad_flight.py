@@ -105,10 +105,11 @@ def steer(drone: Drone, sticks: np.ndarray, dt: float) -> None:
             -climb * 0.7,
         ]
     )
-    target = np.asarray(drone.controls["position"]) + velocity * dt
+    target = np.asarray(drone.controls["position"], dtype=np.float64) + velocity * dt
     error = target - drone.state["position"]
-    if np.linalg.norm(error) > 0.6:
-        target = drone.state["position"] + error * (0.6 / np.linalg.norm(error))
+    distance = float(np.linalg.norm(error))
+    if distance > 0.6:  # Keep the target within 0.6 m of the aircraft.
+        target -= error * (1 - 0.6 / distance)
     drone.controls["position"] = np.clip(target, [-4, -4, -3.5], [4, 4, -0.17])
 
 
@@ -182,7 +183,7 @@ def main() -> None:
                 elif "hold" in pressed:
                     drone.hold()
                 steer(drone, sticks, driver.control_dt)
-                position = drone.state["position"]
+                measured = drone.state["position"]
                 status = "FLYING" if drone.state["armed"] else "DISARMED - press A"
                 tag = drone.latest_tag()
                 seen = (
@@ -196,14 +197,14 @@ def main() -> None:
                     (
                         int(mujoco.mjtFontScale.mjFONTSCALE_150),
                         int(mujoco.mjtGridPos.mjGRID_TOPLEFT),
-                        f"{label} | {status}\n{pad.name}\nA Takeoff  B Land  X Hold  Y Reset  Menu Quit\nLeft stick: altitude / yaw\nRight stick: forward / sideways\n[ ] onboard cameras\nHeight: {-position[2]:.2f} m{seen}",
+                        f"{label} | {status}\n{pad.name}\nA Takeoff  B Land  X Hold  Y Reset  Menu Quit\nLeft stick: altitude / yaw\nRight stick: forward / sideways\n[ ] onboard cameras\nHeight: {-measured[2]:.2f} m{seen}",
                         None,
                     )
                 )
                 driver.step()
                 if started - last_log > 2.0:
                     print(
-                        f"position_ned={position.round(2).tolist()} sticks={sticks.round(2).tolist()} armed={drone.state['armed']}",
+                        f"position_ned={measured.round(2).tolist()} sticks={sticks.round(2).tolist()} armed={drone.state['armed']}",
                         flush=True,
                     )
                     last_log = started
