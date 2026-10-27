@@ -225,29 +225,35 @@ def test_cleanup_attempts_all_motors_even_after_one_failure() -> None:
 def test_drone_backend_tracking_and_partial_failure_cleanup(drone_model: Path) -> None:
     backend = MagicMock()
     backend.get_observation.return_value = {
-        "position": np.array([0.4, 0, 0.6], dtype=np.float32),
+        "position": np.array([0.4, 0, -0.6], dtype=np.float32),
         "quaternion": np.array([2**-0.5, 0, 0, 2**-0.5], dtype=np.float32),
         "linear_velocity_m_s": np.zeros(3, dtype=np.float32),
         "angular_velocity_rad_s": np.zeros(3, dtype=np.float32),
+        "armed": False,
+        "offboard": False,
+        "landed": False,
     }
     drone = Drone("drone", model=drone_model, backend=backend, position=(0.4, 0, 0.5))
     with MujocoDriver([drone]) as driver:
         driver.reset()
         drone.hardware = True
         driver.step()
-        np.testing.assert_allclose(drone.state["position"], [0.4, 0, 0.6])
+        np.testing.assert_allclose(drone.state["position"], [0.4, 0, -0.6])
         mujoco.mj_step(driver.model, driver.data, nstep=40)
         np.testing.assert_allclose(driver.data.qpos[:3], [0.4, 0, 0.6], atol=0.003)
         np.testing.assert_allclose(
             driver.data.qpos[3:7],
-            backend.get_observation.return_value["quaternion"],
+            backend.get_observation.return_value["quaternion"]
+            * np.array([1, 1, -1, -1]),
             atol=0.003,
         )
-        drone.controls["thrust_n"] = 2
+        drone.controls["position"] = np.array([0.4, 0, -0.8])
         driver.step()
-        assert backend.send_action.call_args.args[0]["thrust_n"] == 2
+        np.testing.assert_allclose(
+            backend.send_action.call_args.args[0]["position"], [0.4, 0, -0.8]
+        )
         driver.reset()
-        assert drone.controls["thrust_n"] == 2
+        np.testing.assert_allclose(drone.controls["position"], [0.4, 0, -0.6])
         drone.hardware = False
         driver.step()
         backend.disconnect.assert_called_once()
@@ -261,8 +267,10 @@ def test_drone_backend_tracking_and_partial_failure_cleanup(drone_model: Path) -
 
 
 def test_no_silent_hardware_fallback_or_fast_hardware_loop(drone_model: Path) -> None:
-    drone = Drone("drone", model=drone_model, hardware=True)
-    with pytest.raises(NotImplementedError):
+    backend = MagicMock()
+    backend.connect.side_effect = OSError("PX4 unavailable")
+    drone = Drone("drone", model=drone_model, hardware=True, backend=backend)
+    with pytest.raises(OSError, match="PX4 unavailable"):
         with MujocoDriver([drone]):
             pass
     arm = SO101Follower("arm", port="/dev/fake")

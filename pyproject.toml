@@ -7,6 +7,7 @@ dependencies = [
     "numpy==2.2.6",
     "gymnasium==1.4.0",
     "lerobot[feetech,training]==0.6.1",
+    "pygame-ce==2.5.8",
 ]
 
 [dependency-groups]
@@ -17,10 +18,22 @@ dev = [
     "trimesh==4.12.2",
     "coacd==1.0.9",
     "scipy==1.17.1",
+    "basedpyright==1.40.2",
 ]
 
 [tool.uv]
 package = false
+
+# Native ROS is distributed through RoboStack, rather than PyPI/uv.
+[tool.airtruck.ros]
+environment = "airtruck-ros"
+distribution = "jazzy"
+packages = [
+    "python=3.12", "numpy=2.2.6", "ros-jazzy-rclpy=7.1.12",
+    "ros-jazzy-rosidl-default-generators=1.6.1", "cmake=3.31.8",
+    "ninja=1.13.2", "colcon-common-extensions=0.3.0",
+]
+px4_revision = "392e831c1f659429ca83902e66820d7094591410"
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

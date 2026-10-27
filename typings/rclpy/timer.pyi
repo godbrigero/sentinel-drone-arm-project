@@ -1,0 +1,3 @@
+"""Focused rclpy 7.1.12 overlay; see typings/README.md."""
+class Timer:
+    def cancel(self) -> None: ...

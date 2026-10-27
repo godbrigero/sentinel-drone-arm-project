@@ -4,6 +4,6 @@
   "venvPath": ".",
   "venv": ".venv",
   "stubPath": "typings",
-  "include": ["airtruck", "typings/smoke.py"],
+  "include": ["airtruck", "scripts", "typings/smoke.py"],
   "exclude": ["**/__pycache__", "models", "airtruck/**/tests"]
 }

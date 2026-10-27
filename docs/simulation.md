@@ -47,7 +47,7 @@ with MujocoDriver([left, right]) as driver:
 runs after fresh input observations and before command validation. Omit `steps` to
 run until `driver.stop()` or interruption. Use `realtime=False` for accelerated
 simulation. Hardware loops require real-time pacing. Physical devices continue on
-their own clocks, and dispatch across serial devices is not an atomic transaction.
+their own clocks, and dispatch across systems is not an atomic transaction.
 
 ## Systems and native worlds
 
@@ -97,47 +97,139 @@ virtual input device. Leaders are observations, not Gymnasium action channels.
 
 See [hardware usage](hardware/README.md) for flags, calibration and teleoperation.
 
-## Drone control
+## Drone position control and flight commands
 
-`airtruck/systems/drone.py` supplies a separate free-body controller. It requires a
-caller-supplied, prepared model; it does not create or simplify Sentinel geometry.
-There is currently no local Sentinel MJCF or flight-controller implementation.
+`Drone` exposes the same position/yaw targets and flight commands in MuJoCo and
+PX4 hardware mode. `hardware=False` is the default; set `hardware=True` at creation
+or later to use the built-in ROS 2 backend. Connecting or switching backends never
+arms the aircraft or selects offboard mode. A supplied prepared MJCF is still
+required for the shared world; no replacement Sentinel geometry is generated.
+There is currently no prepared Sentinel MJCF in the repository.
 
 ```python
 from airtruck.systems.drone import Drone
 
 arm = SO101Follower("arm")
-drone = Drone("drone", model="/path/to/prepared-drone.xml", position=(0.4, 0, 0.5))
+drone = Drone("drone", model="/path/to/prepared-drone.xml",
+              hardware=False, position=(0.4, 0, 0.1))
 
 with MujocoDriver([arm, drone]) as driver:
     driver.reset()
+    drone.takeoff(0.5)
+    driver.run(steps=250, realtime=drone.hardware)
+    drone.controls["position"] = [0.6, 0.2, -0.8]
+    drone.controls["yaw"] = 0.3
     arm.controls["shoulder_pan.pos"] = 20
-    drone.controls["thrust_n"] = 4
-    drone.controls["yaw_torque_nm"] = 0.02
-    driver.step()
-    print(drone.state["position"])
+    driver.run(steps=250, realtime=drone.hardware)
+    drone.land()
+    driver.run(steps=300, realtime=drone.hardware)
 ```
 
-The drone root body needs one free joint, assigned inertia, and four native site
-actuators named `thrust_n`, `roll_torque_nm`, `pitch_torque_nm`, `yaw_torque_nm`.
-They must be stateless, unit-gain, bias-free motor actuators. Their gears are respectively `0 0 1 0 0 0`, `0 0 0 1 0 0`, `0 0 0 0 1 0`,
-`0 0 0 0 0 1`. They share a body-aligned site at the root's center of mass and
-finite native `ctrlrange` limits. MuJoCo rotates these local wrenches as the body
-moves; no Python force integration or collision solver is implemented.
+Controls are `position` (three absolute local NED meters) and `yaw` (radians in
+[-pi, pi]). NED means north, east, down: negative Z requests height above the
+estimator's local origin. Positive yaw turns from north toward east. Positions
+are not automatically relative to the current pose or terrain. The constructor's
+`position=` and `quaternion=` still place a model in the MuJoCo Z-up world.
+For drone conversion, world axes are north/west/up and the model body is
+forward/left/up: NED `[x, y, z]` maps to world `[x, -y, -z]`. Arm units are unchanged.
 
-State contains world position of the root body frame, wxyz quaternion, world
-linear velocity of that same origin in m/s, and world angular velocity in rad/s.
-Center-of-mass offsets do not change the reported velocity reference point. A `DroneHardware` implementation supplies
-`connect`, `disconnect`, `get_observation`, and `send_action` in this SI schema.
-Connecting the backend must not arm an aircraft. Reset preserves existing hardware
-wrench targets; a simulated reset clears them to zero. Enabling hardware without a
-backend raises an error. Reference aircraft weights are not assigned CAD inertia.
+The flight methods do not advance physics:
 
-The analytic free-body fixture in `airtruck/tests/conftest.py` tests thrust, torque,
-rotated forces, floor contact and backend tracking. It is not a Sentinel model.
-`airtruck.examples.mixed_systems` runs an arm with a supplied drone model.
+- `engage_offboard_mode()` selects position control, holding the pending target.
+- `arm()` requests arming; `disarm()` requests disarming without force-override flags.
+- `takeoff(height)` holds measured XY/yaw, selects offboard, arms, and requests a
+  climb by that many meters from the measured position. It returns after setting
+  the target, not after reaching the requested height.
+- `hold()` captures measured position/yaw and resumes offboard if already armed.
+- `land()` requests PX4's actual landing mode. Simulation descends at a bounded
+  speed, detects upward supporting native contacts and low speed, then disarms
+  after one second of sustained ground contact. Landing is asynchronous: inspect
+  `state["landed"]` and `state["armed"]` while continuing to step the driver.
+
+State contains NED position, a wxyz body-FRD-to-NED quaternion, NED linear and
+angular velocities, and measured `armed`, `offboard`, `landed` flags. Simulation
+reports body-origin velocity even with an offset COM. Backend changes seed a hold
+at the observed pose. A simulated reset disarms and restores the initial model;
+a hardware reset holds measured position without arming, homing, or changing its
+flight mode. A hardware-tracked proxy converts the measured pose into the native
+Z-up world and uses MuJoCo constraints between observations. Virtual contact forces
+are not sent back to real hardware.
+
+### Simulation controller and model contract
+
+`FlightController` in `airtruck/systems/flight.py` implements bounded position/velocity
+and attitude/rate feedback with gravity compensation. It converts targets to the
+model's four native wrench actuators once per driver tick; MuJoCo integrates the
+result and computes gravity, collisions and contact forces over the physics
+substeps. Simulation flight never assigns qpos to reach a commanded target.
+Unarmed drones receive zero motor inputs and fall under gravity.
+
+The model root needs one free joint, assigned inertia, and stateless, unit-gain,
+bias-free site motor actuators named `thrust_n`, `roll_torque_nm`,
+`pitch_torque_nm`, `yaw_torque_nm`. Their gears are respectively `0 0 1 0 0 0`,
+`0 0 0 1 0 0`, `0 0 0 0 1 0`, `0 0 0 0 0 1`, with finite limited control ranges.
+They share a body-aligned site at the root COM. These wrench channels are internal
+controller outputs, not policy actions. Use an aggregate rigid-body mass/inertia
+appropriate to the supplied aircraft and enough actuator authority to support it.
+Manufacturer reference aircraft weight does not establish assigned CAD inertia.
+
+The controller gains and response limits are editable through `controller=FlightController(...)`.
+They are illustrative simulation settings: matching the command API does not make
+this controller dynamically identical to PX4 firmware or the physical aircraft.
+The default controller is tested at a 0.02 s control period with the analytic
+free-body fixture. No automatic tag alignment or landing mission is implemented.
+`airtruck.examples.mixed_systems --drone-model /path/to/model.xml --height 0.5`
+runs the same flight API alongside an arm, without connecting hardware.
+
+### PX4 ROS 2 backend
+
+See [ROS installation and hardware configuration](hardware/README.md#px4-drone).
+`PX4Backend` publishes `OffboardControlMode`, `TrajectorySetpoint` and
+`VehicleCommand`; it subscribes to odometry, vehicle status, land detection and
+command acknowledgements. It streams a measured hold for at least 1.1 seconds
+before requesting offboard, and waits for both command acceptance and the measured
+mode/arming change. Mode/arming flags never mean only "request sent".
+Position-only messages set unused velocity/acceleration feed-forward fields to NaN.
+
+Each hardware backend owns a ROS context and executor. Driver reads and bounded
+flight-command waits pump that executor; there is no background flight thread and
+no shutdown of another application's ROS context. Run the hardware driver in real
+time at the default 50 Hz rate. Its ROS timer sends setpoints/heartbeats at 20 Hz.
+Fresh telemetry is required; stale data stops the heartbeat, and estimator-origin
+resets require reconnecting rather than reusing an old absolute target. Closing
+only stops communication; it does not silently land or disarm a flying aircraft.
+PX4's configured offboard-loss behavior applies if communication stops.
+
+Gymnasium packs four drone action numbers and sixteen observation numbers using
+the same schemas in either backend. For simulation training, a task wrapper's
+`reset()` should explicitly request takeoff/arming after resetting the base
+environment; base resets never auto-arm. Hardware episode resets must be managed
+explicitly rather than running accelerated vector workers against a real aircraft.
+Absolute position/velocity spaces are unbounded, while the API rejects nonfinite
+values. Gymnasium's checker therefore emits range/normalization advice. A task
+wrapper can bound its workspace and normalize policy inputs/actions for training;
+LeRobot's dataset statistics still own policy normalization.
 
 ## Gymnasium and ACT
+
+The interactive controller example is available with:
+
+```sh
+uv run --locked mjpython -m airtruck.examples.gamepad_flight
+```
+
+It uses `models/demo_quad/quad.xml` (an explicitly analytic model, not Sentinel)
+and `worlds/flight_arena/scene.xml`. SDL's standard game-controller mapping reads
+the Xbox pad without creating another visible window. Left stick controls climb
+and yaw, and right stick moves forward/sideways relative to the current heading.
+A takes off, B lands, X holds, Y resets, and Menu closes the demo. Releasing the
+sticks leaves a held position target; disconnecting the controller captures a
+measured hold. Targets are bounded to the demonstration arena with a small
+tracking leash. `--model` can select another model using the prepared drone
+contract. The demo always constructs `Drone(..., hardware=False)`.
+
+The generic model's mass/inertia are assigned simulation settings and are recorded
+in its own `information.json`; they are not CAD or measured Sentinel properties.
 
 ```python
 with MujocoDriver([left, right]) as driver:

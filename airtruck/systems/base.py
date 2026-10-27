@@ -140,7 +140,7 @@ class SimSystem(ABC):
                 self._hardware_active = True
                 self._backend_changed()
                 self.observe()
-                self.hold()
+                self._hold_after_switch()
             except BaseException:
                 try:
                     self._disconnect_hardware()
@@ -154,7 +154,10 @@ class SimSystem(ABC):
             finally:
                 self._hardware_active = False
                 self._backend_changed()
-            self.hold()
+            self._hold_after_switch()
+
+    def _hold_after_switch(self) -> None:
+        self.hold()
 
     def _connect_hardware(self) -> None:
         raise NotImplementedError(f"No hardware backend for {type(self).__name__}")

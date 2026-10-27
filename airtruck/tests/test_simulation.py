@@ -139,39 +139,29 @@ def test_arm_and_free_body_use_different_controls_in_one_world(
         driver.reset()
         initial_z = drone.state["position"][2]
         arm.controls["shoulder_pan.pos"] = 20
-        drone.controls["thrust_n"] = 1.5  # Greater than this analytic fixture's weight.
-        drone.controls["yaw_torque_nm"] = 0.001
+        drone.takeoff(0.5)
+        drone.controls["yaw"] = 0.3
         driver.step()
         assert driver.model.nq == 13 and driver.model.nu == 10
         assert driver.data.time == pytest.approx(0.02)
-        assert drone.state["position"][2] > initial_z
-        assert abs(drone.state["quaternion"][3]) > 0.001
+        assert drone.state["position"][2] < initial_z
+        assert abs(drone.state["quaternion"][3]) > 0
         assert arm.state["shoulder_pan.pos"] > 0
         adapter = GymnasiumAdapter(driver)
         assert spaces.flatdim(adapter.action_space) == 10
-        assert spaces.flatdim(adapter.observation_space) == 19
+        assert spaces.flatdim(adapter.observation_space) == 22
         assert not np.any(driver.data.warning.number)
 
 
-def test_drone_site_thrust_rotates_with_body_and_makes_floor_contact(
-    drone_model: Path,
-) -> None:
-    drone = Drone(
-        "drone",
-        model=drone_model,
-        position=(0.4, 0, 0.2),
-        quaternion=(2**-0.5, 0, 2**-0.5, 0),
-    )
+def test_disarmed_drone_falls_and_makes_native_floor_contact(drone_model: Path) -> None:
+    drone = Drone("drone", model=drone_model, position=(0.4, 0, 0.2))
     with MujocoDriver([drone]) as driver:
         driver.reset()
-        drone.controls["thrust_n"] = 1
-        for _ in range(5):
+        drone.controls["position"] = np.array([0.4, 0, -2.0])
+        for _ in range(50):
             driver.step()
-        assert drone.state["position"][0] > 0.42  # Local +Z is world +X.
-        drone.controls["thrust_n"] = 0
-        for _ in range(45):
-            driver.step()
-        assert drone.state["position"][2] == pytest.approx(0.03, abs=0.003)
+        assert drone.state["position"][2] == pytest.approx(-0.03, abs=0.003)
+        assert drone.state["landed"] and not drone.state["armed"]
         assert driver.info["contacts"]
 
 
@@ -259,4 +249,4 @@ def test_drone_velocity_matches_pose_origin_with_offset_center_of_mass(
         np.testing.assert_allclose(
             drone.state["linear_velocity_m_s"], [0, 0, 0], atol=1e-8
         )
-        np.testing.assert_allclose(drone.state["angular_velocity_rad_s"], [0, 0, 1])
+        np.testing.assert_allclose(drone.state["angular_velocity_rad_s"], [0, 0, -1])

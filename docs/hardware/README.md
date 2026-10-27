@@ -1,4 +1,4 @@
-# SO-101 systems: simulation and LeRobot hardware
+# Hardware control: SO-101 and PX4
 
 Use the same `SO101Follower` or `SO101Leader` object for both backends. These classes
 inherit the corresponding native LeRobot class and share `SO101Arm` simulation
@@ -92,3 +92,56 @@ Tests use fake buses while exercising native LeRobot connect/configure/read/writ
 methods. They do not open physical ports. Physical calibration, installed voltage,
 real timing, dynamics and motion remain unverified. Cleanup cannot guarantee an
 unreachable device is unpowered; errors remain visible.
+
+## PX4 drone
+
+`Drone(..., hardware=True)` uses the built-in PX4 ROS 2 backend. It accepts the
+same NED `position`/`yaw` controls and `arm`, `takeoff`, `hold`, `land`, `disarm`
+methods as simulation. Supply the prepared drone MJCF for the shared world.
+`PX4Config(namespace="px4_1", system_id=2)` selects a namespaced vehicle;
+pass it as `Drone(..., px4=config)`. A custom backend may implement `DroneHardware`.
+
+ROS imports are direct and required when importing the drone modules. On this
+macOS workspace, native ROS 2 Jazzy/rclpy 7.1.12 and PX4 release/1.16 messages are
+installed in Pixi's `airtruck-ros` environment. An ignored
+`.venv/lib/python3.12/site-packages/airtruck_ros.pth` exposes those bindings and the
+ROS prefix to the persistent uv Python 3.12 environment. The SDK is a real native
+installation, not the type overlay or a runtime mock.
+
+To reproduce the native installation, install `pixi` and the platform C/C++ build
+tools, then run from the project root:
+
+```sh
+uv sync --locked
+uv run --locked python scripts/drone/install_ros.py
+```
+
+Python packages remain locked by `uv.lock`. Native ROS distribution/build inputs
+are pinned under `[tool.airtruck.ros]` in `pyproject.toml`; Pixi owns its native
+environment and package manifest outside the checkout. The installer builds PX4
+messages at revision `392e831c1f659429ca83902e66820d7094591410`, sets the native
+library install paths, registers the SDK in `.venv`, and removes temporary source
+and build artifacts. Re-run it after replacing `.venv`. ROS packages are not normal
+PyPI dependencies; `uv sync` alone does not install native ROS or generate messages.
+
+The aircraft must run a compatible PX4 firmware/message version and the XRCE-DDS
+bridge/agent must already be configured. The backend uses the message class's
+`MESSAGE_VERSION` to select versioned output topics (for example
+`/fmu/out/vehicle_status_v1`). Match firmware, message definitions, namespace and
+system IDs; this installation does not flash or configure the aircraft.
+
+The adapter uses position/yaw setpoints, a 20 Hz heartbeat and bounded acknowledgement
+waits. Connection never arms; explicit takeoff first holds the measured pose,
+warms up offboard, confirms mode/arming and then changes the position target.
+`land()` sends `VEHICLE_CMD_NAV_LAND` and confirms landing mode, not touchdown.
+Keep stepping in real time and inspect measured land/arming status. Shutdown does
+not auto-disarm; communication loss invokes the aircraft's configured failsafe.
+See [flight semantics and coordinate frames](../simulation.md#drone-position-control-and-flight-commands).
+
+Native ROS message serialization and node/executor/type support have been checked
+locally on an isolated DDS domain. The automated PX4 transport tests replace the
+ROS graph with an in-memory executor; they test warmup, setpoints, ACK/status
+confirmation, rejection/timeouts, frame conversion and cleanup without connecting
+to a flight controller. PX4 SITL, physical flight, radio/bridge timing and actual
+flight-controller gains remain unverified. Simulation tracks the same API through
+an illustrative controller; it does not run PX4 firmware.

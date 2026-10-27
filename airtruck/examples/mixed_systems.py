@@ -15,15 +15,17 @@ def main() -> None:
     parser.add_argument("--drone-body", default="base")
     parser.add_argument("--seconds", type=float, default=5)
     parser.add_argument(
-        "--thrust",
+        "--height",
         type=float,
-        default=0,
-        help="Body-local thrust in N; not a hover controller",
+        default=0.5,
+        help="Simulated takeoff height above the initial pose in meters",
     )
     parser.add_argument("--render", action="store_true")
     args = parser.parse_args()
-    if not math.isfinite(args.seconds) or args.seconds <= 0:
-        parser.error("seconds must be positive and finite")
+    if not all(
+        math.isfinite(value) and value > 0 for value in (args.seconds, args.height)
+    ):
+        parser.error("seconds and height must be positive and finite")
     arm = SO101Follower("arm")
     drone = Drone(
         "drone",
@@ -36,7 +38,7 @@ def main() -> None:
     ) as driver:
         driver.reset()
         arm.controls["shoulder_pan.pos"] = 20
-        drone.controls["thrust_n"] = args.thrust
+        drone.takeoff(args.height)
         driver.run(
             steps=math.ceil(args.seconds / driver.control_dt), realtime=args.render
         )

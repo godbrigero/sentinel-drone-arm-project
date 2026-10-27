@@ -1,11 +1,16 @@
 """Static examples for native MuJoCo and Gymnasium access."""
 
+from collections.abc import Sequence
 from typing import assert_type
 
 import mujoco
 import mujoco.viewer
 import numpy as np
 from numpy.typing import NDArray
+from px4_msgs.msg import TrajectorySetpoint, VehicleCommand
+from rclpy.node import Node
+from rclpy.publisher import Publisher
+from rclpy.qos import qos_profile_sensor_data
 
 from airtruck.simulation.driver import MujocoDriver
 from airtruck.systems.base import Values
@@ -51,3 +56,18 @@ def check_driver(driver: MujocoDriver) -> None:
     env = driver.as_gymnasium(flatten=True)
     env.reset(seed=42)
     env.step(env.action_space.sample())
+
+
+def check_px4(node: Node) -> None:
+    target = TrajectorySetpoint()
+    assert_type(target.timestamp, int)
+    assert_type(target.position, Sequence[float])
+    assert_type(target.yaw, float)
+    publisher = node.create_publisher(
+        TrajectorySetpoint, "/typing_only", qos_profile_sensor_data
+    )
+    assert_type(publisher, Publisher[TrajectorySetpoint])
+    publisher.publish(target)
+    # These ignores must stay necessary: fields and publisher payloads are typed.
+    target.yaw = "north"  # type: ignore[assignment]
+    publisher.publish(VehicleCommand())  # type: ignore[arg-type]

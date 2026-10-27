@@ -1,0 +1,20 @@
+<mujoco model="gamepad_flight_arena">
+  <compiler angle="radian" inertiafromgeom="false"/>
+  <option timestep="0.0005" integrator="implicitfast" gravity="0 0 -9.81"/>
+  <size memory="32M"/>
+  <statistic center="0 0 .8" extent="3"/>
+  <visual><global offwidth="1280" offheight="960"/><headlight ambient=".4 .4 .4" diffuse=".7 .7 .7"/></visual>
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" rgb1=".19 .23 .28" rgb2=".24 .29 .35" width="512" height="512"/>
+    <material name="floor" texture="grid" texrepeat="12 12" texuniform="true" reflectance=".1"/>
+  </asset>
+  <worldbody>
+    <light pos="0 0 5" dir="0 0 -1"/>
+    <geom name="ground" type="plane" size="6 6 .1" material="floor"/>
+    <geom name="landing_pad" type="cylinder" pos="0 0 .004" size=".45 .004" rgba=".12 .65 .48 1"/>
+    <geom type="box" pos="2 2 .3" size=".3 .3 .3" rgba=".95 .55 .15 1"/>
+    <geom type="box" pos="-2 2 .6" size=".25 .25 .6" rgba=".3 .6 .95 1"/>
+    <geom type="box" pos="-2 -2 .3" size=".3 .3 .3" rgba=".95 .55 .15 1"/>
+    <geom type="box" pos="2 -2 .6" size=".25 .25 .6" rgba=".3 .6 .95 1"/>
+  </worldbody>
+</mujoco>

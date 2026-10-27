@@ -26,6 +26,7 @@ uv sync --locked
 uv run --locked python -m airtruck.main
 uv run --locked mjpython -m airtruck.main --render
 uv run --locked python -m airtruck.examples.two_arms
+uv run --locked mjpython -m airtruck.examples.gamepad_flight
 ```
 
 `airtruck.main` runs leader/follower teleoperation for 30 seconds by default.
@@ -38,11 +39,19 @@ reports contacts and exits without serial connections. Its `--world` option sele
 a base MJCF template without attached systems, and `--benchmark` skips contact-force
 extraction. Rendering is optional; the headless example does not sleep.
 
+The gamepad example opens a MuJoCo arena with a generic analytic quadrotor and a
+Bluetooth/USB Xbox controller. A takes off, B lands, X holds, Y resets, and Menu
+quits. Left stick controls altitude/yaw; right stick controls body-relative
+forward/sideways movement. This demo uses no physical aircraft connection and
+does not represent the Sentinel CAD or measured flight dynamics.
+
 ## Code and configuration
 
 - `airtruck/systems/base.py`: `SimSystem` lifecycle and numeric space validation.
 - `airtruck/systems/so101.py`: shared arm binding plus native LeRobot leader/follower subclasses.
-- `airtruck/systems/drone.py`: body-wrench control for a supplied free-body MJCF and optional hardware backend.
+- `airtruck/systems/drone.py`: shared position/yaw flight commands for a supplied free-body MJCF and PX4 hardware.
+- `airtruck/systems/flight.py`: NED frame conversion, flight schemas and simulation autopilot.
+- `airtruck/systems/px4.py`: typed ROS 2 offboard transport with confirmed commands and telemetry.
 - `airtruck/simulation/driver.py`: model assembly, shared stepping, rendering and cleanup.
 - `airtruck/simulation/gymnasium.py`: Gymnasium packing, flattening names and episode boundary.
 - `airtruck/examples/two_arms.py`: individual objects controlled before one shared step.
@@ -58,8 +67,8 @@ pieces, exclusions, inertias, servo parameters and action-unit metadata live in
 `scripts/so101/verify.py`.
 
 The exported SO-101 visual geometry is preserved. `Drone` does not generate a
-replacement Sentinel model: no prepared Sentinel MJCF or flight-controller backend
-exists locally. The mixed-system tests use a clearly labeled analytic fixture.
+replacement Sentinel model: a prepared Sentinel MJCF is still required. The PX4
+backend uses ROS 2 position/yaw offboard messages. The mixed-system tests use a clearly labeled analytic fixture.
 There is no task-specific reward or success objective.
 
 `pyproject.toml` and `uv.lock` own dependencies and the persistent ignored `.venv`.
@@ -73,11 +82,13 @@ is required. Use direct module imports.
 ```sh
 uv run --locked pytest -q
 uv run --locked mypy
+uv run --locked basedpyright
 uv run --locked python scripts/so101/verify.py
 ```
 
-Tests cover mixed systems, contact effects, native LeRobot on fake buses, backend
-switching and real ACT checkpoint training/reload. Physical ports are never opened.
+Tests cover mixed systems, native flight tracking/landing, PX4 message transport,
+contact effects, native LeRobot on fake buses, backend switching and real ACT
+checkpoint training/reload. Physical ports are never opened.
 See [simulation and ACT](simulation.md), [hardware](hardware/README.md),
 [CAD provenance](so101/README.md), [model fidelity](so101/motor-model.md) and
 [Sentinel CAD](sentinel/README.md).

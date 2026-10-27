@@ -275,6 +275,7 @@ def main() -> int:
             command(root, output, 'lockfile', ['uv', 'lock', '--check']),
             command(root, output, 'pytest', ['uv', 'run', '--locked', 'pytest', '-q']),
             command(root, output, 'mypy', ['uv', 'run', '--locked', 'mypy', '--no-incremental', '--cache-dir', str(output/'mypy-cache')]),
+            command(root, output, 'basedpyright', ['uv', 'run', '--locked', 'basedpyright']),
         ]
         if (root/'requirements.txt').exists():
             checks.append(command(root, output, 'requirements-export', ['uv', 'export', '--locked', '--no-hashes', '--output-file', str(output/'requirements.expected.txt')]))

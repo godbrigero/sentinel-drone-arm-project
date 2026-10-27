@@ -1,4 +1,4 @@
-# MuJoCo typing overlay
+# Robotics typing overlays
 
 These local `.pyi` files describe the **MuJoCo 3.16.0** Python bindings pinned in `pyproject.toml` and `uv.lock`. They improve autocomplete and static checks; they do not wrap MuJoCo, change physics, or add runtime classes. Keep `typings/` on the type checker's stub search path, **not** on `PYTHONPATH`.
 
@@ -20,10 +20,13 @@ Array dtype is represented; dimensions, contiguity, writability, and physical un
 
 ## Checking
 
-The workspace typechecker configuration supplies this directory as the stub path. To check independently from the project root:
+The workspace typechecker configuration supplies this directory as the stub path.
+Basedpyright checks the application, build/install scripts and typing smoke example;
+mypy also checks the project source and overlays. To check from the project root:
 
 ```sh
 uv run --locked mypy
+uv run --locked basedpyright
 uv run --locked mypy --follow-imports=skip typings/mujoco
 ```
 
@@ -32,3 +35,21 @@ uv run --locked mypy --follow-imports=skip typings/mujoco
 ## Attribution
 
 Derived API declarations: MuJoCo, Copyright 2022 DeepMind Technologies Limited, Apache License 2.0. Upstream: https://github.com/google-deepmind/mujoco. The upstream wheel's license is retained as `LICENSE.mujoco`. Local generation, annotation corrections, and examples are maintained with this project; these are not official upstream type stubs.
+
+## ROS 2 and PX4 overlays
+
+`rclpy/` describes the small ROS 2 Jazzy/rclpy 7.1.12 surface used by the PX4
+transport: context, node, typed publishers/subscriptions, executor, timer, clock
+and QoS. `px4_msgs/msg/__init__.pyi` describes all fields and constants of the seven
+used message types from PX4 revision `392e831c1f659429ca83902e66820d7094591410`
+(release/1.16). It is generated from those message definitions; the original
+BSD-3-Clause notice is retained in `px4_msgs/LICENSE`. ROS API declarations are
+maintained locally against the installed rclpy signatures (Apache-2.0 upstream).
+These focused overlays provide autocomplete and static checks, not alternate
+runtime implementations or a claim of typing the entire ROS SDK.
+
+The native ROS/PX4 libraries are installed separately through
+`scripts/drone/install_ros.py`; the stubs must never be on runtime `PYTHONPATH`.
+The backend uses concrete ROS context/node/executor and message types and requires
+no missing-import suppression for them. Upgrade and verify these overlays when
+changing the native SDK versions. See the [ROS installation guide](../docs/hardware/README.md#px4-drone).

@@ -1,0 +1,6 @@
+"""Focused rclpy 7.1.12 overlay; see typings/README.md."""
+from .context import Context
+from .node import Node
+
+def init(*, context: Context | None = None) -> None: ...
+def create_node(node_name: str, *, context: Context | None = None) -> Node: ...
