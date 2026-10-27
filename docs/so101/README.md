@@ -32,7 +32,7 @@ uv run --locked python scripts/so101/verify.py
 
 The two-arm example controls both objects before advancing one shared world.
 It runs for eight simulated seconds and exits. `two_arms()` in the example creates
-names, placements and initial joint poses. `MujocoDriver` attaches the objects to
+names, placements and initial joint poses. `SystemDriver` attaches the objects to
 `worlds/bench/scene.xml`; `--world` selects another base template. Instantiate one
 object for a single arm. The standalone native scenes are retained for direct
 MuJoCo model verification.
@@ -70,6 +70,6 @@ The builder creates its exporter configuration in a temporary directory. It uses
 retained CAD manifests and meshes without Onshape API keys or CAD writes. The model
 owns its collisions and native servos. `SO101Arm` owns joint bindings and normalized
 units. `SO101Follower` and `SO101Leader` add the native LeRobot roles and hardware
-flag. `MujocoDriver` coordinates the objects; `as_gymnasium()` supplies the separate
+flag. `SystemDriver` coordinates the objects; `as_gymnasium()` supplies the separate
 training/episode interface. See [model fidelity](motor-model.md) and
 [hardware usage](../hardware/README.md).

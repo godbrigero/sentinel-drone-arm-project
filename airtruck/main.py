@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import math
 
-from airtruck.simulation.driver import MujocoDriver
+from airtruck.runtime.driver import SystemDriver
 from airtruck.systems.so101 import SO101Arm, SO101Follower, SO101Leader, release
 
 
@@ -55,7 +55,7 @@ def main() -> None:
         return
     if leader.hardware and follower.hardware and args.leader_port == args.follower_port:
         parser.error("Leader and follower need distinct serial ports")
-    with MujocoDriver(
+    with SystemDriver(
         [leader, follower], render_mode="human" if args.render else None
     ) as driver:
         driver.reset()

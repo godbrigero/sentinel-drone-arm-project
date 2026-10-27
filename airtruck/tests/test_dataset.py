@@ -17,8 +17,8 @@ from airtruck.examples.act import (
     train,
 )
 from airtruck.examples.two_arms import motion, two_arms
-from airtruck.simulation.driver import MujocoDriver
-from airtruck.simulation.gymnasium import GymnasiumAdapter, feature_names
+from airtruck.runtime.driver import SystemDriver
+from airtruck.runtime.gymnasium import GymnasiumAdapter, feature_names
 from airtruck.systems.base import ROOT
 
 
@@ -32,7 +32,7 @@ def test_dataset_preserves_channel_order_and_pre_action_observation(
     assert saved.num_episodes == 2 and len(saved) == 6
     metadata = json.loads((output / "meta/airtruck.json").read_text())
     arms = two_arms()
-    with MujocoDriver(arms, world=world) as driver:
+    with SystemDriver(arms, world=world) as driver:
         adapter = GymnasiumAdapter(driver)
         env = driver.as_gymnasium(flatten=True, max_episode_steps=3)
         observation, _ = env.reset(seed=42)

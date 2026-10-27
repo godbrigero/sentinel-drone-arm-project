@@ -12,7 +12,7 @@ from rclpy.node import Node
 from rclpy.publisher import Publisher
 from rclpy.qos import qos_profile_sensor_data
 
-from airtruck.simulation.driver import MujocoDriver
+from airtruck.runtime.driver import SystemDriver
 from airtruck.systems.base import Values
 
 
@@ -48,7 +48,7 @@ def controller(model: mujoco.MjModel, data: mujoco.MjData) -> None:
     data.ctrl[:] = 0.0
 
 
-def check_driver(driver: MujocoDriver) -> None:
+def check_driver(driver: SystemDriver) -> None:
     assert_type(driver.data.qpos, NDArray[np.float64])
     driver.reset(seed=42)
     observations = driver.step()

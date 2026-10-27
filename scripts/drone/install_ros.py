@@ -104,7 +104,7 @@ def main() -> None:
         [
             sys.executable,
             "-c",
-            "import rclpy; from rclpy.serialization import serialize_message; from px4_msgs.msg import TrajectorySetpoint; print(rclpy.__file__); print('PX4 native serialization bytes:', len(serialize_message(TrajectorySetpoint())))",
+            "import rclpy; from rclpy.serialization import serialize_message; from px4_msgs.msg import TrajectorySetpoint; from geometry_msgs.msg import PoseStamped; print(rclpy.__file__); print('Tag pose bytes:', len(serialize_message(PoseStamped()))); print('PX4 native serialization bytes:', len(serialize_message(TrajectorySetpoint())))",
         ],
         check=True,
     )

@@ -47,7 +47,53 @@ set matched the leg flange pattern, so the leg positions are assumptions that ke
 legs clear of the RC receiver, the ESC stack and the carrier. Replace them with the
 measured mounting holes when available.
 
+## Simulation model
+
+`models/sentinel-quad/sentinel.xml` is generated from the `Sentinel_Drone` assembly
+by `scripts/sentinel/build_model.py`. Onshape remains the source: to rebuild after a
+CAD change, export the assembly as glTF (resolution COARSE, hidden parts excluded,
+Z up), update `simulation.CAD_export` in `information.json`, and run
+
+```sh
+uv run --locked python scripts/sentinel/build_model.py /tmp/Sentinel_Drone.gltf
+```
+
+The builder reads the export directly, checks the triangle count against the
+record, and writes `assets/*.obj`, the MJCF and `source/cad-manifest.json` (source
+hash, microversion, per-mesh hashes and the propeller-to-motor matching) only after
+the staged model compiles with the assigned mass and the feet as its lowest point.
+All 691,542 exported triangles are kept and grouped only by color and rigid body.
+COARSE is Onshape's coarsest tessellation of the exact CAD surfaces; finer
+exports exceed 64 MiB and make per-frame camera rendering much slower.
+
+- **Frame.** Body FLU (x forward, y left, z up) with its origin at the rotor center
+  on the bottom-plate plane (assembly X 98.5, Y −59, Z 0): body = (−X, −Y, Z). The
+  feet are 0.1448 m below the origin and the GPS mast top 0.1442 m above it.
+- **Mass.** 1.407 kg assigned: the manufacturer's 1347 g with battery plus the 60 g
+  carrier CAD mass. The F450 legs replacing the RB5 gear are not accounted for.
+  The center of mass is assumed 30 mm above the plate at the rotor center, and the
+  root inertia is a lumped motor/core-box estimate. Onshape has no assembly mass:
+  357 parts lack a material, so CAD mass, center of mass and inertia are unknown.
+- **Propellers.** Each 1045 propeller is a separate body on a hinge along its
+  measured motor axis (6° inward tilt), matched to its motor by geometry and checked
+  against the A = CW, B = CCW variant record. Rotors 1 and 3 (rear right, front left)
+  spin CW and 2 and 4 CCW, as viewed from above. Thrust and torque coefficients come
+  from assumed 1045 coefficients (C_T 0.115, C_P 0.045), giving a modelled hover of
+  about 484 rad/s. Spin speed limits use 810 rad/s.
+- **Cameras.** `front_down` uses the tracking-camera CAD frame and `rear_left` the
+  rear stereo low-Y (left) frame, both rechecked against the camera geometry at
+  microversion `a668233d1f67ae32dea9c710`. Reference optics: tracking M0014, 166°
+  fisheye; stereo M0015, 85° (the source names no axis; horizontal is assumed).
+  Simulation uses pinhole cameras: the fisheye's central focal length (276 px) and
+  85° horizontal for the stereo camera (349 px).
+- **Collision.** One convex hull per top-level occurrence (33), excluding the
+  propellers, which are visual only. Hulls overestimate concave parts such as the
+  arms and legs; the feet are exact lowest points.
+
 ## Limitations
 
 Fastener lengths, clearances of the current carrier, arm and tray stiffness, payload rating, print orientation, leg
-material and mass, and the physical leg positions are unverified.
+material and mass, and the physical leg positions are unverified. The simulation model's mass
+distribution, rotor coefficients, the camera lens models and which camera feeds the
+onboard tag detector are assumptions, not measurements. Simulated flight uses an
+illustrative controller, not identified Sentinel dynamics.

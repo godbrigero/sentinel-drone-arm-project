@@ -258,6 +258,12 @@ class SO101Arm(SimSystem):
         release(self)
 
     def connect(self, calibrate: bool = False) -> None:
+        """Open the serial bus now (LeRobot's interface); never moves the arm.
+
+        Optional: `SystemDriver` connects on entering `with`, or at the first
+        `reset()`/`step()`. Use this to connect earlier, or with `calibrate=True`.
+        The arm must already belong to a driver.
+        """
         self._calibrate_on_connect = calibrate
         try:
             self.sync_hardware()

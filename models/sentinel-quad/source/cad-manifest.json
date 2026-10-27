@@ -1,0 +1,404 @@
+{
+  "cad_url": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/1600b2c66d3b102227c2adfb",
+  "microversion": "a668233d1f67ae32dea9c710",
+  "export": {
+    "format": "glTF",
+    "resolution": "COARSE",
+    "excludeHiddenEntities": true
+  },
+  "source_sha256": "0b5d5a1c5b74b141440dee2f0d186be34569933b699ce5b6ce0a556bc6a58859",
+  "units": "m",
+  "triangles": 691542,
+  "rotor_propellers": {
+    "1": "occurrence of REPRESENTATIVE 1045 \u00e2\u0080\u0094 CW (A)#53",
+    "2": "occurrence of REPRESENTATIVE 1045 \u00e2\u0080\u0094 CCW (B)#31",
+    "3": "occurrence of REPRESENTATIVE 1045 \u00e2\u0080\u0094 CW (A)#9",
+    "4": "occurrence of REPRESENTATIVE 1045 \u00e2\u0080\u0094 CCW (B)#25"
+  },
+  "meshes": [
+    {
+      "file": "assets/base_00.obj",
+      "body": "base",
+      "rgba": [
+        0.0,
+        0.678,
+        1.0,
+        1.0
+      ],
+      "triangles": 70592,
+      "sha256": "9db27768718c26225bf5f9fca3b38fe8fa043a32719686fc5cf0d86c1c19c759"
+    },
+    {
+      "file": "assets/base_01.obj",
+      "body": "base",
+      "rgba": [
+        0.0,
+        1.0,
+        0.0,
+        1.0
+      ],
+      "triangles": 6288,
+      "sha256": "92dd080902ebbc5fef5821c1bf8ae7e904824db4993efef8fbf5e17016d34606"
+    },
+    {
+      "file": "assets/base_02.obj",
+      "body": "base",
+      "rgba": [
+        0.039,
+        0.039,
+        0.039,
+        1.0
+      ],
+      "triangles": 365,
+      "sha256": "e3413e1d6c9a80a9d226428d94c412dd860f2dccc091e433f8c72bd843132be4"
+    },
+    {
+      "file": "assets/base_03.obj",
+      "body": "base",
+      "rgba": [
+        0.078,
+        0.078,
+        0.078,
+        1.0
+      ],
+      "triangles": 12,
+      "sha256": "8591fd0a492945fb45dadfd85540c8360c6e948c65b94d04741d8bac03f0d905"
+    },
+    {
+      "file": "assets/base_04.obj",
+      "body": "base",
+      "rgba": [
+        0.106,
+        0.31,
+        0.0,
+        1.0
+      ],
+      "triangles": 72280,
+      "sha256": "039fcc68857f09d6eed36cf905f86cdb097daa6d2cc8bb6b6bb9d578203be8cc"
+    },
+    {
+      "file": "assets/base_05.obj",
+      "body": "base",
+      "rgba": [
+        0.122,
+        0.58,
+        0.82,
+        1.0
+      ],
+      "triangles": 46322,
+      "sha256": "d540fabbf11ee3e483b54cf72640a56e872a6de8fb52fd82a87b86a9a82e68e7"
+    },
+    {
+      "file": "assets/base_06.obj",
+      "body": "base",
+      "rgba": [
+        0.129,
+        0.435,
+        0.682,
+        1.0
+      ],
+      "triangles": 828,
+      "sha256": "84d56a8cab2744ea1c41a315fce785cc31d834b830cac87ee3b0a9a2f2335281"
+    },
+    {
+      "file": "assets/base_07.obj",
+      "body": "base",
+      "rgba": [
+        0.157,
+        0.157,
+        0.157,
+        1.0
+      ],
+      "triangles": 112,
+      "sha256": "08559ad0be01e09adc44d16304c87f10d77372755309cf08c65e81a9df4143f4"
+    },
+    {
+      "file": "assets/base_08.obj",
+      "body": "base",
+      "rgba": [
+        0.235,
+        0.235,
+        0.235,
+        1.0
+      ],
+      "triangles": 192,
+      "sha256": "6507af0a47a7823b2782aff4dbe3f1038f7ad742dbe57017b58b7ffd55a81081"
+    },
+    {
+      "file": "assets/base_09.obj",
+      "body": "base",
+      "rgba": [
+        0.251,
+        0.251,
+        0.251,
+        1.0
+      ],
+      "triangles": 60191,
+      "sha256": "2f62d1ff037aa39f62d92b76d8db36755dd2b875075ad12aa3120a55a93e8f50"
+    },
+    {
+      "file": "assets/base_10.obj",
+      "body": "base",
+      "rgba": [
+        0.298,
+        0.298,
+        0.298,
+        1.0
+      ],
+      "triangles": 6244,
+      "sha256": "68e0ca6a2b8e8314b3fb64ecd0f736de2e8247d99510e9e590c2b5d257776f1f"
+    },
+    {
+      "file": "assets/base_11.obj",
+      "body": "base",
+      "rgba": [
+        0.341,
+        0.341,
+        0.341,
+        1.0
+      ],
+      "triangles": 31220,
+      "sha256": "2ec1e23d47fdaf42ae0c14101ac07de63f8e2b1ed32e8545513651ea0f138756"
+    },
+    {
+      "file": "assets/base_12.obj",
+      "body": "base",
+      "rgba": [
+        0.471,
+        0.431,
+        0.275,
+        1.0
+      ],
+      "triangles": 62444,
+      "sha256": "b77be0e97c93c0bd41bad8a517c5437544ce8fcf673edc0b3f0cb1dc629682c0"
+    },
+    {
+      "file": "assets/base_13.obj",
+      "body": "base",
+      "rgba": [
+        0.502,
+        0.502,
+        0.0,
+        1.0
+      ],
+      "triangles": 140,
+      "sha256": "c4b3f898198d947f37c21e54a3cf4abf644c100b55fac50d99381ae4c69410cb"
+    },
+    {
+      "file": "assets/base_14.obj",
+      "body": "base",
+      "rgba": [
+        0.502,
+        0.502,
+        0.502,
+        1.0
+      ],
+      "triangles": 16364,
+      "sha256": "c939d2b78a007ecbae4145a5a021df9bbb83b477851277615c3cffd5ddc00efd"
+    },
+    {
+      "file": "assets/base_15.obj",
+      "body": "base",
+      "rgba": [
+        0.749,
+        0.749,
+        0.749,
+        1.0
+      ],
+      "triangles": 23341,
+      "sha256": "5aa407d7c16a6b665bcb7da9d14491757f13a510b2fa57187473ac5b865c6a66"
+    },
+    {
+      "file": "assets/base_16.obj",
+      "body": "base",
+      "rgba": [
+        0.753,
+        0.753,
+        0.0,
+        1.0
+      ],
+      "triangles": 58,
+      "sha256": "74c1c5ab7a7145627fb98d0238a6f2bb76707372ecd37ffce6def63833c20bf2"
+    },
+    {
+      "file": "assets/base_17.obj",
+      "body": "base",
+      "rgba": [
+        0.753,
+        0.753,
+        0.753,
+        1.0
+      ],
+      "triangles": 65214,
+      "sha256": "ed302c4a9e660b641b52398fe950020979729b35ad85b956fa7cf7ad7e230ba7"
+    },
+    {
+      "file": "assets/base_18.obj",
+      "body": "base",
+      "rgba": [
+        0.792,
+        0.82,
+        0.933,
+        1.0
+      ],
+      "triangles": 70496,
+      "sha256": "6b028a96ceeebf808359a42b418ed209b2905b5a21cb8eb91276015068638d19"
+    },
+    {
+      "file": "assets/base_19.obj",
+      "body": "base",
+      "rgba": [
+        0.796,
+        0.824,
+        0.937,
+        1.0
+      ],
+      "triangles": 392,
+      "sha256": "36c89bf7eafe50e0d245397d4f0fdff9d63bb8d82fed0c1d9f0dc0ebf079c7ef"
+    },
+    {
+      "file": "assets/base_20.obj",
+      "body": "base",
+      "rgba": [
+        0.8,
+        0.8,
+        0.8,
+        1.0
+      ],
+      "triangles": 1649,
+      "sha256": "6cd5d17335eae4368e6fa88c3ee9020d2dce10b63d3e27fa84ddbbf8f7fe1eb5"
+    },
+    {
+      "file": "assets/base_21.obj",
+      "body": "base",
+      "rgba": [
+        0.843,
+        0.059,
+        0.059,
+        1.0
+      ],
+      "triangles": 456,
+      "sha256": "932c181d3edafc7da0963c81c7eb85264904f647092fafaacc66d9d79a8707dd"
+    },
+    {
+      "file": "assets/base_22.obj",
+      "body": "base",
+      "rgba": [
+        0.902,
+        0.549,
+        0.078,
+        1.0
+      ],
+      "triangles": 1308,
+      "sha256": "057c0084370e7f78609afbd487de8a2900c64e03b581ce9e1d4e0b56af3fd7be"
+    },
+    {
+      "file": "assets/base_23.obj",
+      "body": "base",
+      "rgba": [
+        0.949,
+        0.549,
+        0.122,
+        1.0
+      ],
+      "triangles": 23640,
+      "sha256": "7e7893409f2f12811be426400c6c526ec284d5313fa40fc05346c77c3e665b48"
+    },
+    {
+      "file": "assets/base_24.obj",
+      "body": "base",
+      "rgba": [
+        0.961,
+        0.961,
+        0.965,
+        1.0
+      ],
+      "triangles": 1124,
+      "sha256": "f817fbb0f3e1dcd520c347eb15939f5f4a5a6355d6be62e378514ee815c19994"
+    },
+    {
+      "file": "assets/base_25.obj",
+      "body": "base",
+      "rgba": [
+        0.984,
+        0.831,
+        0.663,
+        1.0
+      ],
+      "triangles": 54674,
+      "sha256": "ced9a3442b756333adf8a12ea73d8915edc9f86f0239aeb81f3a59af99ee65d7"
+    },
+    {
+      "file": "assets/base_26.obj",
+      "body": "base",
+      "rgba": [
+        1.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "triangles": 14400,
+      "sha256": "bbd3d41f1de5b56cd1f43d4c12b845a887671f336d02e5e7a334cc46de887fed"
+    },
+    {
+      "file": "assets/base_27.obj",
+      "body": "base",
+      "rgba": [
+        1.0,
+        1.0,
+        0.0,
+        1.0
+      ],
+      "triangles": 400,
+      "sha256": "86485c877f0ce0c128ab9a9c44bff0446e2e9969f99b594b1eea045e9edaee67"
+    },
+    {
+      "file": "assets/rotor_1_00.obj",
+      "body": "rotor_1",
+      "rgba": [
+        0.18,
+        0.2,
+        0.231,
+        1.0
+      ],
+      "triangles": 15208,
+      "sha256": "97082e8b8e3ffa58980e249d01b5ed698d7fc769fe8d9fdf2913ac52dfafb639"
+    },
+    {
+      "file": "assets/rotor_2_00.obj",
+      "body": "rotor_2",
+      "rgba": [
+        0.18,
+        0.2,
+        0.231,
+        1.0
+      ],
+      "triangles": 15190,
+      "sha256": "46906963478ccd036082a3aee948d46dc5f705244aa301408f80c35855bb1e3b"
+    },
+    {
+      "file": "assets/rotor_3_00.obj",
+      "body": "rotor_3",
+      "rgba": [
+        0.18,
+        0.2,
+        0.231,
+        1.0
+      ],
+      "triangles": 15208,
+      "sha256": "9db5a327168e1cfab7bb8bc04355ddd9d531ff1dbe2de22a4eda941fcc4d9e96"
+    },
+    {
+      "file": "assets/rotor_4_00.obj",
+      "body": "rotor_4",
+      "rgba": [
+        0.18,
+        0.2,
+        0.231,
+        1.0
+      ],
+      "triangles": 15190,
+      "sha256": "c981f86c38260b41c982d7c290e5d4f836ace16fee2a82e0deca4c1199e329f3"
+    }
+  ]
+}

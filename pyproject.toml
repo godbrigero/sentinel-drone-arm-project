@@ -8,6 +8,7 @@ dependencies = [
     "gymnasium==1.4.0",
     "lerobot[feetech,training]==0.6.1",
     "pygame-ce==2.5.8",
+    "opencv-python-headless==4.13.0.92",
 ]
 
 [dependency-groups]
@@ -30,6 +31,7 @@ environment = "airtruck-ros"
 distribution = "jazzy"
 packages = [
     "python=3.12", "numpy=2.2.6", "ros-jazzy-rclpy=7.1.12",
+    "ros-jazzy-geometry-msgs=5.3.8",
     "ros-jazzy-rosidl-default-generators=1.6.1", "cmake=3.31.8",
     "ninja=1.13.2", "colcon-common-extensions=0.3.0",
 ]

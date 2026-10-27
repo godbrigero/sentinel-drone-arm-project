@@ -1,0 +1,15 @@
+{
+  "model": "AprilTag tag36h11 ID 2 (simulation-only object)",
+  "family": "tag36h11",
+  "tag_id": 2,
+  "svg_width_mm": 100,
+  "black_border_edge_mm": 80,
+  "cells_per_side_including_quiet_zone": 10,
+  "simulation_plate_thickness_mm": 1,
+  "opencv_marker_rotation_deg": 180,
+  "_sources": {
+    "image": "tag36h11-2.svg",
+    "simulation_object": "airtruck/systems/tag_object.py",
+    "opencv_marker_rotation_deg": "SVG raster equals cv2.aruco DICT_APRILTAG_36h11 marker 2 rotated 180 deg"
+  }
+}

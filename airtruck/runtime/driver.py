@@ -1,4 +1,4 @@
-"""One shared MuJoCo world, coordinated through system-owned controls and state."""
+"""One control loop for simulated and hardware systems in a shared MuJoCo world."""
 
 from __future__ import annotations
 
@@ -16,18 +16,37 @@ import mujoco.viewer
 import numpy as np
 from gymnasium import spaces
 
-from airtruck.simulation.gymnasium import GymnasiumAdapter
+from airtruck.runtime.gymnasium import GymnasiumAdapter
 from airtruck.systems.base import ROOT, SimSystem, Values
 
 
-class MujocoDriver:
-    """Systems own their schemas/backends; only this class advances physics."""
+class SystemDriver:
+    """Steps every system on one clock, whether it is simulated or real hardware.
+
+    Systems own their schemas and backends (MuJoCo, LeRobot, PX4). The driver
+    syncs backend switches, refreshes observations, dispatches commands and is the
+    only code that advances MuJoCo; hardware systems appear there as tracked proxies.
+
+    Hardware connects automatically; no separate connect call is needed:
+
+        drone = SentinelDrone("drone", hardware=True)
+        with SystemDriver([drone]) as driver:  # Opens the PX4 backend here.
+            driver.reset()
+            ...                                # Closed again on exit.
+
+    Entering the `with` block opens every `hardware=True` backend (serial bus,
+    PX4/ROS 2). Without `with`, the first `reset()` or `step()` connects instead,
+    and a `hardware` flag changed later takes effect at the next one. Connecting
+    only starts communication: it never arms, takes off, moves an arm or changes a
+    flight mode. Leaving the block, or `close()`, disconnects every system; this
+    does not land or disarm a flying aircraft.
+    """
 
     def __init__(
         self,
         systems: Sequence[SimSystem],
         *,
-        world: str | Path | None = None,
+        world: str | Path | mujoco.MjSpec | None = None,
         control_dt: float = 0.02,
         render_mode: Literal["human", "rgb_array"] | None = None,
         width: int = 640,
@@ -42,11 +61,15 @@ class MujocoDriver:
         if render_mode not in (None, "human", "rgb_array"):
             raise ValueError("Unsupported render mode")
         self.systems = tuple(systems)
+        # An MjSpec world is copied, so the caller's specification is unchanged.
         self.world_path = (
-            Path(world).resolve()
+            None
+            if isinstance(world, mujoco.MjSpec)
+            else Path(world).resolve()
             if world is not None
             else ROOT / "worlds/bench/scene.xml"
         )
+        self._world_spec = world if isinstance(world, mujoco.MjSpec) else None
         self.model = self._compile()
         ratio = control_dt / self.model.opt.timestep
         if (
@@ -75,7 +98,11 @@ class MujocoDriver:
             raise
 
     def _compile(self) -> mujoco.MjModel:
-        spec = mujoco.MjSpec.from_file(str(self.world_path))
+        spec = (
+            self._world_spec.copy()
+            if self._world_spec is not None
+            else mujoco.MjSpec.from_file(str(self.world_path))
+        )
         for system in self.systems:
             if spec.body(f"{system.name}/{system.root_body}") is not None:
                 raise ValueError(
@@ -84,7 +111,8 @@ class MujocoDriver:
             system.attach(spec)
         return spec.compile()
 
-    def __enter__(self) -> MujocoDriver:
+    def __enter__(self) -> SystemDriver:
+        """Connect every hardware-enabled system; on any failure, close them all."""
         self._require_open()
         try:
             for system in self.systems:

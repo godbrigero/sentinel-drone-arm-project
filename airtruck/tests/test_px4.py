@@ -8,9 +8,13 @@ from typing import Any
 import numpy as np
 import pytest
 
+import cv2
+
 import airtruck.systems.px4 as px4
-from airtruck.simulation.driver import MujocoDriver
+from airtruck.runtime.driver import SystemDriver
+from airtruck.systems.apriltag import TAGS, AprilTagConfig, apriltag_image
 from airtruck.systems.drone import Drone
+from airtruck.systems.sentinel import SentinelDrone
 
 
 class Message:
@@ -297,7 +301,7 @@ def test_drone_hardware_uses_the_same_targets_and_confirmed_state(
 ) -> None:
     backend = px4.PX4Backend()
     drone = Drone("drone", model=drone_model, hardware=True, backend=backend)
-    with MujocoDriver([drone]) as driver:
+    with SystemDriver([drone]) as driver:
         driver.reset()
         assert not drone.state["armed"]
         drone.takeoff(0.7)
@@ -315,3 +319,89 @@ def test_drone_hardware_uses_the_same_targets_and_confirmed_state(
         drone.hardware = False
         driver.step()
         assert not drone.hardware_active and graph.destroyed
+
+
+def tag_pose(x: float, y: float, z: float, stamp: float = 12.5) -> Any:
+    return SimpleNamespace(
+        header=SimpleNamespace(
+            stamp=SimpleNamespace(sec=int(stamp), nanosec=int(stamp % 1 * 1e9)),
+            frame_id="tracking",
+        ),
+        pose=SimpleNamespace(
+            position=SimpleNamespace(x=x, y=y, z=z),
+            orientation=SimpleNamespace(x=0.0, y=0.0, z=0.0, w=1.0),
+        ),
+    )
+
+
+def test_ros_tag_detections_update_the_drone_and_global_board(
+    graph: ROSGraph,
+) -> None:
+    backend = px4.PX4Backend()
+    drone = SentinelDrone(
+        "tagged",
+        hardware=True,
+        backend=backend,
+    )
+    with SystemDriver([drone]) as driver:
+        driver.reset()
+        assert "/tag_detections" in graph.subscriptions
+        assert drone.latest_tag() is None
+        # The same PoseStamped topic and camera-frame meaning as the onboard node.
+        graph.subscriptions["/tag_detections"](tag_pose(0.1, 0.2, 1.5))
+        driver.step()
+        detection = drone.latest_tag()
+        assert detection is TAGS.latest(vehicle="tagged")
+        assert detection is not None and detection.source == "ros"
+        assert detection.camera == "front_down" and detection.tag_id is None
+        np.testing.assert_allclose(detection.position_m, [0.1, 0.2, 1.5])
+        assert detection.timestamp_s == pytest.approx(12.5)
+        # The vehicle is level at NED [1, 2, -0.5]; front_down looks forward/down.
+        camera = drone.cameras["front_down"]
+        expected = np.array([1, 2, -0.5]) + camera.body_point([0.1, 0.2, 1.5])
+        assert detection.position_ned_m is not None
+        np.testing.assert_allclose(detection.position_ned_m, expected, atol=1e-5)
+        assert expected[0] > 1.9 and expected[2] > 0.5  # Ahead of and below the drone.
+        assert backend.pop_tag_detections() == []
+
+
+def test_hardware_frames_can_be_published_for_tag_detection(graph: ROSGraph) -> None:
+    drone = SentinelDrone(
+        "framed",
+        hardware=True,
+        backend=px4.PX4Backend(),
+        apriltags=AprilTagConfig(tag_size_m=0.16, cameras=("rear_left",)),
+    )
+    with SystemDriver([drone]) as driver:
+        driver.reset()
+        with pytest.raises(RuntimeError, match="No frame"):
+            drone.capture("rear_left")
+        frame = np.full((480, 640, 3), 128, np.uint8)
+        tag = cv2.resize(apriltag_image(9), (200, 200), interpolation=cv2.INTER_NEAREST)
+        frame[140:340, 220:420] = tag
+        drone.cameras["rear_left"].publish(frame, timestamp_s=3.0)
+        assert drone.capture("rear_left") is drone.cameras["rear_left"].frame
+        graph.now += 1.0  # Next detection period on the hardware clock.
+        driver.step()
+        detection = drone.latest_tag(tag_id=9)
+        assert detection is not None and detection.source == "camera"
+        assert detection.timestamp_s == 3.0
+        # Centered, facing the camera: 0.16 m tag over 160 px at f=349.2 px.
+        np.testing.assert_allclose(detection.position_m, [0, 0, 0.349], atol=0.01)
+
+
+def test_sentinel_hardware_uses_the_identical_api(graph: ROSGraph) -> None:
+    backend = px4.PX4Backend()
+    drone = SentinelDrone("real", hardware=True, backend=backend)
+    with SystemDriver([drone]) as driver:
+        assert drone.is_connected and drone.hardware_active  # Opened on entry.
+        driver.reset()
+        assert not drone.state["armed"]  # Connecting never arms.
+        accepted = drone.send_action({"position": np.array([1.0, 2.0, -1.5])})
+        np.testing.assert_allclose(accepted["position"], [1, 2, -1.5])
+        assert backend._target is not None
+        np.testing.assert_allclose(backend._target["position"], [1, 2, -1.5])
+        assert drone.get_observation().keys() == drone.state.keys()
+        assert set(drone.cameras) == {"front_down", "rear_left"}
+        drone.disconnect()
+        assert not drone.is_connected and graph.destroyed

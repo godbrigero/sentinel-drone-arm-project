@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -27,6 +28,7 @@ from rclpy.qos import (
     ReliabilityPolicy,
     qos_profile_sensor_data,
 )
+from geometry_msgs.msg import PoseStamped
 from px4_msgs.msg import (
     OffboardControlMode,
     TrajectorySetpoint,
@@ -47,6 +49,9 @@ class PX4Config:
     source_component: int = 191
     timeout_s: float = 5.0
     telemetry_timeout_s: float = 1.0
+    # Onboard tag detector output (absolute topic, camera optical frame).
+    tag_topic: str = "/tag_detections"
+    tag_camera: str = "front_down"
 
     def __post_init__(self) -> None:
         if any(
@@ -64,6 +69,8 @@ class PX4Config:
             for value in (self.timeout_s, self.telemetry_timeout_s)
         ):
             raise ValueError("PX4 timeouts must be positive and finite")
+        if not self.tag_topic.startswith("/") or not self.tag_camera:
+            raise ValueError("tag_topic must be absolute and tag_camera nonempty")
 
 
 class PX4Backend:
@@ -88,6 +95,7 @@ class PX4Backend:
         self._stream_started: float | None = None
         self._last_heartbeat: float | None = None
         self._reset_counter: int | None = None
+        self._tags: deque[Values] = deque(maxlen=64)
 
     @property
     def node(self) -> Node:
@@ -158,6 +166,12 @@ class PX4Backend:
                 qos_profile_sensor_data,
             )
             self.node.create_subscription(
+                PoseStamped,
+                self.config.tag_topic,
+                self._on_tag,
+                qos_profile_sensor_data,
+            )
+            self.node.create_subscription(
                 VehicleCommandAck,
                 self._topic("out", "vehicle_command_ack", VehicleCommandAck),
                 self._on_ack,
@@ -200,6 +214,7 @@ class PX4Backend:
                 self._odometry = self._status = self._land = None
                 self._received.clear()
                 self._acks.clear()
+                self._tags.clear()
                 self._target = self._stream_started = self._reset_counter = None
                 self._last_heartbeat = None
 
@@ -238,6 +253,31 @@ class PX4Backend:
     def _on_land(self, message: VehicleLandDetected) -> None:
         self._land = message
         self._received["land"] = time.monotonic()
+
+    def _on_tag(self, message: PoseStamped) -> None:
+        pose, stamp = message.pose, message.header.stamp
+        timestamp = stamp.sec + stamp.nanosec * 1e-9
+        self._tags.append(
+            {
+                "camera": self.config.tag_camera,
+                "tag_id": None,  # PoseStamped carries no tag ID.
+                "position": [pose.position.x, pose.position.y, pose.position.z],
+                "quaternion": [
+                    pose.orientation.w,
+                    pose.orientation.x,
+                    pose.orientation.y,
+                    pose.orientation.z,
+                ],
+                "timestamp_s": timestamp
+                or self.node.get_clock().now().nanoseconds * 1e-9,
+            }
+        )
+
+    def pop_tag_detections(self) -> list[Values]:
+        """Tag poses received while spinning since the previous call."""
+        records = list(self._tags)
+        self._tags.clear()
+        return records
 
     def _on_ack(self, message: VehicleCommandAck) -> None:
         if (

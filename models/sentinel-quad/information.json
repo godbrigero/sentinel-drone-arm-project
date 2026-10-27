@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-25",
+  "updated": "2026-10-26",
   "frame": {
     "name": "Onshape upright assembly world",
     "unit": "mm",
@@ -78,7 +78,8 @@
     "GPS_reference": "Neo-M8N",
     "CPU_reference": "QRB5165",
     "ESC_reference": "VOXL 4-in-1 V2",
-    "payload_reference_g": 1000
+    "payload_reference_g": 1000,
+    "CAD_mass_parts_missing_material": 357
   },
   "motors": {
     "CAD_model": "T-MOTOR AIR2213 kv920",
@@ -375,7 +376,8 @@
         ]
       }
     ],
-    "CAD_verified_microversion": "d1176d5378978055193bcf40"
+    "CAD_verified_microversion": "d1176d5378978055193bcf40",
+    "frames_rechecked_microversion": "a668233d1f67ae32dea9c710"
   },
   "platform": {
     "material": "PETG",
@@ -492,7 +494,8 @@
     "so101": null,
     "camera_geometry": null,
     "propellers": null,
-    "so101_simulation": null
+    "so101_simulation": null,
+    "camera_optics": "https://docs.modalai.com/image-sensors/"
   },
   "so101": {
     "model": "SO-101 follower",
@@ -986,5 +989,109 @@
     "parts": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/cdbbc1a92d0491c119c32a75",
     "design": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/53e27d3cc51408c8d2c62832",
     "verified_microversion": "a668233d1f67ae32dea9c710"
+  },
+  "simulation": {
+    "model": "sentinel.xml",
+    "body_origin_onshape_mm": [
+      98.5,
+      -59.0,
+      0.0
+    ],
+    "body_axes_onshape": {
+      "x": [
+        -1,
+        0,
+        0
+      ],
+      "y": [
+        0,
+        -1,
+        0
+      ],
+      "z": [
+        0,
+        0,
+        1
+      ]
+    },
+    "assigned_mass_kg": 1.407,
+    "assigned_mass_basis_kg": {
+      "reference_with_battery": 1.347,
+      "carrier_CAD": 0.06
+    },
+    "assigned_center_of_mass_onshape_mm": [
+      98.5,
+      -59.0,
+      30.0
+    ],
+    "assigned_root_inertia_kg_m2": [
+      0.00912,
+      0.00961,
+      0.01569
+    ],
+    "lumped_inertia_inputs": {
+      "motor_mass_kg": 0.058,
+      "motor_radius_m": 0.1642,
+      "motor_height_above_com_m": 0.05,
+      "core_box_m": [
+        0.14,
+        0.12,
+        0.1
+      ]
+    },
+    "propeller_assigned_mass_kg": 0.013,
+    "propeller_assigned_inertia_kg_m2": [
+      2e-07,
+      2e-07,
+      2e-07
+    ],
+    "propeller_assumed_coefficients": {
+      "C_T": 0.115,
+      "C_P": 0.045,
+      "air_density_kg_m3": 1.225
+    },
+    "rotor_thrust_coefficient_N_s2_rad2": 1.485e-05,
+    "rotor_torque_coefficient_N_m_s2_rad2": 2.35e-07,
+    "rotor_speed_limit_rad_s": 810,
+    "rotor_velocity_gain_N_m_s": 1e-05,
+    "spawn_height_m": 0.146,
+    "cameras": [
+      {
+        "name": "front_down",
+        "CAD_frame": "tracking",
+        "resolution_px": [
+          640,
+          480
+        ],
+        "focal_px": 276.1,
+        "fovy_deg": 81.99,
+        "reference_fov_deg": 166,
+        "reference_fov_axis": null,
+        "assumed_fov_axis": "diagonal",
+        "reference_projection": "fisheye",
+        "simulated_projection": "pinhole"
+      },
+      {
+        "name": "rear_left",
+        "CAD_frame": "rear_stereo_y_low",
+        "resolution_px": [
+          640,
+          480
+        ],
+        "focal_px": 349.2,
+        "fovy_deg": 69.0,
+        "reference_fov_deg": 85,
+        "reference_fov_axis": null,
+        "assumed_fov_axis": "horizontal",
+        "simulated_projection": "pinhole"
+      }
+    ],
+    "CAD_export": {
+      "format": "glTF",
+      "resolution": "COARSE",
+      "microversion": "a668233d1f67ae32dea9c710",
+      "triangles": 691542
+    },
+    "rotor_spin_time_constant_s": 0.02
   }
 }

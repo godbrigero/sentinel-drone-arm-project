@@ -1,4 +1,4 @@
-"""Xbox flight demo with the shared Drone API and a generic analytic quadrotor."""
+"""Xbox flight demo with the shared Drone API and the Sentinel simulation model."""
 
 from __future__ import annotations
 
@@ -13,9 +13,11 @@ import numpy as np
 import pygame
 from pygame._sdl2 import controller
 
-from airtruck.simulation.driver import MujocoDriver
+from airtruck.runtime.driver import SystemDriver
+from airtruck.systems.apriltag import AprilTagConfig, add_apriltag
 from airtruck.systems.base import ROOT
 from airtruck.systems.drone import Drone
+from airtruck.systems.sentinel import SPAWN_HEIGHT_M, SentinelDrone
 from airtruck.systems.flight import yaw_angle
 
 BUTTONS = {
@@ -113,15 +115,38 @@ def steer(drone: Drone, sticks: np.ndarray, dt: float) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--model", type=Path, default=ROOT / "models/demo_quad/quad.xml"
+        "--model", type=Path, help="Another prepared drone MJCF (default: Sentinel)"
+    )
+    parser.add_argument(
+        "--spawn-height",
+        type=float,
+        default=SPAWN_HEIGHT_M,
+        help="Initial body-origin height in meters (default: Sentinel feet on floor)",
+    )
+    parser.add_argument(
+        "--apriltag",
+        action="store_true",
+        help="Place tag36h11 #0 ahead of the pad and detect it with the drone cameras",
     )
     args = parser.parse_args()
+    if not math.isfinite(args.spawn_height) or args.spawn_height < 0:
+        parser.error("spawn-height must be finite and nonnegative")
+    world = mujoco.MjSpec.from_file(str(ROOT / "worlds/flight_arena/scene.xml"))
+    if args.apriltag:
+        add_apriltag(world, 0, size_m=0.3, position=(1.5, 0, 0.0011))
+    label = "SENTINEL" if args.model is None else args.model.stem.upper()
     pad = XboxPad()
     try:
-        drone = Drone("drone", model=args.model, hardware=False, position=(0, 0, 0.14))
-        with MujocoDriver(
-            [drone], world=ROOT / "worlds/flight_arena/scene.xml", render_mode="human"
-        ) as driver:
+        apriltags = AprilTagConfig(tag_size_m=0.3) if args.apriltag else None
+        position = (0.0, 0.0, args.spawn_height)
+        drone = (
+            SentinelDrone("drone", position=position, apriltags=apriltags)
+            if args.model is None
+            else Drone(
+                "drone", model=args.model, position=position, apriltags=apriltags
+            )
+        )
+        with SystemDriver([drone], world=world, render_mode="human") as driver:
             driver.reset()
             viewer = driver._viewer
             assert viewer is not None
@@ -131,7 +156,10 @@ def main() -> None:
                 viewer.cam.azimuth, viewer.cam.elevation = 135, -25
             disconnected = False
             last_log = 0.0
-            print("A takeoff | B land | X hold | Y reset | Menu quit", flush=True)
+            print(
+                "A takeoff | B land | X hold | Y reset | Menu quit | [ ] onboard cameras",
+                flush=True,
+            )
             while viewer.is_running():
                 started = time.monotonic()
                 sample = pad.poll()
@@ -156,11 +184,19 @@ def main() -> None:
                 steer(drone, sticks, driver.control_dt)
                 position = drone.state["position"]
                 status = "FLYING" if drone.state["armed"] else "DISARMED - press A"
+                tag = drone.latest_tag()
+                seen = (
+                    f"\nTag {tag.tag_id} via {tag.camera}: NED {np.round(tag.position_ned_m, 2).tolist()} at t={tag.timestamp_s:.1f}s"
+                    if tag is not None and tag.position_ned_m is not None
+                    else "\nNo tag detected"
+                    if args.apriltag
+                    else ""
+                )
                 viewer.set_texts(
                     (
                         int(mujoco.mjtFontScale.mjFONTSCALE_150),
                         int(mujoco.mjtGridPos.mjGRID_TOPLEFT),
-                        f"GENERIC QUAD | {status}\n{pad.name}\nA Takeoff  B Land  X Hold  Y Reset  Menu Quit\nLeft stick: altitude / yaw\nRight stick: forward / sideways\nHeight: {-position[2]:.2f} m",
+                        f"{label} | {status}\n{pad.name}\nA Takeoff  B Land  X Hold  Y Reset  Menu Quit\nLeft stick: altitude / yaw\nRight stick: forward / sideways\n[ ] onboard cameras\nHeight: {-position[2]:.2f} m{seen}",
                         None,
                     )
                 )

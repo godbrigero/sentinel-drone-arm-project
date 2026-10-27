@@ -5,7 +5,7 @@ inherit the corresponding native LeRobot class and share `SO101Arm` simulation
 bindings. No separate hardware controller hierarchy or serial protocol is added.
 
 ```python
-from airtruck.simulation.driver import MujocoDriver
+from airtruck.runtime.driver import SystemDriver
 from airtruck.systems.so101 import SO101Follower, SO101Leader
 
 leader = SO101Leader("leader", hardware=True, port="/dev/YOUR_LEADER",
@@ -13,7 +13,7 @@ leader = SO101Leader("leader", hardware=True, port="/dev/YOUR_LEADER",
 follower = SO101Follower("follower", hardware=False, port="/dev/YOUR_FOLLOWER",
                          id="airtruck_follower", position=(0.25, 0, 0))
 
-with MujocoDriver([leader, follower]) as driver:
+with SystemDriver([leader, follower]) as driver:
     driver.reset()
 
     def update():
@@ -95,15 +95,40 @@ unreachable device is unpowered; errors remain visible.
 
 ## PX4 drone
 
-`Drone(..., hardware=True)` uses the built-in PX4 ROS 2 backend. It accepts the
-same NED `position`/`yaw` controls and `arm`, `takeoff`, `hold`, `land`, `disarm`
-methods as simulation. Supply the prepared drone MJCF for the shared world.
+Use the same `SentinelDrone` object for both backends, as with the arms:
+
+```python
+from airtruck.systems.sentinel import SentinelDrone
+
+drone = SentinelDrone("drone", hardware=True)
+
+with SystemDriver([drone]) as driver:   # Connects; never arms.
+    driver.reset()
+    drone.takeoff(1.0)
+    driver.run(steps=250, realtime=True)
+    drone.land()
+```
+
+`hardware=True` uses the built-in PX4 ROS 2 backend. It accepts the same NED
+`position`/`yaw` controls and `arm`, `takeoff`, `hold`, `land`, `disarm`,
+`send_action`, `get_observation`, `connect` and `disconnect` methods as simulation.
+The built-in model is the hardware-tracked proxy in the shared world; the generic
+`Drone(..., model=path, hardware=True)` accepts another prepared drone MJCF.
 `PX4Config(namespace="px4_1", system_id=2)` selects a namespaced vehicle;
-pass it as `Drone(..., px4=config)`. A custom backend may implement `DroneHardware`.
+pass it as `SentinelDrone(..., px4=config)`. A custom backend may implement `DroneHardware`,
+including `pop_tag_detections()` (return `[]` when it has no tag source).
+
+Tag poses from the aircraft's detector arrive on `/tag_detections`
+(`geometry_msgs/PoseStamped`, camera optical frame) and are published to the global
+`TAGS` board on every observation; `PX4Config(tag_topic=..., tag_camera=...)` changes
+the topic and the camera they are attributed to. Camera frames are not received
+over ROS: publish them with `drone.cameras[name].publish(image, timestamp_s)` to use
+`capture()` and opt-in image detection. See
+[onboard cameras and AprilTags](../simulation.md#onboard-cameras-and-apriltags).
 
 ROS imports are direct and required when importing the drone modules. On this
-macOS workspace, native ROS 2 Jazzy/rclpy 7.1.12 and PX4 release/1.16 messages are
-installed in Pixi's `airtruck-ros` environment. An ignored
+macOS workspace, native ROS 2 Jazzy/rclpy 7.1.12, geometry_msgs 5.3.8 and PX4
+release/1.16 messages are installed in Pixi's `airtruck-ros` environment. An ignored
 `.venv/lib/python3.12/site-packages/airtruck_ros.pth` exposes those bindings and the
 ROS prefix to the persistent uv Python 3.12 environment. The SDK is a real native
 installation, not the type overlay or a runtime mock.
@@ -141,7 +166,7 @@ See [flight semantics and coordinate frames](../simulation.md#drone-position-con
 Native ROS message serialization and node/executor/type support have been checked
 locally on an isolated DDS domain. The automated PX4 transport tests replace the
 ROS graph with an in-memory executor; they test warmup, setpoints, ACK/status
-confirmation, rejection/timeouts, frame conversion and cleanup without connecting
-to a flight controller. PX4 SITL, physical flight, radio/bridge timing and actual
+confirmation, rejection/timeouts, frame conversion, tag-pose ingestion and cleanup
+without connecting to a flight controller. PX4 SITL, physical flight, radio/bridge timing and actual
 flight-controller gains remain unverified. Simulation tracks the same API through
 an illustrative controller; it does not run PX4 firmware.

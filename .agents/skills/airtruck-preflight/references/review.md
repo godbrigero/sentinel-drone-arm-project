@@ -3,7 +3,7 @@
 ## Project-specific semantic review
 
 - `airtruck/systems/`: system-owned controls/state, model bindings and optional hardware. SO-101 leader/follower classes inherit the native LeRobot roles; validate calibration, backend transitions, normalized units, input-only leader behavior and cleanup after partial failures. Hardware activation must be explicit; ordinary simulation must not open ports.
-- `airtruck/simulation/`: `MujocoDriver` owns the shared world and clock; system updates install controls before one native physics advance. The separate Gymnasium adapter owns packing; standard wrappers own flattening and episode limits. Check namespace isolation, disjoint actuator ownership, copied observations, deterministic reset and cleanup. Public native model/data access is an explicit diagnostic escape hatch.
+- `airtruck/runtime/`: `SystemDriver` owns the shared world and clock; system updates install controls before one native physics advance. The separate Gymnasium adapter owns packing; standard wrappers own flattening and episode limits. Check namespace isolation, disjoint actuator ownership, copied observations, deterministic reset and cleanup. Public native model/data access is an explicit diagnostic escape hatch.
 - `airtruck/examples/` and `airtruck/main.py`: exercise the same object API. Check dataset observation/action alignment, native LeRobot training/checkpoint consumers and hardware-free rollout metadata. Review PX4 direct imports/native SDK installation, NED frame conversion, heartbeat warmup, ACK plus measured-status confirmation and shared flight commands. Mixed-system fixtures and transport doubles do not establish a real Sentinel model, PX4 SITL validation or physical flight performance.
 - `models/so101/source/cad-manifest.json`: CAD rebuild/verification inputs. `so101.xml`: native actuators, action-unit metadata, collision pieces and exclusions. `information.json`: compact engineering references with unknowns explicit. LeRobot owns device calibration and training configurations. Check moved/removed inputs against all consumers; do not restore retired runtime JSON or duplicate computed values without a clear need.
 - `worlds/`: base templates and standalone native reference scenes. Check relative asset paths, namespace isolation, initial joints and native contact policy. Reference scenes already contain robots and must not be passed as object-assembly templates. Collision-disabled diagnostics and decomposed convex contacts have different claims.
@@ -22,7 +22,7 @@ The inventory excludes `.git`, `.venv*`, caches and tool/account metadata direct
   "summary": "What changed, why it matters, and the readiness verdict.",
   "reviewed_documents": ["AGENTS.md", "docs/README.md"],
   "changes": [
-    {"title": "One world owns physics", "detail": "Verified before/after behavior and why it changed", "paths": ["airtruck/simulation/driver.py"]}
+    {"title": "One world owns physics", "detail": "Verified before/after behavior and why it changed", "paths": ["airtruck/runtime/driver.py"]}
   ],
   "findings": [
     {"severity": "warning", "path": "airtruck/main.py:1", "message": "Concrete finding with effect and next action"}
@@ -32,7 +32,7 @@ The inventory excludes `.git`, `.venv*`, caches and tool/account metadata direct
     {"label": "Driver", "detail": "Validate every command, dispatch all systems, then advance one shared world"}
   ],
   "examples": [
-    {"title": "Current public API", "code": "from airtruck.simulation.driver import MujocoDriver"}
+    {"title": "Current public API", "code": "from airtruck.runtime.driver import SystemDriver"}
   ],
   "limitations": ["GUI not exercised in this headless preflight"]
 }

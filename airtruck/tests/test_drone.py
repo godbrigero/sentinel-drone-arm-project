@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from airtruck.simulation.driver import MujocoDriver
+from airtruck.runtime.driver import SystemDriver
 from airtruck.systems.drone import Drone
 from airtruck.systems.flight import (
     FlightController,
@@ -15,7 +15,7 @@ from airtruck.systems.flight import (
 )
 
 
-def advance(driver: MujocoDriver, seconds: float) -> None:
+def advance(driver: SystemDriver, seconds: float) -> None:
     for _ in range(round(seconds / driver.control_dt)):
         driver.step()
     assert not np.any(driver.data.warning.number)
@@ -23,7 +23,7 @@ def advance(driver: MujocoDriver, seconds: float) -> None:
 
 def test_takeoff_position_yaw_hold_and_land_on_native_floor(drone_model: Path) -> None:
     drone = Drone("drone", model=drone_model, position=(0.4, 0, 0.03))
-    with MujocoDriver([drone]) as driver:
+    with SystemDriver([drone]) as driver:
         driver.reset()
         assert not drone.state["armed"]
         before = driver.data.qpos.copy()
@@ -53,7 +53,7 @@ def test_takeoff_position_yaw_hold_and_land_on_native_floor(drone_model: Path) -
 
 def test_yaw_pi_and_hold_interrupt_landing(drone_model: Path) -> None:
     drone = Drone("drone", model=drone_model, position=(0.4, 0, 0.5))
-    with MujocoDriver([drone]) as driver:
+    with SystemDriver([drone]) as driver:
         driver.reset()
         drone.engage_offboard_mode()
         drone.arm()
@@ -76,7 +76,7 @@ def test_yaw_pi_and_hold_interrupt_landing(drone_model: Path) -> None:
 
 def test_flight_commands_validate_before_changing_mode(drone_model: Path) -> None:
     drone = Drone("drone", model=drone_model, position=(0.4, 0, 0.5))
-    with MujocoDriver([drone]) as driver:
+    with SystemDriver([drone]) as driver:
         driver.reset()
         for height in (0, -1, np.nan, np.inf):
             with pytest.raises(ValueError):

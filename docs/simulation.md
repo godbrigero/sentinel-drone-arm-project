@@ -1,17 +1,20 @@
-# System objects and the shared MuJoCo driver
+# System objects and the shared system driver
 
 Each `SimSystem` owns its model binding, control schema, observations and optional
-hardware connection. `MujocoDriver` owns one MuJoCo model/data pair and physics clock.
-It does not interpret arm joints, drone forces, units or controller types.
+hardware connection. `SystemDriver` (`airtruck/runtime/driver.py`) runs every system,
+simulated or hardware, on one control clock. It owns one MuJoCo model/data pair:
+simulated systems are physics there, and hardware systems appear as proxies that
+track their measured state. It does not interpret arm joints, drone forces, units
+or controller types.
 
 ```python
-from airtruck.simulation.driver import MujocoDriver
+from airtruck.runtime.driver import SystemDriver
 from airtruck.systems.so101 import SO101Follower
 
 left = SO101Follower("left", position=(-0.25, 0, 0))
 right = SO101Follower("right", position=(0.25, 0, 0))
 
-with MujocoDriver([left, right], control_dt=0.02) as driver:
+with SystemDriver([left, right], control_dt=0.02) as driver:
     driver.reset()
     left.controls["shoulder_pan.pos"] = 20
     right.controls["shoulder_pan.pos"] = -10
@@ -33,7 +36,7 @@ sleep. Models use meters and wxyz unit quaternions for placements.
 ## Continuous control
 
 ```python
-with MujocoDriver([left, right]) as driver:
+with SystemDriver([left, right]) as driver:
     driver.reset()
 
     def update():
@@ -59,8 +62,9 @@ array controls can coexist; the driver contains no fixed channel counts.
 
 Each object supplies its prepared MJCF model and placement. The driver attaches
 its root body under the object's name using native `MjSpec` frames, then compiles
-one world. `world=` accepts a base MJCF template without those systems; the default
-is `worlds/bench/scene.xml`. Model geometry and collision preparation remain in the
+one world. `world=` accepts a base MJCF template without those systems, or an
+in-memory `mujoco.MjSpec` (copied, so the caller's specification is unchanged; used
+for generated AprilTag textures). The default is `worlds/bench/scene.xml`. Model geometry and collision preparation remain in the
 model builder, not the driver.
 
 The standalone `worlds/so101/scene.xml` and `worlds/two_arms/scene.xml` remain native
@@ -99,21 +103,36 @@ See [hardware usage](hardware/README.md) for flags, calibration and teleoperatio
 
 ## Drone position control and flight commands
 
-`Drone` exposes the same position/yaw targets and flight commands in MuJoCo and
-PX4 hardware mode. `hardware=False` is the default; set `hardware=True` at creation
-or later to use the built-in ROS 2 backend. Connecting or switching backends never
-arms the aircraft or selects offboard mode. A supplied prepared MJCF is still
-required for the shared world; no replacement Sentinel geometry is generated.
-There is currently no prepared Sentinel MJCF in the repository.
+`SentinelDrone` is the aircraft object, used like `SO101Follower`: one class whose
+`hardware` flag selects the backend, with identical controls, state, flight
+commands, cameras and tag detections in both. `hardware=False` (the default) flies
+the built-in MuJoCo model `models/sentinel-quad/sentinel.xml`, built from the
+Onshape assembly (see [Sentinel CAD](sentinel/README.md#simulation-model));
+`hardware=True` flies the real aircraft through the PX4 ROS 2 backend. The flag
+can also be changed later and takes effect at the next driver tick. Connecting or
+switching backends never arms the aircraft or selects offboard mode. The default
+placement `position=(0, 0, SPAWN_HEIGHT_M)` (0.146 m) stands it on its feet on a
+floor at z = 0.
 
 ```python
-from airtruck.systems.drone import Drone
+from airtruck.systems.sentinel import SPAWN_HEIGHT_M, SentinelDrone
 
+drone = SentinelDrone("drone")                  # Simulation.
+drone = SentinelDrone("drone", hardware=True)   # The real aircraft via PX4.
+```
+
+`Drone` in `airtruck/systems/drone.py` is the generic class underneath, for any
+prepared drone MJCF (`Drone("quad", model=path, position=...)`). Both provide
+`connect()`, `disconnect()`, `is_connected`, `get_observation()` and
+`send_action(action)`, with the same meaning as on the arms: `connect()` opens the
+selected backend at once (otherwise the driver opens it on entry), and
+`send_action()` applies a position/yaw target without advancing the clock.
+
+```python
 arm = SO101Follower("arm")
-drone = Drone("drone", model="/path/to/prepared-drone.xml",
-              hardware=False, position=(0.4, 0, 0.1))
+drone = SentinelDrone("drone", position=(0.6, 0, SPAWN_HEIGHT_M))
 
-with MujocoDriver([arm, drone]) as driver:
+with SystemDriver([arm, drone]) as driver:
     driver.reset()
     drone.takeoff(0.5)
     driver.run(steps=250, realtime=drone.hardware)
@@ -173,13 +192,130 @@ controller outputs, not policy actions. Use an aggregate rigid-body mass/inertia
 appropriate to the supplied aircraft and enough actuator authority to support it.
 Manufacturer reference aircraft weight does not establish assigned CAD inertia.
 
+Two optional features are discovered by name. Velocity actuators named `rotor_*`
+on hinge joints of root-child bodies spin propellers: each tick, the applied wrench
+is allocated to per-rotor thrust from each rotor's position, axis and spin, and the
+propeller target speed is `sqrt(thrust / k_T)`. The actuator `user` fields hold
+`k_T k_Q` (N/(rad/s)² and N·m/(rad/s)²); a control range of `[-max, 0]` or
+`[0, max]` fixes the spin direction (positive is counter-clockwise about the motor
+axis toward the shaft tip). `drone.rotor_speeds_rad_s` reports measured signed
+speeds. Propeller spin is visual: propellers carry their mass but negligible spin
+inertia, so it does not feed back into the aggregate wrench flight model. Hardware
+proxies spin armed propellers at hover speed. Cameras on the root body become
+`drone.cameras`; see [onboard cameras and AprilTags](#onboard-cameras-and-apriltags).
+
 The controller gains and response limits are editable through `controller=FlightController(...)`.
 They are illustrative simulation settings: matching the command API does not make
 this controller dynamically identical to PX4 firmware or the physical aircraft.
 The default controller is tested at a 0.02 s control period with the analytic
-free-body fixture. No automatic tag alignment or landing mission is implemented.
-`airtruck.examples.mixed_systems --drone-model /path/to/model.xml --height 0.5`
-runs the same flight API alongside an arm, without connecting hardware.
+free-body fixture and the Sentinel model (takeoff, hover, yaw and landing). No
+automatic tag alignment or landing mission is implemented.
+`airtruck.examples.mixed_systems --height 0.5` runs the same flight API with the
+Sentinel model beside an arm, without connecting hardware; `--drone-model` selects
+another prepared model.
+
+### Onboard cameras and AprilTags
+
+The Sentinel model has two cameras from the CAD optical frames: `front_down`
+(tracking camera, front center, about 46° below forward) and `rear_left` (rear
+stereo left camera, looking straight back). Both are 640×480 pinhole cameras;
+their focal lengths and the reference lens data are in the model's
+`information.json`. `drone.cameras[name]` holds `intrinsics` (OpenCV K),
+`rotation`/`position_m` (optical frame x right, y down, z forward, into body FRD),
+and the latest `frame` with `timestamp_s`.
+
+```python
+image = drone.capture("front_down")  # Simulation: renders the current state now.
+```
+
+In simulation `capture()` renders with MuJoCo's offscreen renderer;
+`camera_rate_hz=` additionally refreshes every camera at that simulated rate. On
+hardware nothing is rendered: publish frames from any source with
+`drone.cameras["front_down"].publish(image, timestamp_s)`, and `capture()` returns
+the latest published frame. Processing code therefore reads the same objects in
+both modes.
+
+Tag detections go to `airtruck.systems.apriltag.TAGS`, a process-wide, thread-safe
+board, and are available from any module:
+
+```python
+from airtruck.systems.apriltag import TAGS, AprilTagConfig, add_apriltag
+
+world = mujoco.MjSpec.from_file(str(ROOT / "worlds/flight_arena/scene.xml"))
+add_apriltag(world, 0, size_m=0.3, position=(1.4, 0, 0.0011))  # Flat, facing up.
+drone = SentinelDrone("drone", apriltags=AprilTagConfig(tag_size_m=0.3))
+with SystemDriver([drone], world=world) as driver:
+    driver.reset()
+    drone.takeoff(1.0)
+    driver.run(steps=300, realtime=False)
+    tag = TAGS.latest(vehicle="drone", tag_id=0)  # Or drone.latest_tag(tag_id=0).
+    print(tag.position_m, tag.position_ned_m)
+```
+
+Image detection is opt-in (`apriltags=None` by default). When enabled it runs at
+`rate_hz` (default 10 Hz) on the configured cameras (all by default), using
+OpenCV's AprilTag dictionaries (`tag36h11` default; `tag16h5`, `tag25h9`,
+`tag36h10`) and square-target PnP. `tag_size_m` is the black-border edge.
+On hardware, PX4 tag messages are always ingested (see the
+[PX4 backend](#px4-ros-2-backend)), and enabled image detection runs on published
+frames. Each `TagDetection` has the vehicle, camera, tag ID (None for ROS poses),
+the tag pose in the camera optical frame (`position_m`, wxyz `quaternion`), the
+timestamp, its source (`simulation`, `camera` or `ros`), and NED tag position and
+orientation computed from the camera mounting and the vehicle state at that tick.
+The tag frame has x right and y up in the printed image, with z out of its face.
+`TAGS.subscribe(callback)` delivers every new detection; simulated resets clear
+that vehicle's detections.
+
+`add_apriltag()` adds a static textured tag to a world specification; its face
+points along the frame's +Z and the image's top along +Y. In the test scenes the
+simulated estimate is within about 1 cm at 1.2 m and 3–4 cm at 1.8 m oblique range.
+Simulated cameras use ideal pinhole projection without lens distortion, noise,
+motion blur or exposure effects, and the 166° fisheye tracking lens is represented
+only by its central focal length. `airtruck.examples.apriltag_detection` hovers
+near a tag and prints detections; the gamepad demo accepts `--apriltag`.
+
+#### Movable SVG tag object
+
+`AprilTagObject` (`airtruck/systems/tag_object.py`) is a simulation-only system
+textured from a tag SVG; the default is `models/apriltag/tag36h11-2.svg`
+(tag36h11 ID 2). Pass it to the driver like any other system and move it while
+simulating:
+
+```python
+from airtruck.systems.tag_object import AprilTagObject
+
+tag = AprilTagObject("tag", position=(1.4, 0, 0.0011))  # Flat, facing up.
+with SystemDriver([drone, tag], world=ROOT / "worlds/flight_arena/scene.xml") as driver:
+    driver.reset()
+    tag.move((0.2, 0, 0))                       # Delta, world meters.
+    tag.move((0, 0.1, 0), frame="local")        # Delta along the tag's own axes.
+    tag.set_position((0.5, 0.5, 0.0011))        # Absolute.
+    tag.rotate(rpy=(0, 0, 30), degrees=True)    # Delta about its own axes.
+    tag.rotate(rpy=(0.2, 0, 0), frame="world")  # Delta about world axes.
+    tag.set_rotation(rpy=(0, 0, 0))             # Absolute; or a wxyz quaternion.
+    tag.set_pose((1, 0, 0.5), (1, 0, 0, 0))
+    driver.step()
+    print(tag.state["position"], tag.state["quaternion"], tag.pose)
+```
+
+Positions are MuJoCo world meters (Z up); rotations take either a wxyz quaternion
+or fixed-axis roll/pitch/yaw (`rpy`, radians unless `degrees=True`). Rotations turn
+about the face center. The face points along +Z with the printed image's top
+along +Y. Edits write MuJoCo's mocap pose immediately, so the tag teleports
+rather than being pushed by forces; before joining a driver they change its
+initial placement, and `driver.reset()` restores that placement. `size_m` is the
+black-border edge and defaults to the SVG's physical size (80 mm border on a
+100 mm plate); the quiet zone is kept around it. The plate does not collide unless
+`collisions=True`, which makes it an immovable surface. A blank backing hides the
+printed skin's mirrored rear face, so the tag cannot be decoded from behind.
+The object has observations (its pose) but no Gymnasium actions or hardware mode.
+
+The SVG loader supports flat-filled, straight-segment paths (M/L/H/V/Z) as
+produced by AprilTag image generators. This official image is OpenCV's
+`DICT_APRILTAG_36h11` marker 2 rotated 180°: OpenCV decodes it as ID 2 with the
+correct position, but its tag x/y axes point opposite the printed image's
+right/up, so orientations from the image detector differ by 180° about the face
+normal from this object's pose.
 
 ### PX4 ROS 2 backend
 
@@ -190,6 +326,14 @@ command acknowledgements. It streams a measured hold for at least 1.1 seconds
 before requesting offboard, and waits for both command acceptance and the measured
 mode/arming change. Mode/arming flags never mean only "request sent".
 Position-only messages set unused velocity/acceleration feed-forward fields to NaN.
+
+The backend also subscribes to the onboard tag detector, as the earlier offboard
+landing node did: `geometry_msgs/PoseStamped` on `/tag_detections` with sensor-data
+QoS. Each pose is the tag in the camera optical frame (x right, y down, z forward),
+attributed to `PX4Config.tag_camera` (default `front_down`); the topic and camera
+are configurable. Every drone observation drains new poses into `TAGS` with NED
+estimates, so detections update whenever the driver steps. The message carries no
+tag ID. Which physical camera feeds the onboard detector is not verified.
 
 Each hardware backend owns a ROS context and executor. Driver reads and bounded
 flight-command waits pump that executor; there is no background flight thread and
@@ -216,23 +360,27 @@ The interactive controller example is available with:
 
 ```sh
 uv run --locked mjpython -m airtruck.examples.gamepad_flight
+uv run --locked mjpython -m airtruck.examples.gamepad_flight --apriltag
+uv run --locked mjpython -m airtruck.examples.gamepad_flight --model models/demo_quad/quad.xml --spawn-height 0.11
 ```
 
-It uses `models/demo_quad/quad.xml` (an explicitly analytic model, not Sentinel)
-and `worlds/flight_arena/scene.xml`. SDL's standard game-controller mapping reads
+It uses the Sentinel model and `worlds/flight_arena/scene.xml`. `--apriltag` places
+tag36h11 #0 1.5 m north of the pad, enables detection on both cameras and shows the
+latest detection; `[` and `]` cycle the viewer through the onboard cameras. SDL's standard game-controller mapping reads
 the Xbox pad without creating another visible window. Left stick controls climb
 and yaw, and right stick moves forward/sideways relative to the current heading.
 A takes off, B lands, X holds, Y resets, and Menu closes the demo. Releasing the
 sticks leaves a held position target; disconnecting the controller captures a
 measured hold. Targets are bounded to the demonstration arena with a small
 tracking leash. `--model` can select another model using the prepared drone
-contract. The demo always constructs `Drone(..., hardware=False)`.
+contract, such as the analytic `models/demo_quad/quad.xml`. The demo always flies
+in simulation.
 
-The generic model's mass/inertia are assigned simulation settings and are recorded
-in its own `information.json`; they are not CAD or measured Sentinel properties.
+Both models' mass/inertia are assigned simulation settings recorded in their own
+`information.json`; they are not CAD or measured Sentinel properties.
 
 ```python
-with MujocoDriver([left, right]) as driver:
+with SystemDriver([left, right]) as driver:
     env = driver.as_gymnasium(max_episode_steps=1000, flatten=True)
     observation, info = env.reset(seed=42)
     observation, reward, terminated, truncated, info = env.step(env.action_space.sample())
@@ -270,6 +418,7 @@ LeRobot configuration dataclasses. `train(config)` returns the saved checkpoint.
 The trainer handles normalization, action chunks, optimization and checkpointing.
 Model sources, object placements, channels and timing are checked on rollout.
 Old checkpoint metadata is not supported. Nothing is uploaded to the Hub.
+The example requires a world file; it rejects an in-memory `MjSpec` world.
 
 The example uses a small 128-dimensional ACT, 16-action chunks and per-step
 inference with temporal ensembling. Three updates only check plumbing, not a

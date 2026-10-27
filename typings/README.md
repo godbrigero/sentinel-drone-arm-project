@@ -45,6 +45,10 @@ used message types from PX4 revision `392e831c1f659429ca83902e66820d7094591410`
 (release/1.16). It is generated from those message definitions; the original
 BSD-3-Clause notice is retained in `px4_msgs/LICENSE`. ROS API declarations are
 maintained locally against the installed rclpy signatures (Apache-2.0 upstream).
+`geometry_msgs/`, `std_msgs/` and `builtin_interfaces/` declare only the
+`PoseStamped` tag-pose message and its nested `Pose`, `Point`, `Quaternion`,
+`Header` and `Time` fields from ROS 2 Jazzy (geometry_msgs 5.3.8; Apache-2.0
+upstream), checked against the installed message field definitions.
 These focused overlays provide autocomplete and static checks, not alternate
 runtime implementations or a claim of typing the entire ROS SDK.
 

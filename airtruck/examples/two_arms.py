@@ -11,7 +11,7 @@ from pathlib import Path
 
 import numpy as np
 
-from airtruck.simulation.driver import MujocoDriver
+from airtruck.runtime.driver import SystemDriver
 from airtruck.systems.base import Values
 from airtruck.systems.so101 import SO101Arm, SO101Follower
 
@@ -68,7 +68,7 @@ def main() -> None:
     if not math.isfinite(args.seconds) or args.seconds <= 0:
         parser.error("seconds must be positive and finite")
     arms = two_arms()
-    with MujocoDriver(
+    with SystemDriver(
         arms,
         world=args.world,
         render_mode=args.render,

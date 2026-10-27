@@ -2,14 +2,24 @@
 
 from __future__ import annotations
 
+import math
+import time
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
 
 import mujoco
 import numpy as np
 from numpy.typing import NDArray
 
+from airtruck.systems.apriltag import (
+    TAGS,
+    AprilTagConfig,
+    AprilTagDetector,
+    TagBoard,
+    TagDetection,
+)
 from airtruck.systems.base import SimSystem, Values, space_values
+from airtruck.systems.camera import FLU_TO_FRD, MUJOCO_TO_OPTICAL, Camera
 from airtruck.systems.flight import (
     FlightController,
     NED_TO_WORLD,
@@ -34,6 +44,9 @@ class DroneHardware(Protocol):
     def arm(self) -> None: ...
     def disarm(self) -> None: ...
     def land(self) -> None: ...
+    def pop_tag_detections(self) -> list[Values]:
+        """New tag poses since the last call: camera, position, quaternion, timestamp_s, tag_id."""
+        ...
 
 
 class Drone(SimSystem):
@@ -42,6 +55,11 @@ class Drone(SimSystem):
     Public positions/velocities use NED; attitudes rotate body FRD into NED.
     The supplied MuJoCo model uses Z-up NWU and body FLU with native wrench
     actuators. A simulation autopilot tracks targets without pose teleports.
+
+    Optional model features are discovered by name: `rotor_*` velocity actuators
+    spin propellers from the allocated wrench, and cameras on the root body become
+    `cameras`. Tag detections from the PX4 tag topic (hardware) or opt-in image
+    detection (`apriltags=`) are published to `tag_board`, the global `TAGS`.
     """
 
     def __init__(
@@ -53,9 +71,27 @@ class Drone(SimSystem):
         backend: DroneHardware | None = None,
         px4: PX4Config | None = None,
         controller: FlightController | None = None,
+        apriltags: AprilTagConfig | None = None,
+        tag_board: TagBoard = TAGS,
+        camera_rate_hz: float | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(name, model=model, root_body=root_body, **kwargs)
+        if camera_rate_hz is not None and not (
+            math.isfinite(camera_rate_hz) and camera_rate_hz > 0
+        ):
+            raise ValueError("camera_rate_hz must be positive and finite")
+        self.apriltags, self.tag_board = apriltags, tag_board
+        self.camera_rate_hz = camera_rate_hz
+        self._detector = (
+            AprilTagDetector(apriltags.family, apriltags.tag_size_m)
+            if apriltags
+            else None
+        )
+        self.cameras: dict[str, Camera] = {}
+        self._renderers: dict[tuple[int, int], mujoco.Renderer] = {}
+        self._detected: dict[str, int] = {}
+        self._next_frame = self._next_detection = -math.inf
         self.backend = backend if backend is not None else PX4Backend(name, px4)
         self.controller = controller or FlightController()
         self._backend_open = False
@@ -160,7 +196,125 @@ class Drone(SimSystem):
             or not np.isfinite(model.actuator_ctrlrange[self._actuators]).all()
         ):
             raise ValueError("Drone actuator control ranges must be finite and limited")
+        self._bind_rotors(model)
+        self._bind_cameras(model)
         super().bind(model, data)
+
+    def _bind_rotors(self, model: mujoco.MjModel) -> None:
+        """Map the aggregate wrench to per-rotor thrust for propeller spin."""
+        rotors = [
+            index
+            for index in range(model.nu)
+            if model.actuator(index).name.startswith(f"{self.name}/rotor_")
+        ]
+        self._rotors = np.array(rotors, dtype=int)
+        self._rotor_dofs: NDArray[np.intp] = np.zeros(0, dtype=np.intp)
+        if not rotors:
+            return
+        if model.nuser_actuator < 2:
+            raise ValueError(
+                "Rotor actuators need user='thrust_coefficient torque_coefficient'"
+            )
+        columns, coefficients, spins, dofs = [], [], [], []
+        for actuator in rotors:
+            joint = int(model.actuator_trnid[actuator, 0])
+            body = int(model.jnt_bodyid[joint])
+            gain = model.actuator_gainprm[actuator, 0]
+            low, high = model.actuator_ctrlrange[actuator]
+            thrust, torque = model.actuator_user[actuator, :2]
+            if (
+                model.actuator_trntype[actuator] != mujoco.mjtTrn.mjTRN_JOINT
+                or model.jnt_type[joint] != mujoco.mjtJoint.mjJNT_HINGE
+                or model.body_parentid[body] != self._body
+                or model.actuator_gaintype[actuator] != mujoco.mjtGain.mjGAIN_FIXED
+                or model.actuator_biastype[actuator] != mujoco.mjtBias.mjBIAS_AFFINE
+                or not np.allclose(model.actuator_biasprm[actuator, :3], [0, 0, -gain])
+                or gain <= 0
+                or not model.actuator_ctrllimited[actuator]
+            ):
+                raise ValueError(
+                    "Rotors need velocity actuators on hinges of root children"
+                )
+            if not (thrust > 0 and torque > 0):
+                raise ValueError("Rotor thrust/torque coefficients must be positive")
+            if low >= 0 < high:
+                spin = 1.0  # Counter-clockwise about the axis toward the shaft tip.
+            elif high <= 0 > low:
+                spin = -1.0
+            else:
+                raise ValueError(
+                    "A rotor control range must allow only one spin direction"
+                )
+            orientation = rotation(model.body_quat[body])
+            axis = orientation @ model.jnt_axis[joint]
+            arm = (
+                model.body_pos[body]
+                + orientation @ model.jnt_pos[joint]
+                - model.body_ipos[self._body]
+            )
+            # Thrust along the axis; propeller drag reacts against the spin.
+            columns.append(
+                np.concatenate(
+                    [[axis[2]], np.cross(arm, axis) - spin * torque / thrust * axis]
+                )
+            )
+            coefficients.append(thrust)
+            spins.append(spin)
+            dofs.append(int(model.jnt_dofadr[joint]))
+        self._allocation = np.linalg.pinv(np.column_stack(columns))
+        self._rotor_thrust = np.array(coefficients)
+        self._rotor_spin = np.array(spins)
+        self._rotor_dofs = np.asarray(dofs, dtype=np.intp)
+        self._rotor_limits = model.actuator_ctrlrange[self._rotors].copy()
+
+    def _bind_cameras(self, model: mujoco.MjModel) -> None:
+        self.cameras.clear()
+        for index in np.flatnonzero(model.cam_bodyid == self._body):
+            name = model.camera(int(index)).name.removeprefix(f"{self.name}/")
+            width, height = (int(v) for v in model.cam_resolution[index])
+            if (width, height) == (1, 1):  # MuJoCo's unspecified resolution.
+                width, height = 640, 480
+            self.cameras[name] = Camera(
+                name,
+                width=width,
+                height=height,
+                fovy_deg=float(model.cam_fovy[index]),
+                rotation=FLU_TO_FRD
+                @ rotation(model.cam_quat[index])
+                @ MUJOCO_TO_OPTICAL,
+                position_m=FLU_TO_FRD @ model.cam_pos[index],
+            )
+        if self.cameras:
+            visual = model.vis.global_
+            visual.offwidth = max(
+                visual.offwidth, *(c.width for c in self.cameras.values())
+            )
+            visual.offheight = max(
+                visual.offheight, *(c.height for c in self.cameras.values())
+            )
+        missing = set(self.apriltags.cameras if self.apriltags else ()) - set(
+            self.cameras
+        )
+        if missing:
+            raise ValueError(
+                f"AprilTag cameras are not on {self.name}: {sorted(missing)}"
+            )
+
+    @property
+    def rotor_speeds_rad_s(self) -> NDArray[np.float64]:
+        """Measured signed propeller speeds about each motor axis."""
+        _, data = self.world
+        return data.qvel[self._rotor_dofs].copy()
+
+    def _spin_rotors(self, wrench: NDArray[np.float64]) -> None:
+        if not len(self._rotors):
+            return
+        _, data = self.world
+        thrust = np.clip(self._allocation @ wrench, 0, None)
+        speed = self._rotor_spin * np.sqrt(thrust / self._rotor_thrust)
+        data.ctrl[self._rotors] = np.clip(
+            speed, self._rotor_limits[:, 0], self._rotor_limits[:, 1]
+        )
 
     def _backend_changed(self) -> None:
         if self._model is None:
@@ -173,6 +327,40 @@ class Drone(SimSystem):
         model.actuator_biasprm[self._actuators] = (
             0 if self._hardware_active else self._biases
         )
+
+    @property
+    def is_connected(self) -> bool:
+        if self.hardware or self._hardware_active:
+            return self._hardware_active and self._backend_open
+        return self._model is not None
+
+    def connect(self) -> None:
+        """Open the selected backend now; never arms or changes flight mode.
+
+        Optional: `SystemDriver` connects on entering `with`, or at the first
+        `reset()`/`step()`. Use this only to connect earlier when the driver is not
+        used as a context manager. The drone must already belong to a driver.
+        """
+        self.sync_hardware()
+        if not self.is_connected:
+            raise RuntimeError("Simulation must be bound to a driver")
+
+    def disconnect(self) -> None:
+        """Stop communication (also done on driver exit); never lands or disarms."""
+        self.close()
+
+    def get_observation(self) -> Values:
+        return self.observe()
+
+    def send_action(self, action: Values) -> Values:
+        """Apply a position/yaw target immediately, without advancing the shared clock."""
+        self.world
+        self.sync_hardware()
+        command = self.validate_controls({**self.controls, **action})
+        self.controls.update(command)
+        if self._hardware_active:
+            return dict(self.backend.send_action(command))
+        return command
 
     def _connect_hardware(self) -> None:
         self._backend_open = True
@@ -198,13 +386,18 @@ class Drone(SimSystem):
 
     def reset(self) -> None:
         self._backend_changed()
+        self._next_frame = self._next_detection = -math.inf
         if not self._hardware_active:
             self._armed = self._offboard = self._landing = False
             self._ground_time = 0.0
+            self.tag_board.clear(vehicle=self.name)
+            for camera in self.cameras.values():
+                camera.frame = camera.timestamp_s = None
         self.observe()
         self._hold_target()
         _, data = self.world
         data.ctrl[self._actuators] = 0
+        data.ctrl[self._rotors] = 0
         if self._hardware_active:
             self.backend.send_action(self.validate_controls())
 
@@ -294,6 +487,10 @@ class Drone(SimSystem):
     def step(self, dt: float) -> None:
         if self._hardware_active:
             self.backend.send_action(dict[str, Any](self._command))
+            # Visual only: armed propellers spin at hover speed on the proxy.
+            model, _ = self.world
+            hover = self._mass * float(np.linalg.norm(model.opt.gravity))
+            self._spin_rotors(np.array([hover if self._armed else 0.0, 0, 0, 0]))
             return
         model, data = self.world
         if self._landing and self._landed:
@@ -320,6 +517,7 @@ class Drone(SimSystem):
         data.ctrl[self._actuators] = np.clip(
             wrench, self._limits[:, 0], self._limits[:, 1]
         )
+        self._spin_rotors(data.ctrl[self._actuators])
 
     def observe(self) -> Values:
         model, data = self.world
@@ -374,4 +572,118 @@ class Drone(SimSystem):
             bool(observation[key]) for key in ("armed", "offboard", "landed")
         )
         self.state = observation
+        if self._hardware_active:
+            for record in self.backend.pop_tag_detections():
+                self._publish_tag(record, "ros")
+        self._process_cameras()
         return dict(self.state)
+
+    def capture(self, camera: str) -> NDArray[np.uint8]:
+        """Render a simulated frame now, or return the latest published hardware frame."""
+        feed = self.cameras[camera]
+        if self._hardware_active:
+            if feed.frame is None:
+                raise RuntimeError(
+                    f"No frame has been published to {self.name}/{camera}"
+                )
+            return feed.frame
+        model, data = self.world
+        size = (feed.width, feed.height)
+        if size not in self._renderers:
+            self._renderers[size] = mujoco.Renderer(model, feed.height, feed.width)
+        renderer = self._renderers[size]
+        renderer.update_scene(data, camera=f"{self.name}/{camera}")
+        feed.publish(renderer.render(), float(data.time))
+        assert feed.frame is not None
+        return feed.frame
+
+    def latest_tag(
+        self, *, camera: str | None = None, tag_id: int | None = None
+    ) -> TagDetection | None:
+        return self.tag_board.latest(vehicle=self.name, camera=camera, tag_id=tag_id)
+
+    def _process_cameras(self) -> None:
+        _, data = self.world
+        now = time.monotonic() if self._hardware_active else float(data.time)
+        # The tolerance keeps accumulated timestep rounding from skipping a period.
+        due = now + 1e-9
+        if (
+            self.camera_rate_hz
+            and not self._hardware_active
+            and due >= self._next_frame
+        ):
+            self._next_frame = now + 1 / self.camera_rate_hz
+            for name in self.cameras:
+                self.capture(name)
+        if (
+            self.apriltags is None
+            or self._detector is None
+            or due < self._next_detection
+        ):
+            return
+        self._next_detection = now + 1 / self.apriltags.rate_hz
+        for name in self.apriltags.cameras or tuple(self.cameras):
+            feed = self.cameras[name]
+            if not self._hardware_active and feed.timestamp_s != data.time:
+                self.capture(name)
+            if feed.frame is None or self._detected.get(name) == feed.sequence:
+                continue
+            self._detected[name] = feed.sequence
+            for found in self._detector.detect(feed.frame, feed.intrinsics):
+                self._publish_tag(
+                    {
+                        "camera": name,
+                        "tag_id": found.tag_id,
+                        "position": found.position_m,
+                        "quaternion": found.quaternion,
+                        "timestamp_s": feed.timestamp_s,
+                        "corners_px": found.corners_px,
+                    },
+                    "camera" if self._hardware_active else "simulation",
+                )
+
+    def _publish_tag(
+        self, record: Values, source: Literal["simulation", "camera", "ros"]
+    ) -> None:
+        position = np.asarray(record["position"], dtype=np.float64)
+        quaternion = np.asarray(record["quaternion"], dtype=np.float64)
+        if (
+            position.shape != (3,)
+            or quaternion.shape != (4,)
+            or not np.isfinite(position).all()
+            or not np.isclose(np.linalg.norm(quaternion), 1, atol=1e-3)
+        ):
+            raise ValueError(
+                "Tag poses need a finite position and unit wxyz quaternion"
+            )
+        feed = self.cameras.get(str(record["camera"]))
+        position_ned = quaternion_ned = None
+        if feed is not None:
+            vehicle = rotation(self.state["quaternion"])
+            position_ned = self.state["position"] + vehicle @ feed.body_point(position)
+            tag = vehicle @ feed.rotation @ rotation(quaternion)
+            quaternion_ned = np.empty(4)
+            mujoco.mju_mat2Quat(quaternion_ned, np.ascontiguousarray(tag).reshape(9))
+        tag_id = record.get("tag_id")
+        self.tag_board.publish(
+            TagDetection(
+                vehicle=self.name,
+                camera=str(record["camera"]),
+                tag_id=None if tag_id is None else int(tag_id),
+                position_m=position,
+                quaternion=quaternion / np.linalg.norm(quaternion),
+                timestamp_s=float(record["timestamp_s"]),
+                source=source,
+                position_ned_m=position_ned,
+                quaternion_ned=quaternion_ned,
+                corners_px=record.get("corners_px"),
+            )
+        )
+
+    def close(self) -> None:
+        try:
+            for renderer in self._renderers.values():
+                renderer.close()
+        finally:
+            self._renderers.clear()
+            super().close()

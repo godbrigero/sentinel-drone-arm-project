@@ -23,8 +23,8 @@ from lerobot.policies.factory import make_pre_post_processors
 from lerobot.scripts.lerobot_train import train as train_policy
 
 from airtruck.examples.two_arms import motion, two_arms
-from airtruck.simulation.driver import MujocoDriver
-from airtruck.simulation.gymnasium import GymnasiumAdapter, feature_names
+from airtruck.runtime.driver import SystemDriver
+from airtruck.runtime.gymnasium import GymnasiumAdapter, feature_names
 from airtruck.systems.base import ROOT
 from airtruck.systems.so101 import SO101Follower
 
@@ -32,8 +32,10 @@ REPO_ID = "local/airtruck-two-arms"
 TASK = "Independent two-arm motion example; no success objective is defined."
 
 
-def schema(driver: MujocoDriver, max_episode_steps: int) -> dict[str, Any]:
+def schema(driver: SystemDriver, max_episode_steps: int) -> dict[str, Any]:
     adapter = GymnasiumAdapter(driver)
+    if driver.world_path is None:
+        raise ValueError("ACT checkpoints record a world file, not an in-memory MjSpec")
     sources = [
         driver.world_path,
         *dict.fromkeys(system.model_path for system in driver.systems),
@@ -66,7 +68,7 @@ def schema(driver: MujocoDriver, max_episode_steps: int) -> dict[str, Any]:
 def record(output: Path, world: Path, episodes: int, seconds: float, seed: int) -> None:
     steps = math.ceil(seconds / 0.02)
     arms = two_arms()
-    with MujocoDriver(arms, world=world) as driver:
+    with SystemDriver(arms, world=world) as driver:
         adapter = GymnasiumAdapter(driver)
         env = driver.as_gymnasium(flatten=True, max_episode_steps=steps)
         metadata = schema(driver, steps)
@@ -210,7 +212,7 @@ def rollout(checkpoint: Path, render: bool, seed: int) -> None:
     if any(set(entry) != fields for entry in metadata["systems"]):
         raise ValueError("Checkpoint systems may describe models and poses only")
     arms = [SO101Follower(hardware=False, **entry) for entry in metadata["systems"]]
-    with MujocoDriver(
+    with SystemDriver(
         arms,
         world=metadata["world"],
         control_dt=metadata["control_dt"],

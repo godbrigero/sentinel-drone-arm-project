@@ -11,7 +11,7 @@ import pytest
 from lerobot.robots.so_follower import SO101Follower as NativeFollower
 from lerobot.teleoperators.so_leader import SO101Leader as NativeLeader
 
-from airtruck.simulation.driver import MujocoDriver
+from airtruck.runtime.driver import SystemDriver
 from airtruck.systems.drone import Drone
 from airtruck.systems.so101 import JOINTS, SO101Arm, SO101Follower, SO101Leader, release
 
@@ -61,7 +61,7 @@ def test_bridge_is_native_lerobot_and_keeps_native_calibration_namespaces() -> N
 
 def test_native_lifecycle_is_simulation_aware() -> None:
     arm = SO101Follower("arm")
-    with MujocoDriver([arm]) as driver:
+    with SystemDriver([arm]) as driver:
         driver.reset()
         fake = FakeBus(arm, dict(arm.state))
         assert arm.is_connected and arm.is_calibrated
@@ -75,7 +75,7 @@ def test_native_lifecycle_is_simulation_aware() -> None:
 
 def test_flag_switches_backend_and_mirrors_measured_pose_without_homing() -> None:
     arm = SO101Follower("arm", port="/dev/fake")
-    with MujocoDriver([arm]) as driver:
+    with SystemDriver([arm]) as driver:
         driver.reset()
         reading = dict(arm.state)
         reading["shoulder_pan.pos"] = 10
@@ -117,7 +117,7 @@ def test_flag_switches_backend_and_mirrors_measured_pose_without_homing() -> Non
 def test_native_send_action_returns_clipped_target_without_stepping() -> None:
     arm = SO101Follower("arm", port="/dev/fake")
     arm.config.max_relative_target = 5.0
-    with MujocoDriver([arm]) as driver:
+    with SystemDriver([arm]) as driver:
         driver.reset()
         reading = dict(arm.state)
         fake = FakeBus(arm, reading)
@@ -134,7 +134,7 @@ def test_native_send_action_returns_clipped_target_without_stepping() -> None:
 def test_real_leader_remains_input_only_and_drives_simulated_follower() -> None:
     leader = SO101Leader("leader", port="/dev/fake", position=(-0.25, 0, 0))
     follower = SO101Follower("follower", position=(0.25, 0, 0))
-    with MujocoDriver([leader, follower]) as driver:
+    with SystemDriver([leader, follower]) as driver:
         driver.reset()
         reading = dict(leader.state)
         reading["shoulder_pan.pos"] = 20
@@ -152,7 +152,7 @@ def test_invalid_second_system_never_sends_first_hardware_target() -> None:
         SO101Follower("left", port="/dev/fake1", position=(-0.25, 0, 0)),
         SO101Follower("right", port="/dev/fake2", position=(0.25, 0, 0)),
     ]
-    with MujocoDriver(arms) as driver:
+    with SystemDriver(arms) as driver:
         driver.reset()
         fakes = [FakeBus(arm, dict(arm.state)) for arm in arms]
         for arm in arms:
@@ -176,7 +176,7 @@ def test_partial_connect_failure_releases_and_closes_everything() -> None:
         raise OSError("partial startup")
 
     fake.bus.connect.side_effect = fail
-    driver = MujocoDriver([arm])
+    driver = SystemDriver([arm])
     with pytest.raises(OSError, match="partial startup"):
         with driver:
             pytest.fail("Connection should not succeed")
@@ -190,14 +190,14 @@ def test_missing_calibration_and_outside_travel_never_enable() -> None:
     fake = FakeBus(arm, {})
     arm.calibration = {}
     with pytest.raises(ValueError, match="Missing"):
-        with MujocoDriver([arm]):
+        with SystemDriver([arm]):
             pass
     fake.bus.connect.assert_not_called()
     arm = SO101Follower("arm", port="/dev/fake", hardware=True)
     fake = FakeBus(arm, {})
     fake.bus.sync_read.side_effect = lambda *a, **kw: dict.fromkeys(JOINTS, 3100)
     with pytest.raises(ValueError, match="outside"):
-        with MujocoDriver([arm]):
+        with SystemDriver([arm]):
             pass
     fake.bus.sync_write.assert_not_called()
     fake.bus.configure_motors.assert_not_called()
@@ -234,7 +234,7 @@ def test_drone_backend_tracking_and_partial_failure_cleanup(drone_model: Path) -
         "landed": False,
     }
     drone = Drone("drone", model=drone_model, backend=backend, position=(0.4, 0, 0.5))
-    with MujocoDriver([drone]) as driver:
+    with SystemDriver([drone]) as driver:
         driver.reset()
         drone.hardware = True
         driver.step()
@@ -261,7 +261,7 @@ def test_drone_backend_tracking_and_partial_failure_cleanup(drone_model: Path) -
     backend.connect.side_effect = OSError("partial drone startup")
     drone = Drone("drone", model=drone_model, backend=backend, hardware=True)
     with pytest.raises(OSError):
-        with MujocoDriver([drone]):
+        with SystemDriver([drone]):
             pass
     backend.disconnect.assert_called_once()
 
@@ -271,10 +271,10 @@ def test_no_silent_hardware_fallback_or_fast_hardware_loop(drone_model: Path) ->
     backend.connect.side_effect = OSError("PX4 unavailable")
     drone = Drone("drone", model=drone_model, hardware=True, backend=backend)
     with pytest.raises(OSError, match="PX4 unavailable"):
-        with MujocoDriver([drone]):
+        with SystemDriver([drone]):
             pass
     arm = SO101Follower("arm", port="/dev/fake")
-    with MujocoDriver([arm]) as driver:
+    with SystemDriver([arm]) as driver:
         driver.reset()
         FakeBus(arm, dict(arm.state))
         arm.hardware = True

@@ -12,7 +12,7 @@ from gymnasium import spaces
 from airtruck.systems.base import space_values
 
 if TYPE_CHECKING:
-    from airtruck.simulation.driver import MujocoDriver
+    from airtruck.runtime.driver import SystemDriver
 
 
 class GymnasiumAdapter(gym.Env):
@@ -20,7 +20,7 @@ class GymnasiumAdapter(gym.Env):
     observation_space: spaces.Dict
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 50}
 
-    def __init__(self, driver: MujocoDriver) -> None:
+    def __init__(self, driver: SystemDriver) -> None:
         self.driver = driver
         self.render_mode = driver.render_mode
         self.metadata = {

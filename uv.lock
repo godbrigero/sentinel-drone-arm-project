@@ -103,6 +103,7 @@ dependencies = [
     { name = "lerobot", extra = ["feetech", "training"] },
     { name = "mujoco" },
     { name = "numpy" },
+    { name = "opencv-python-headless" },
     { name = "pygame-ce" },
 ]
 
@@ -123,6 +124,7 @@ requires-dist = [
     { name = "lerobot", extras = ["feetech", "training"], specifier = "==0.6.1" },
     { name = "mujoco", specifier = "==3.16.0" },
     { name = "numpy", specifier = "==2.2.6" },
+    { name = "opencv-python-headless", specifier = "==4.13.0.92" },
     { name = "pygame-ce", specifier = "==2.5.8" },
 ]
 

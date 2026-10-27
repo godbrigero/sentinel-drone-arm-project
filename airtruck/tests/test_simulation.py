@@ -11,19 +11,19 @@ from gymnasium import spaces
 from gymnasium.utils.env_checker import check_env
 
 from airtruck.examples.two_arms import motion, two_arms
-from airtruck.simulation.driver import MujocoDriver
-from airtruck.simulation.gymnasium import GymnasiumAdapter, feature_names
+from airtruck.runtime.driver import SystemDriver
+from airtruck.runtime.gymnasium import GymnasiumAdapter, feature_names
 from airtruck.systems.drone import Drone
 from airtruck.systems.so101 import SO101Follower, SO101Leader
 
 
 def single_env() -> gym.Env:
-    return MujocoDriver([SO101Follower("arm")]).as_gymnasium(flatten=True)
+    return SystemDriver([SO101Follower("arm")]).as_gymnasium(flatten=True)
 
 
 def test_object_controls_share_one_clock_and_hold_other_targets() -> None:
     left, right = two_arms()
-    with MujocoDriver([left, right], collisions=False) as driver:
+    with SystemDriver([left, right], collisions=False) as driver:
         driver.reset()
         untouched = right.controls["gripper.pos"]
         left.controls["shoulder_pan.pos"] = 20
@@ -45,7 +45,7 @@ def test_object_controls_share_one_clock_and_hold_other_targets() -> None:
 )
 def test_invalid_controls_cannot_partially_advance_world(bad: str) -> None:
     arms = two_arms()
-    with MujocoDriver(arms) as driver:
+    with SystemDriver(arms) as driver:
         driver.reset()
         arms[0].controls["shoulder_pan.pos"] = 20
         if bad == "unknown":
@@ -73,7 +73,7 @@ def test_invalid_controls_cannot_partially_advance_world(bad: str) -> None:
 
 def test_gymnasium_native_flattening_and_horizon() -> None:
     arm = SO101Follower("arm")
-    with MujocoDriver([arm]) as driver:
+    with SystemDriver([arm]) as driver:
         adapter = GymnasiumAdapter(driver)
         check_env(adapter, skip_render_check=True)
         env = driver.as_gymnasium(flatten=True, max_episode_steps=1)
@@ -107,7 +107,7 @@ def test_cross_arm_contacts_change_the_trajectory() -> None:
     runs = []
     for enabled in (True, False):
         arms = two_arms()
-        with MujocoDriver(arms, collisions=enabled) as driver:
+        with SystemDriver(arms, collisions=enabled) as driver:
             driver.reset()
             initial = {arm.name: dict(arm.controls) for arm in arms}
             trajectory, samples, peak = [], 0, 0.0
@@ -135,7 +135,7 @@ def test_arm_and_free_body_use_different_controls_in_one_world(
 ) -> None:
     arm = SO101Follower("arm")
     drone = Drone("drone", model=drone_model, position=(0.4, 0, 0.5))
-    with MujocoDriver([arm, drone]) as driver:
+    with SystemDriver([arm, drone]) as driver:
         driver.reset()
         initial_z = drone.state["position"][2]
         arm.controls["shoulder_pan.pos"] = 20
@@ -155,7 +155,7 @@ def test_arm_and_free_body_use_different_controls_in_one_world(
 
 def test_disarmed_drone_falls_and_makes_native_floor_contact(drone_model: Path) -> None:
     drone = Drone("drone", model=drone_model, position=(0.4, 0, 0.2))
-    with MujocoDriver([drone]) as driver:
+    with SystemDriver([drone]) as driver:
         driver.reset()
         drone.controls["position"] = np.array([0.4, 0, -2.0])
         for _ in range(50):
@@ -168,7 +168,7 @@ def test_disarmed_drone_falls_and_makes_native_floor_contact(drone_model: Path) 
 def test_leader_is_an_input_and_immediate_commands_do_not_advance_time() -> None:
     leader = SO101Leader("leader", position=(-0.25, 0, 0))
     follower = SO101Follower("follower", position=(0.25, 0, 0))
-    with MujocoDriver([leader, follower]) as driver:
+    with SystemDriver([leader, follower]) as driver:
         driver.reset()
         leader.controls["shoulder_pan.pos"] = 20
         for _ in range(30):
@@ -183,7 +183,7 @@ def test_leader_is_an_input_and_immediate_commands_do_not_advance_time() -> None
 
 def test_run_reset_and_lifetime() -> None:
     arm = SO101Follower("arm")
-    driver = MujocoDriver([arm])
+    driver = SystemDriver([arm])
     with pytest.raises(gym.error.ResetNeeded):
         driver.step()
     driver.reset(seed=42)
@@ -208,11 +208,11 @@ def test_run_reset_and_lifetime() -> None:
 
 def test_driver_rejects_duplicate_systems_and_second_owner() -> None:
     with pytest.raises(ValueError, match="unique"):
-        MujocoDriver([SO101Follower("arm"), SO101Follower("arm")])
+        SystemDriver([SO101Follower("arm"), SO101Follower("arm")])
     arm = SO101Follower("arm")
-    with MujocoDriver([arm]):
+    with SystemDriver([arm]):
         with pytest.raises(ValueError, match="only one"):
-            MujocoDriver([arm])
+            SystemDriver([arm])
 
 
 def test_reset_seeds_object_owned_randomization() -> None:
@@ -222,7 +222,7 @@ def test_reset_seeds_object_owned_randomization() -> None:
             super().reset()
 
     arm = RandomArm("arm")
-    with MujocoDriver([arm]) as driver:
+    with SystemDriver([arm]) as driver:
         driver.reset(seed=42)
         first = dict(arm.state)
         driver.reset(seed=42)
@@ -241,7 +241,7 @@ def test_drone_velocity_matches_pose_origin_with_offset_center_of_mass(
     site.set("pos", ".01 0 0")
     xml.write(drone_model)
     drone = Drone("drone", model=drone_model, position=(0.4, 0, 0.5))
-    with MujocoDriver([drone]) as driver:
+    with SystemDriver([drone]) as driver:
         driver.reset()
         driver.data.qvel[5] = 1
         mujoco.mj_forward(driver.model, driver.data)
