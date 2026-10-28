@@ -153,6 +153,27 @@ def test_dropped_startup_packet_retries_the_whole_connect(
         assert not arm.hardware_active and not fake.bus.is_connected
 
 
+@pytest.mark.parametrize("arm_type", [SO101Follower, SO101Leader])
+def test_failed_interactive_calibration_is_not_retried(
+    arm_type: type[SO101Follower] | type[SO101Leader],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    arm = arm_type("arm", hardware=True, port="/dev/fake")
+    fake = FakeBus(arm, dict.fromkeys(arm.action_features, 0.0))
+    fake.bus.is_calibrated = False
+    calibration = MagicMock(side_effect=ConnectionError("calibration interrupted"))
+    monkeypatch.setattr(arm, "calibrate", calibration)
+
+    with pytest.raises(ConnectionError, match="calibration interrupted"):
+        arm.connect(calibrate=True)
+
+    calibration.assert_called_once_with()
+    fake.bus.connect.assert_called_once_with()
+    fake.bus.disconnect.assert_called_once_with(disable_torque=False)
+    assert not arm.hardware_active and not fake.bus.is_connected
+    assert not fake.normal_commands
+
+
 def test_native_send_action_returns_clipped_target_without_stepping() -> None:
     arm = SO101Follower("arm", port="/dev/fake")
     arm.config.max_relative_target = 5.0

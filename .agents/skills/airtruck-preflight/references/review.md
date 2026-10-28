@@ -13,7 +13,7 @@
 - CAD meshes and inertias: unchanged hashes/provenance or the full authorized CAD verification workflow. No claims that hull contacts reproduce concave surfaces exactly or that reference mass is measured mass.
 - Documentation: read all project `.md` files outside caches and tool metadata. Validate descriptions and examples, not only links. Check all changed/deleted paths, examples, dependencies, test commands, GUI assumptions, limitations, and root hygiene. User-requested commits require this review before the commit.
 
-The inventory excludes `.git`, `.venv*`, caches and tool/account metadata directories. Report these exclusions. Project skills under `.agents/skills/` are included in the review and snapshot. Symlinks are listed, not followed. A root `information.json` is not required when model-specific records are present. New directories are review candidates, not automatically forbidden.
+The inventory excludes `.git`, `.venv*`, caches and tool/account metadata directories. Report these exclusions. Project skills under `.agents/skills/` and Claude Code adapters under `.claude/skills/` are included in the review and snapshot. Symlinks are listed, not followed. A root `information.json` is not required when model-specific records are present. New directories are review candidates, not automatically forbidden.
 
 ## Review notes supplied to the renderer
 

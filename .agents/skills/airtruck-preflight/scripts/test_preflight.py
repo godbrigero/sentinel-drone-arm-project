@@ -1,10 +1,19 @@
 """Behavior checks for the auditor, using isolated synthetic repositories."""
+import importlib.util
 import json
 from pathlib import Path
 import subprocess
 import tempfile
 import unittest
-import preflight
+
+# Load the sibling by path under both direct unittest execution and pytest's
+# importlib mode, without adding this tooling directory to runtime sys.path.
+spec = importlib.util.spec_from_file_location(
+    "airtruck_preflight_tests_subject", Path(__file__).with_name("preflight.py")
+)
+assert spec is not None and spec.loader is not None
+preflight = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(preflight)
 
 
 class PreflightTests(unittest.TestCase):

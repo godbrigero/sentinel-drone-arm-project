@@ -89,6 +89,12 @@ is required. Use direct module imports.
 
 ## Verify
 
+For a reviewed local commit, invoke `$commit` in Codex or `/commit` in Claude Code
+from this repository. The [Claude Code adapter](../.claude/skills/commit/SKILL.md)
+loads the [shared commit workflow](../.agents/skills/commit/SKILL.md), including
+the project preflight and documentation review. Both reuse still-valid checks
+from the current conversation and verify the resulting commit without pushing.
+
 ```sh
 uv run --locked pytest -q
 uv run --locked mypy
@@ -99,7 +105,12 @@ uv run --locked python scripts/so101/verify.py
 Tests cover mixed systems, native flight tracking/landing, Sentinel propeller spin
 and cameras, simulated and ROS AprilTag detections, PX4 message transport, contact
 effects, native LeRobot on fake buses and backend switching. Physical ports are
-never opened. Camera tests need an offscreen OpenGL context (available on macOS; Linux needs EGL or OSMesa via `MUJOCO_GL`).
+never opened. Regression tests also exercise the four edit-and-run examples with
+hardware disabled and short headless runs, tag callback filtering/cleanup, and
+calibration failures without automatic retries. The default pytest command includes
+the preflight auditor's six self-tests; they also run directly with
+`python3 .agents/skills/airtruck-preflight/scripts/test_preflight.py`.
+Camera tests need an offscreen OpenGL context (available on macOS; Linux needs EGL or OSMesa via `MUJOCO_GL`).
 See [simulation](simulation.md), [hardware](hardware/README.md),
 [CAD provenance](so101/README.md), [model fidelity](so101/motor-model.md) and
 [Sentinel CAD](sentinel/README.md).

@@ -22,7 +22,7 @@ import xml.etree.ElementTree as ET
 
 ROOT_FILES = {'information.json', 'AGENTS.md', '.gitignore', 'requirements.txt',
               'pyrightconfig.json', 'pyproject.toml', 'uv.lock'}
-ROOT_DIRS = {'.agents', 'airtruck', 'models', 'worlds', 'scripts', 'docs', 'typings', 'global-info-images'}
+ROOT_DIRS = {'.agents', '.claude', 'airtruck', 'models', 'worlds', 'scripts', 'docs', 'typings', 'global-info-images'}
 OMIT = {'.git', '.aws', '.codex', '__pycache__', '.mypy_cache', '.pytest_cache', '.ruff_cache', '.cache'}
 
 

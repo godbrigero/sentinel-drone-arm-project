@@ -49,7 +49,7 @@ addopts = [
     "--import-mode=importlib",
 ]
 
-testpaths = ["airtruck"]
+testpaths = ["airtruck", ".agents/skills/airtruck-preflight/scripts"]
 
 [tool.mypy]
 python_version = "3.12"
