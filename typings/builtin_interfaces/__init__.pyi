@@ -1,1 +1,1 @@
-"""Focused ROS 2 Jazzy builtin_interfaces overlay; see typings/README.md."""
+"""Focused ROS 2 Humble builtin_interfaces overlay; see typings/README.md."""

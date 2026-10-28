@@ -25,7 +25,8 @@ with SystemDriver([left, right], control_dt=0.02) as driver:
 `controls` holds persistent desired targets. Unchanged fields retain their targets;
 `state` contains observed values, not desired targets. Editing controls does not
 advance physics. `driver.step()` synchronizes pending backend switches, refreshes
-inputs, runs an optional update callback, validates **all** control snapshots,
+inputs, lets linked systems write their targets (an `SO101Leader` with
+`follower=` sets that follower's controls), runs an optional update callback, validates **all** control snapshots,
 dispatches them through the systems, then advances the shared model once. Every
 system moves and exchanges contact forces during the same MuJoCo substeps.
 
@@ -47,7 +48,8 @@ with SystemDriver([left, right]) as driver:
 ```
 
 `run()` is a blocking loop; it does not start hidden worker threads. The callback
-runs after fresh input observations and before command validation. Omit `steps` to
+runs after fresh input observations and leader-to-follower links, and before
+command validation. Omit `steps` to
 run until `driver.stop()` or interruption. Use `realtime=False` for accelerated
 simulation. Hardware loops require real-time pacing. Physical devices continue on
 their own clocks, and dispatch across systems is not an atomic transaction.
@@ -55,7 +57,9 @@ their own clocks, and dispatch across systems is not an atomic transaction.
 ## Systems and native worlds
 
 The base contract is in `airtruck/systems/base.py`: `attach`, `bind`, `reset`, `step`
-and `observe`. `prepare_step` validates and snapshots a system's pending controls.
+and `observe`. Optional `link` resolves named references to other systems in the
+same driver, and `drive` writes those systems' controls each tick before the
+callback. `prepare_step` validates and snapshots a system's pending controls.
 A system's `step(dt)` applies its local inputs; it must never call `mujoco.mj_step`.
 New system types implement their own action and observation spaces. Scalar and
 array controls can coexist; the driver contains no fixed channel counts.
@@ -95,8 +99,10 @@ A follower exposes `send_action()` and `get_observation()`. A leader exposes
 `get_action()` and `send_feedback()`. `send_action()` applies a target immediately
 and returns the target accepted by LeRobot, including native relative-target
 clipping. It never advances the simulation clock. Use `controls` plus `driver.step()`
-for coordinated ticks. A real leader remains an input device: ordinary driver
-steps read it and never command its motors. Simulated leader controls pose its
+for coordinated ticks. `SO101Leader(..., follower=follower)`, given the follower
+object or its system name, makes every tick copy the leader's pose into that
+follower; see [hardware usage](hardware/README.md). A real leader remains an input
+device: ordinary driver steps read it and never command its motors. Simulated leader controls pose its
 virtual input device. Leaders are observations, not Gymnasium action channels.
 
 See [hardware usage](hardware/README.md) for flags, calibration and teleoperation.
@@ -179,9 +185,10 @@ The flight methods do not advance physics:
   `state["landed"]` and `state["armed"]` while continuing to step the driver.
 
 Simulation reports body-origin velocity even with an offset COM. Simulated
-`landed` means supporting contact below 0.15 m/s; hardware uses PX4's land
-detector. Backend changes seed a hold at the observed pose. A simulated reset
-disarms and restores the initial model; a hardware reset holds measured position
+`landed` means supporting contact below 0.15 m/s; hardware derives it from PX4's
+arming state and takeoff time (see
+[flight command semantics](hardware/README.md#flight-command-semantics)).
+Backend changes seed a hold at the observed pose. A simulated reset disarms and restores the initial model; a hardware reset holds measured position
 without arming, homing, or changing its flight mode. A hardware-tracked proxy
 converts the measured pose into the native Z-up world and uses MuJoCo constraints
 between observations. Virtual contact forces are not sent back to real hardware.
@@ -220,11 +227,13 @@ The controller gains and response limits are editable through `controller=Flight
 They are illustrative simulation settings: matching the command API does not make
 this controller dynamically identical to PX4 firmware or the physical aircraft.
 The default controller is tested at a 0.02 s control period with the analytic
-free-body fixture and the Sentinel model (takeoff, hover, yaw and landing). No
-automatic tag alignment or landing mission is implemented.
-`airtruck.examples.mixed_systems --height 0.5` runs the same flight API with the
-Sentinel model beside an arm, without connecting hardware; `--drone-model` selects
-another prepared model.
+free-body fixture and the Sentinel model (takeoff, hover, yaw and landing).
+The default gains are underdamped; the hover tests allow ten simulated seconds
+for takeoff settling and check both position error and low velocity. The
+`drone_1m_in_front_tag` example adjusts XY targets from detections at a configured
+0.5 m standoff, then requests landing. This is an illustrative example, not a
+validated alignment or landing mission. The mixed arm/drone snippet above uses
+the same public API without connecting hardware.
 
 ### Onboard cameras and AprilTags
 
@@ -270,7 +279,8 @@ OpenCV's AprilTag dictionaries (`tag36h11` default; `tag16h5`, `tag25h9`,
 `tag36h10`) and square-target PnP. `tag_size_m` is the black-border edge.
 On hardware, PX4 tag messages are always ingested (see the
 [PX4 backend](#px4-ros-2-backend)), and enabled image detection runs on published
-frames. Each `TagDetection` has the vehicle, camera, tag ID (None for ROS poses),
+frames. Each `TagDetection` has the vehicle, camera, tag ID (None for a ROS pose
+whose `frame_id` is not a decimal ID),
 the tag pose in the camera optical frame (`position_m`, wxyz `quaternion`), the
 timestamp, its source (`simulation`, `camera` or `ros`), and NED tag position and
 orientation computed from the camera mounting and the vehicle state at that tick.
@@ -283,8 +293,8 @@ points along the frame's +Z and the image's top along +Y. In the test scenes the
 simulated estimate is within about 1 cm at 1.2 m and 3–4 cm at 1.8 m oblique range.
 Simulated cameras use ideal pinhole projection without lens distortion, noise,
 motion blur or exposure effects, and the 166° fisheye tracking lens is represented
-only by its central focal length. `airtruck.examples.apriltag_detection` hovers
-near a tag and prints detections; the gamepad demo accepts `--apriltag`.
+only by its central focal length. The tag snippet above demonstrates simulated
+detection without a hardware connection.
 
 #### Movable SVG tag object
 
@@ -333,10 +343,11 @@ normal from this object's pose.
 
 See [ROS installation and hardware configuration](hardware/README.md#px4-drone).
 `PX4Backend` publishes `OffboardControlMode`, `TrajectorySetpoint` and
-`VehicleCommand`; it subscribes to odometry, vehicle status, land detection and
-command acknowledgements. It streams a measured hold for at least 1.1 seconds
-before requesting offboard, and waits for both command acceptance and the measured
-mode/arming change. Mode/arming flags never mean only "request sent".
+`VehicleCommand`; it subscribes to odometry and vehicle status (the Sentinel's
+PX4 1.14 bridge publishes no command ACK or land detector). It streams a measured
+hold for at least 1.1 seconds before requesting offboard, and re-sends each command
+until the measured mode/arming change confirms it. Mode/arming flags never mean
+only "request sent".
 Position-only messages set unused velocity/acceleration feed-forward fields to NaN.
 
 The backend also subscribes to the onboard tag detector, as the earlier offboard
@@ -344,8 +355,9 @@ landing node did: `geometry_msgs/PoseStamped` on `/tag_detections` with sensor-d
 QoS. Each pose is the tag in the camera optical frame (x right, y down, z forward),
 attributed to `PX4Config.tag_camera` (default `front_down`); the topic and camera
 are configurable. Every drone observation drains new poses into `TAGS` with NED
-estimates, so detections update whenever the driver steps. The message carries no
-tag ID. Which physical camera feeds the onboard detector is not verified.
+estimates, so detections update whenever the driver steps. VOXL's
+`voxl_mpa_to_ros2` puts the decimal tag ID in `header.frame_id`; other strings give
+`tag_id=None`. Which physical camera feeds the onboard detector is not verified.
 
 Each hardware backend owns a ROS context and executor. Driver reads and bounded
 flight-command waits pump that executor; there is no background flight thread and
@@ -366,30 +378,12 @@ values. Gymnasium's checker therefore emits range/normalization advice. A task
 wrapper can bound its workspace and normalize policy inputs/actions for training;
 LeRobot's dataset statistics still own policy normalization.
 
-## Gymnasium and ACT
+## Gymnasium
 
-The interactive controller example is available with:
-
-```sh
-uv run --locked mjpython -m airtruck.examples.gamepad_flight
-uv run --locked mjpython -m airtruck.examples.gamepad_flight --apriltag
-uv run --locked mjpython -m airtruck.examples.gamepad_flight --model models/demo_quad/quad.xml --spawn-height 0.11
-```
-
-It uses the Sentinel model and `worlds/flight_arena/scene.xml`. `--apriltag` places
-tag36h11 #0 1.5 m north of the pad, enables detection on both cameras and shows the
-latest detection; `[` and `]` cycle the viewer through the onboard cameras. SDL's standard game-controller mapping reads
-the Xbox pad without creating another visible window. Left stick controls climb
-and yaw, and right stick moves forward/sideways relative to the current heading.
-A takes off, B lands, X holds, Y resets, and Menu closes the demo. Releasing the
-sticks leaves a held position target; disconnecting the controller captures a
-measured hold. Targets are bounded to the demonstration arena with a small
-tracking leash. `--model` can select another model using the prepared drone
-contract, such as the analytic `models/demo_quad/quad.xml`. The demo always flies
-in simulation.
-
-Both models' mass/inertia are assigned simulation settings recorded in their own
-`information.json`; they are not CAD or measured Sentinel properties.
+The adapter remains available for policy integrations. The former ACT
+record/train/rollout and gamepad example modules have been removed; this checkout
+has no bundled dataset/checkpoint round-trip example. LeRobot still owns native
+arm communication, calibration and policy-training APIs.
 
 ```python
 with SystemDriver([left, right]) as driver:
@@ -409,33 +403,6 @@ systems and drivers for each worker. Each worker owns an independent whole world
 the interacting objects within one world are not separate workers. Async factories
 need the usual `if __name__ == "__main__":` entry point. One system instance cannot
 belong to two drivers.
-
-```sh
-uv run --locked python -m airtruck.examples.act record --output /tmp/airtruck-dataset --episodes 4 --seconds 8
-uv run --locked python -m airtruck.examples.act train --dataset /tmp/airtruck-dataset --output /tmp/airtruck-act --steps 1000
-uv run --locked python -m airtruck.examples.act rollout --checkpoint /tmp/airtruck-act/checkpoints/last/pretrained_model
-```
-
-The example records a standard LeRobot v3 dataset, calls LeRobot's Python trainer,
-and reloads native ACT checkpoints/preprocessors. The first arm supplies
-`observation.state`; the other arm supplies `observation.environment_state`.
-Both are measured positions available through the same object API in simulation
-or hardware. Stock ACT requires an image or environment-state input. This example
-uses numerical state, without synthetic hardware velocity measurements or vision
-weight downloads. Demonstrations pair observations at t with commands at t before
-physics advances. They demonstrate infrastructure, not task expertise.
-
-`act_training_config(dataset, output, steps=1000, device="cpu")` returns native
-LeRobot configuration dataclasses. `train(config)` returns the saved checkpoint.
-The trainer handles normalization, action chunks, optimization and checkpointing.
-Model sources, object placements, channels and timing are checked on rollout.
-Old checkpoint metadata is not supported. Nothing is uploaded to the Hub.
-The example requires a world file; it rejects an in-memory `MjSpec` world.
-
-The example uses a small 128-dimensional ACT, 16-action chunks and per-step
-inference with temporal ensembling. Three updates only check plumbing, not a
-learned skill. Use fresh output directories. Available accelerators can be chosen
-with `--device mps` or `--device cuda`.
 
 ## Rendering and contact fidelity
 

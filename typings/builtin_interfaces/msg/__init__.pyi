@@ -1,4 +1,4 @@
-"""builtin_interfaces/Time, ROS 2 Jazzy."""
+"""builtin_interfaces/Time, ROS 2 Humble."""
 from typing import Any
 
 class Time:

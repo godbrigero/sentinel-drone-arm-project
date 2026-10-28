@@ -20,6 +20,8 @@ dev = [
     "coacd==1.0.9",
     "scipy==1.17.1",
     "basedpyright==1.40.2",
+    "paramiko==5.1.0",
+    "types-paramiko==5.0.0.20261021",
 ]
 
 [tool.uv]
@@ -28,14 +30,17 @@ package = false
 # Native ROS is distributed through RoboStack, rather than PyPI/uv.
 [tool.airtruck.ros]
 environment = "airtruck-ros"
-distribution = "jazzy"
+distribution = "humble"
+# RoboStack Humble defaults to Cyclone DDS; the aircraft's PX4 bridge
+# (MicroXRCEAgent) is Fast DDS.
+rmw_implementation = "rmw_fastrtps_cpp"
 packages = [
-    "python=3.12", "numpy=2.2.6", "ros-jazzy-rclpy=7.1.12",
-    "ros-jazzy-geometry-msgs=5.3.8",
-    "ros-jazzy-rosidl-default-generators=1.6.1", "cmake=3.31.8",
+    "python=3.12", "numpy=2.2.6", "ros-humble-rclpy=3.3.21",
+    "ros-humble-rmw-fastrtps-cpp=6.2.10", "ros-humble-geometry-msgs=4.9.1",
+    "ros-humble-rosidl-default-generators=1.2.1", "cmake=3.31.8",
     "ninja=1.13.2", "colcon-common-extensions=0.3.0",
 ]
-px4_revision = "392e831c1f659429ca83902e66820d7094591410"
+px4_revision = "6954ed341da55e5b514780d6301dd2e4647c2e49"
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

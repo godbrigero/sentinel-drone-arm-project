@@ -13,7 +13,14 @@ from lerobot.teleoperators.so_leader import SO101Leader as NativeLeader
 
 from airtruck.runtime.driver import SystemDriver
 from airtruck.systems.drone import Drone
-from airtruck.systems.so101 import JOINTS, SO101Arm, SO101Follower, SO101Leader, release
+from airtruck.systems.so101 import (
+    CONNECT_ATTEMPTS,
+    JOINTS,
+    SO101Arm,
+    SO101Follower,
+    SO101Leader,
+    release,
+)
 
 
 class FakeBus:
@@ -114,6 +121,38 @@ def test_flag_switches_backend_and_mirrors_measured_pose_without_homing() -> Non
     fake.bus.disconnect.assert_called_once_with(disable_torque=False)
 
 
+def test_dropped_startup_packet_retries_the_whole_connect(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    arm = SO101Follower("arm", port="/dev/fake")
+    with SystemDriver([arm]) as driver:
+        driver.reset()
+        reading = dict(arm.state)
+        fake = FakeBus(arm, reading)
+        failures = [ConnectionError("no status packet")]
+
+        def flaky_write(*args: Any, **kwargs: Any) -> None:
+            if failures:
+                raise failures.pop()
+
+        fake.bus.write.side_effect = flaky_write
+        arm.hardware = True
+        driver.step()
+        assert arm.hardware_active and fake.bus.is_connected
+        assert fake.bus.connect.call_count == 2
+        assert "arm connect failed (no status packet); retrying 2/3" in caplog.text
+
+        arm.hardware = False
+        driver.step()
+        fake.bus.connect.reset_mock()
+        fake.bus.write.side_effect = ConnectionError("no status packet")
+        arm.hardware = True
+        with pytest.raises(ConnectionError, match="no status packet"):
+            driver.step()
+        assert fake.bus.connect.call_count == CONNECT_ATTEMPTS
+        assert not arm.hardware_active and not fake.bus.is_connected
+
+
 def test_native_send_action_returns_clipped_target_without_stepping() -> None:
     arm = SO101Follower("arm", port="/dev/fake")
     arm.config.max_relative_target = 5.0
@@ -132,7 +171,9 @@ def test_native_send_action_returns_clipped_target_without_stepping() -> None:
 
 
 def test_real_leader_remains_input_only_and_drives_simulated_follower() -> None:
-    leader = SO101Leader("leader", port="/dev/fake", position=(-0.25, 0, 0))
+    leader = SO101Leader(
+        "leader", port="/dev/fake", position=(-0.25, 0, 0), follower="follower"
+    )
     follower = SO101Follower("follower", position=(0.25, 0, 0))
     with SystemDriver([leader, follower]) as driver:
         driver.reset()
@@ -141,7 +182,7 @@ def test_real_leader_remains_input_only_and_drives_simulated_follower() -> None:
         fake = FakeBus(leader, reading)
         leader.hardware = True
         for _ in range(30):
-            driver.step(update=lambda: follower.controls.update(leader.get_action()))
+            driver.step()
         assert leader.get_action() == reading
         assert follower.state["shoulder_pan.pos"] > 15
         assert fake.normal_commands == []

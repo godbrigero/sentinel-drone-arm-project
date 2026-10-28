@@ -1,4 +1,4 @@
-"""geometry_msgs 5.3.8 pose messages, ROS 2 Jazzy."""
+"""geometry_msgs 4.9.1 pose messages, ROS 2 Humble."""
 from typing import Any
 
 from std_msgs.msg import Header

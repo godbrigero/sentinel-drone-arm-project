@@ -38,16 +38,17 @@ Derived API declarations: MuJoCo, Copyright 2022 DeepMind Technologies Limited, 
 
 ## ROS 2 and PX4 overlays
 
-`rclpy/` describes the small ROS 2 Jazzy/rclpy 7.1.12 surface used by the PX4
+`rclpy/` describes the small ROS 2 Humble/rclpy 3.3.21 surface used by the PX4
 transport: context, node, typed publishers/subscriptions, executor, timer, clock
-and QoS. `px4_msgs/msg/__init__.pyi` describes all fields and constants of the seven
-used message types from PX4 revision `392e831c1f659429ca83902e66820d7094591410`
-(release/1.16). It is generated from those message definitions; the original
+and QoS. `px4_msgs/msg/__init__.pyi` describes all fields and constants of the five
+used message types from `px4_msgs` revision `6954ed341da55e5b514780d6301dd2e4647c2e49`
+(PX4 1.14, matching the Sentinel's VOXL 2). It is generated from those message
+definitions and checked against the installed runtime classes; the original
 BSD-3-Clause notice is retained in `px4_msgs/LICENSE`. ROS API declarations are
 maintained locally against the installed rclpy signatures (Apache-2.0 upstream).
 `geometry_msgs/`, `std_msgs/` and `builtin_interfaces/` declare only the
 `PoseStamped` tag-pose message and its nested `Pose`, `Point`, `Quaternion`,
-`Header` and `Time` fields from ROS 2 Jazzy (geometry_msgs 5.3.8; Apache-2.0
+`Header` and `Time` fields from ROS 2 Humble (geometry_msgs 4.9.1; Apache-2.0
 upstream), checked against the installed message field definitions.
 These focused overlays provide autocomplete and static checks, not alternate
 runtime implementations or a claim of typing the entire ROS SDK.

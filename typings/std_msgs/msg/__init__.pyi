@@ -1,4 +1,4 @@
-"""std_msgs/Header, ROS 2 Jazzy."""
+"""std_msgs/Header, ROS 2 Humble."""
 from typing import Any
 
 from builtin_interfaces.msg import Time

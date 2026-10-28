@@ -166,19 +166,63 @@ def test_disarmed_drone_falls_and_makes_native_floor_contact(drone_model: Path) 
 
 
 def test_leader_is_an_input_and_immediate_commands_do_not_advance_time() -> None:
-    leader = SO101Leader("leader", position=(-0.25, 0, 0))
+    leader = SO101Leader("leader", position=(-0.25, 0, 0), follower="follower")
     follower = SO101Follower("follower", position=(0.25, 0, 0))
     with SystemDriver([leader, follower]) as driver:
         driver.reset()
         leader.controls["shoulder_pan.pos"] = 20
         for _ in range(30):
-            driver.step(update=lambda: follower.controls.update(leader.get_action()))
+            driver.step()
         assert leader.state["shoulder_pan.pos"] > 15
         assert follower.state["shoulder_pan.pos"] > 10
         assert tuple(GymnasiumAdapter(driver).action_space.spaces) == ("follower",)
         before = driver.data.time
         follower.send_action({"shoulder_pan.pos": 10})
         assert driver.data.time == before
+
+
+def test_leader_follower_link_is_validated_and_callback_overrides_it() -> None:
+    with pytest.raises(TypeError, match="SO101Follower or its system name"):
+        SO101Leader("leader", follower=SO101Leader("other"))
+    outside = SO101Follower("follower", position=(0.25, 0, 0))
+    with pytest.raises(ValueError, match="'follower' is not in this driver"):
+        SystemDriver([SO101Leader("leader", follower=outside)])
+    with pytest.raises(ValueError, match="'follower' is not in this driver"):
+        SystemDriver(
+            [
+                SO101Leader("leader", follower=outside),
+                SO101Follower("follower", position=(0.25, 0, 0)),
+            ]
+        )
+    with pytest.raises(ValueError, match="SO101Follower named 'missing'"):
+        SystemDriver([SO101Leader("leader", follower="missing")])
+    with pytest.raises(ValueError, match="SO101Follower named 'other'"):
+        SystemDriver(
+            [
+                SO101Leader("leader", follower="other"),
+                SO101Leader("other", position=(0.25, 0, 0)),
+            ]
+        )
+    for by_object in (False, True):
+        follower = SO101Follower("follower", position=(0.25, 0, 0))
+        leader = SO101Leader(
+            "leader",
+            position=(-0.25, 0, 0),
+            follower=follower if by_object else "follower",
+        )
+        with SystemDriver([follower, leader]) as driver:
+            driver.reset()
+            leader.controls["shoulder_pan.pos"] = 20
+            linked: list[bool] = []
+
+            def update() -> None:
+                linked.append(follower.controls == leader.state)
+                follower.controls["shoulder_pan.pos"] = -20
+
+            for _ in range(3):
+                driver.step(update=update)
+            assert linked == [True] * 3 and leader.state["shoulder_pan.pos"] > 5
+            assert follower.controls["shoulder_pan.pos"] == -20
 
 
 def test_run_reset_and_lifetime() -> None:

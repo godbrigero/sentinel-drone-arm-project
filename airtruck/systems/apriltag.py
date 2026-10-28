@@ -58,7 +58,7 @@ class TagDetection:
     (x right, y down, z forward; wxyz quaternion rotating tag axes into it).
     The tag frame has x right and y up in the printed image, z out of its face.
     NED fields are filled when the camera mounting and vehicle pose are known.
-    `tag_id` is None when the source (a ROS PoseStamped) carries no ID.
+    `tag_id` is None when a ROS PoseStamped's frame_id is not a decimal tag ID.
     """
 
     vehicle: str

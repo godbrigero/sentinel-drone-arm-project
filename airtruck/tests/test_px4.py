@@ -27,8 +27,8 @@ class Message:
 class Status(Message):
     arming_state: int
     nav_state: int
-    MESSAGE_VERSION = 1
-    ARMING_STATE_ARMED, ARMING_STATE_DISARMED = 2, 1
+    takeoff_time: int
+    ARMING_STATE_STANDBY, ARMING_STATE_ARMED = 1, 2
     NAVIGATION_STATE_OFFBOARD, NAVIGATION_STATE_AUTO_LAND = 14, 18
 
 
@@ -50,18 +50,12 @@ class Command(Message):
     )
 
 
-class Ack(Message):
-    VEHICLE_CMD_RESULT_ACCEPTED, VEHICLE_CMD_RESULT_IN_PROGRESS = 0, 5
-
-
 class ROSGraph:
     def __init__(self) -> None:
         self.now = 0.0
         self.telemetry = True
-        self.reject = False
-        self.acknowledge = True
         self.change_status = True
-        self.pending: list[tuple[str, Any]] = []
+        self.drop_commands = 0
         self.sent: list[tuple[float, str, Any]] = []
         self.subscriptions: dict[str, Any] = {}
         self.timers: list[Any] = []
@@ -76,8 +70,7 @@ class ROSGraph:
             angular_velocity=[0.0] * 3,
             reset_counter=0,
         )
-        self.status = Status(arming_state=1, nav_state=0)
-        self.land = Message(landed=False)
+        self.status = Status(arming_state=1, nav_state=0, takeoff_time=0)
 
     def create_publisher(self, message: Any, topic: str, qos: Any) -> Any:
         return SimpleNamespace(publish=lambda value: self.publish(topic, value))
@@ -99,25 +92,17 @@ class ROSGraph:
         self.sent.append((self.now, topic, copy.deepcopy(message)))
         if not topic.endswith("/vehicle_command"):
             return
-        if self.change_status and not self.reject:
+        if self.drop_commands:  # Lost over Wi-Fi; the bridge returns no ACK.
+            self.drop_commands -= 1
+        elif self.change_status:
             if message.command == 176:
                 self.status.nav_state = 14
             elif message.command == 400:
                 self.status.arming_state = 2 if message.param1 else 1
+                if not message.param1:
+                    self.status.takeoff_time = 0  # Commander clears it on disarm.
             elif message.command == 21:
                 self.status.nav_state = 18
-        if self.acknowledge:
-            self.pending.append(
-                (
-                    "vehicle_command_ack",
-                    Ack(
-                        command=message.command,
-                        result=2 if self.reject else 0,
-                        target_system=message.source_system,
-                        target_component=message.source_component,
-                    ),
-                )
-            )
 
     def spin_once(self, timeout_sec: float = 0) -> None:
         self.now += max(timeout_sec, 0.001)
@@ -127,17 +112,10 @@ class ROSGraph:
                     callback(self.odom)
                 elif "/vehicle_status" in topic:
                     callback(self.status)
-                elif "/vehicle_land_detected" in topic:
-                    callback(self.land)
         if self.now >= self.timer_due:
             for callback in self.timers:
                 callback()
             self.timer_due = self.now + 0.05
-        while self.pending:
-            name, message = self.pending.pop(0)
-            for topic, callback in self.subscriptions.items():
-                if topic.endswith("/" + name):
-                    callback(message)
 
     def add_node(self, node: Any) -> None:
         pass
@@ -167,10 +145,8 @@ def graph(monkeypatch: pytest.MonkeyPatch) -> ROSGraph:
         "OffboardControlMode": Message,
         "TrajectorySetpoint": Message,
         "VehicleCommand": Command,
-        "VehicleCommandAck": Ack,
         "VehicleStatus": Status,
         "VehicleOdometry": Odometry,
-        "VehicleLandDetected": Message,
     }.items():
         monkeypatch.setattr(px4, key, value, raising=False)
     return graph
@@ -182,7 +158,9 @@ def test_px4_streams_hold_before_mode_and_confirms_flight_commands(
     backend = px4.PX4Backend(config=px4.PX4Config(namespace="px4_1"))
     backend.connect()
     assert not any(topic.endswith("/vehicle_command") for _, topic, _ in graph.sent)
-    assert "/px4_1/fmu/out/vehicle_status_v1" in graph.subscriptions
+    # PX4 1.14 topics are unversioned; its bridge has no ACK or land detector.
+    assert "/px4_1/fmu/out/vehicle_status" in graph.subscriptions
+    assert not any("land_detected" in t or "ack" in t for t in graph.subscriptions)
     backend.engage_offboard_mode()
     backend.arm()
     observations = backend.get_observation()
@@ -221,19 +199,44 @@ def test_px4_streams_hold_before_mode_and_confirms_flight_commands(
     ]
     assert [message.command for message in commands] == [176, 400, 21, 400]
     assert commands[-2].target_system == 1 and commands[-2].from_external
+    # PX4 stamps zero timestamps on arrival, independent of the host clock.
+    assert all(message.timestamp == 0 for _, _, message in graph.sent)
     backend.disconnect()
     assert graph.destroyed and graph.closed
 
 
-@pytest.mark.parametrize("failure", ["rejected", "no_ack", "no_status"])
-def test_px4_never_assumes_a_command_succeeded(graph: ROSGraph, failure: str) -> None:
-    backend = px4.PX4Backend(config=px4.PX4Config(timeout_s=0.2))
+def test_px4_never_assumes_a_command_succeeded(graph: ROSGraph) -> None:
+    backend = px4.PX4Backend(config=px4.PX4Config(timeout_s=1.2))
     backend.connect()
-    graph.reject = failure == "rejected"
-    graph.acknowledge = failure != "no_ack"
-    graph.change_status = failure != "no_status"
-    with pytest.raises((RuntimeError, TimeoutError)):
+    graph.change_status = False  # Rejected or ignored: status never confirms.
+    with pytest.raises(TimeoutError, match="vehicle status"):
         backend.arm()
+    commands = [m for _, t, m in graph.sent if t.endswith("/vehicle_command")]
+    assert 2 <= len(commands) <= 3  # Re-sent every 0.5 s until the timeout.
+    backend.disconnect()
+
+
+def test_dropped_command_is_resent_until_status_confirms(graph: ROSGraph) -> None:
+    backend = px4.PX4Backend()
+    backend.connect()
+    graph.drop_commands = 1
+    backend.arm()
+    commands = [m for _, t, m in graph.sent if t.endswith("/vehicle_command")]
+    assert [m.command for m in commands] == [400, 400]
+    assert backend.get_observation()["armed"]
+    backend.disconnect()
+
+
+def test_landed_follows_px4_takeoff_time_and_arming(graph: ROSGraph) -> None:
+    backend = px4.PX4Backend()
+    backend.connect()
+    assert backend.get_observation()["landed"]  # Disarmed.
+    graph.status.arming_state = 2
+    assert backend.get_observation()["landed"]  # Armed, takeoff not detected.
+    graph.status.takeoff_time = 5_000_000
+    assert not backend.get_observation()["landed"]  # Flying.
+    graph.status.arming_state, graph.status.takeoff_time = 1, 0  # Auto-disarm.
+    assert backend.get_observation()["landed"]
     backend.disconnect()
 
 
@@ -321,11 +324,13 @@ def test_drone_hardware_uses_the_same_targets_and_confirmed_state(
         assert not drone.hardware_active and graph.destroyed
 
 
-def tag_pose(x: float, y: float, z: float, stamp: float = 12.5) -> Any:
+def tag_pose(
+    x: float, y: float, z: float, stamp: float = 12.5, frame_id: str = "tracking"
+) -> Any:
     return SimpleNamespace(
         header=SimpleNamespace(
             stamp=SimpleNamespace(sec=int(stamp), nanosec=int(stamp % 1 * 1e9)),
-            frame_id="tracking",
+            frame_id=frame_id,
         ),
         pose=SimpleNamespace(
             position=SimpleNamespace(x=x, y=y, z=z),
@@ -363,6 +368,10 @@ def test_ros_tag_detections_update_the_drone_and_global_board(
         np.testing.assert_allclose(detection.position_ned_m, expected, atol=1e-5)
         assert expected[0] > 1.9 and expected[2] > 0.5  # Ahead of and below the drone.
         assert backend.pop_tag_detections() == []
+        # VOXL's voxl_mpa_to_ros2 sends the tag ID as frame_id.
+        graph.subscriptions["/tag_detections"](tag_pose(0.0, 0.0, 1.0, frame_id="7"))
+        driver.step()
+        assert drone.latest_tag(tag_id=7) is not None
 
 
 def test_hardware_frames_can_be_published_for_tag_detection(graph: ROSGraph) -> None:

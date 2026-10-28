@@ -4,14 +4,16 @@ import mujoco
 import numpy as np
 from numpy.typing import NDArray
 
+from airtruck.examples.constants import IS_HARDWARE
 from airtruck.runtime.driver import SystemDriver
 from airtruck.systems.apriltag import AprilTagConfig, TagDetection
 from airtruck.systems.flight import rotation
+from airtruck.systems.px4 import PX4Config
 from airtruck.systems.sentinel import SentinelDrone
 from airtruck.systems.base import ROOT
 from airtruck.systems.tag_object import AprilTagObject
 
-STANDOFF_M = 1.0
+STANDOFF_M = 0.5
 TAG_HOME_M = (1.0, 0.0, 0.1)
 TAG_SWAY_M = 0.75
 TAG_PERIOD_S = 16.0
@@ -20,20 +22,14 @@ TAG_PERIOD_S = 16.0
 def detection_to_position_change(
     detection: TagDetection, drone: SentinelDrone
 ) -> NDArray[np.float64]:
-    """NED correction that puts the camera 1 m horizontally in front of the tag.
+    """NED correction that places the camera at the configured tag standoff.
 
     `position_ned_m` is the tag in NED. The north/east move places the camera's
     look direction on that tag at `STANDOFF_M`; down is left unchanged.
     """
     camera = drone.cameras.get(detection.camera)
     tag = detection.position_ned_m
-    print(tag)
-    if (
-        detection.camera != "front_down"
-        or camera is None
-        or tag is None
-        or not drone.state
-    ):
+    if camera is None or tag is None or not drone.state:
         return np.zeros(3)
 
     body_to_ned = rotation(np.asarray(drone.state["quaternion"], dtype=np.float64))
@@ -51,15 +47,21 @@ def detection_to_position_change(
 
 
 def tag_position(time_s: float) -> tuple[float, float, float]:
-    """East-west sway about the home pose. Starts at home when time is zero."""
+    """Diagonal sway about the home pose. Starts at home when time is zero."""
     sway = TAG_SWAY_M * math.sin(2 * math.pi * time_s / TAG_PERIOD_S)
     return (TAG_HOME_M[0] + sway, TAG_HOME_M[1] + sway, TAG_HOME_M[2])
 
 
-def main():
+def main() -> None:
     drone = SentinelDrone(
-        "drone", apriltags=AprilTagConfig(tag_size_m=0.16, cameras=("front_down",))
+        "drone",
+        hardware=IS_HARDWARE,
+        apriltags=AprilTagConfig(tag_size_m=0.16),
+        px4=PX4Config(
+            tag_topic="/tag_detections",
+        ),
     )
+
     tag = AprilTagObject("tag", size_m=0.16, position=TAG_HOME_M)
     world = mujoco.MjSpec.from_file(str(ROOT / "worlds/flight_arena/scene.xml"))
 
@@ -72,11 +74,13 @@ def main():
 
         driver.reset()
 
-        drone.takeoff(1.5)
+        drone.takeoff(0.5)
 
         driver.run(steps=250, realtime=True, update=move_tag)
 
         def tag_position_change(detection: TagDetection) -> None:
+            if detection.vehicle != drone.name:
+                return
             change = detection_to_position_change(detection, drone)
             drone.controls["position"][:2] = (
                 np.asarray(drone.state["position"][:2], dtype=np.float64) + change[:2]
@@ -84,9 +88,12 @@ def main():
 
         unsubscribe = drone.tag_board.subscribe(tag_position_change)
 
-        driver.run(steps=300, realtime=True, update=move_tag)
-        driver.run(steps=250, realtime=True, update=move_tag)
-        unsubscribe()
+        try:
+            driver.run(steps=500, realtime=True)
+        finally:
+            unsubscribe()
+        drone.land()
+        driver.run(steps=250, realtime=True)
 
 
 if __name__ == "__main__":

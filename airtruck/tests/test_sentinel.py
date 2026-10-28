@@ -79,8 +79,10 @@ def test_rotors_spin_with_the_allocated_wrench() -> None:
         driver.reset()
         np.testing.assert_array_equal(drone.rotor_speeds_rad_s, 0)
         drone.takeoff(0.8)
-        advance(driver, 5)
+        # Check hover after the default controller's takeoff transient settles.
+        advance(driver, 10)
         assert -drone.state["position"][2] == pytest.approx(0.946 + 0.008, abs=0.03)
+        assert np.linalg.norm(drone.state["linear_velocity_m_s"]) < 0.01
         speeds = drone.rotor_speeds_rad_s
         # Hover: equal magnitudes, CW (1, 3) negative and CCW (2, 4) positive.
         hover = np.sqrt(1.407 * 9.81 / 4 / 1.485e-5)

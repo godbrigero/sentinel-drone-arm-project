@@ -33,8 +33,6 @@ from px4_msgs.msg import (
     OffboardControlMode,
     TrajectorySetpoint,
     VehicleCommand,
-    VehicleCommandAck,
-    VehicleLandDetected,
     VehicleOdometry,
     VehicleStatus,
 )
@@ -76,9 +74,11 @@ class PX4Config:
 class PX4Backend:
     """Pumped by driver reads/commands; no background thread or global ROS shutdown.
 
-    Connection starts no flight mode and never arms. Explicit flight commands wait
-    for both ACK and measured status. ROS timers stream targets at 20 Hz while the
-    driver runs or a bounded command wait spins this backend's private context.
+    Connection starts no flight mode and never arms. The Sentinel's PX4 1.14 bridge
+    publishes no command ACK or land detector, so explicit flight commands are
+    re-sent until measured vehicle status confirms them, and `landed` is derived
+    from arming state and PX4's takeoff time. ROS timers stream targets at 20 Hz
+    while the driver runs or a bounded command wait spins this backend's context.
     """
 
     def __init__(self, name: str = "drone", config: PX4Config | None = None) -> None:
@@ -88,9 +88,7 @@ class PX4Backend:
         self._executor: SingleThreadedExecutor | None = None
         self._odometry: VehicleOdometry | None = None
         self._status: VehicleStatus | None = None
-        self._land: VehicleLandDetected | None = None
         self._received: dict[str, float] = {}
-        self._acks: dict[int, VehicleCommandAck] = {}
         self._target: Values | None = None
         self._stream_started: float | None = None
         self._last_heartbeat: float | None = None
@@ -160,28 +158,14 @@ class PX4Backend:
                 qos_profile_sensor_data,
             )
             self.node.create_subscription(
-                VehicleLandDetected,
-                self._topic("out", "vehicle_land_detected", VehicleLandDetected),
-                self._on_land,
-                qos_profile_sensor_data,
-            )
-            self.node.create_subscription(
                 PoseStamped,
                 self.config.tag_topic,
                 self._on_tag,
                 qos_profile_sensor_data,
             )
-            self.node.create_subscription(
-                VehicleCommandAck,
-                self._topic("out", "vehicle_command_ack", VehicleCommandAck),
-                self._on_ack,
-                qos_profile_sensor_data,
-            )
             self._timer = self.node.create_timer(0.05, self._publish_target)
             self._wait(
-                lambda: self._odometry is not None
-                and self._status is not None
-                and self._land is not None,
+                lambda: self._odometry is not None and self._status is not None,
                 "valid PX4 telemetry",
             )
             observation = self.get_observation()
@@ -211,9 +195,8 @@ class PX4Backend:
                     self._context.try_shutdown()
             finally:
                 self._context = None
-                self._odometry = self._status = self._land = None
+                self._odometry = self._status = None
                 self._received.clear()
-                self._acks.clear()
                 self._tags.clear()
                 self._target = self._stream_started = self._reset_counter = None
                 self._last_heartbeat = None
@@ -250,17 +233,15 @@ class PX4Backend:
         self._status = message
         self._received["status"] = time.monotonic()
 
-    def _on_land(self, message: VehicleLandDetected) -> None:
-        self._land = message
-        self._received["land"] = time.monotonic()
-
     def _on_tag(self, message: PoseStamped) -> None:
         pose, stamp = message.pose, message.header.stamp
         timestamp = stamp.sec + stamp.nanosec * 1e-9
+        # VOXL's voxl_mpa_to_ros2 writes the decimal tag ID into frame_id.
+        frame = message.header.frame_id
         self._tags.append(
             {
                 "camera": self.config.tag_camera,
-                "tag_id": None,  # PoseStamped carries no tag ID.
+                "tag_id": int(frame) if frame.isdecimal() else None,
                 "position": [pose.position.x, pose.position.y, pose.position.z],
                 "quaternion": [
                     pose.orientation.w,
@@ -279,25 +260,18 @@ class PX4Backend:
         self._tags.clear()
         return records
 
-    def _on_ack(self, message: VehicleCommandAck) -> None:
-        if (
-            message.target_system == self.config.source_system
-            and message.target_component == self.config.source_component
-        ):
-            self._acks[message.command] = message
-
     def get_observation(self) -> Values:
         for _ in range(8):
             self._spin()
         now = time.monotonic()
         if any(
             now - self._received.get(key, -np.inf) > self.config.telemetry_timeout_s
-            for key in ("odometry", "status", "land")
+            for key in ("odometry", "status")
         ):
             self._target = None
             raise TimeoutError("PX4 telemetry is missing or stale")
-        odometry, land = self._odometry, self._land
-        if odometry is None or land is None:
+        odometry = self._odometry
+        if odometry is None:
             raise RuntimeError("PX4 telemetry is not available")
         quaternion = np.asarray(odometry.q, dtype=float)
         if not np.isclose(np.linalg.norm(quaternion), 1):
@@ -308,6 +282,7 @@ class PX4Backend:
             velocity = attitude @ velocity
         elif odometry.velocity_frame != VehicleOdometry.VELOCITY_FRAME_NED:
             raise ValueError("PX4 odometry velocity must use NED or body FRD")
+        armed = self.status.arming_state == VehicleStatus.ARMING_STATE_ARMED
         return space_values(
             flight_observation_space(),
             {
@@ -316,10 +291,12 @@ class PX4Backend:
                 "linear_velocity_m_s": velocity,
                 "angular_velocity_rad_s": attitude
                 @ np.asarray(odometry.angular_velocity),
-                "armed": self.status.arming_state == VehicleStatus.ARMING_STATE_ARMED,
+                "armed": armed,
                 "offboard": self.status.nav_state
                 == VehicleStatus.NAVIGATION_STATE_OFFBOARD,
-                "landed": land.landed,
+                # Commander sets takeoff_time on detected takeoff and clears it on
+                # disarm, so after flight this turns true at (auto-)disarm.
+                "landed": not armed or self.status.takeoff_time == 0,
             },
         )
 
@@ -335,15 +312,16 @@ class PX4Backend:
         if any(
             time.monotonic() - self._received.get(key, -np.inf)
             > self.config.telemetry_timeout_s
-            for key in ("odometry", "status", "land")
+            for key in ("odometry", "status")
         ):
             self._stream_started = self._last_heartbeat = None
             return
-        timestamp = self.node.get_clock().now().nanoseconds // 1000
+        # Timestamp 0 makes the PX4 bridge stamp arrival time; a host-clock stamp is
+        # shifted by the aircraft's clock offset and can look stale to offboard checks.
         mode = OffboardControlMode()
-        mode.timestamp, mode.position = timestamp, True
+        mode.timestamp, mode.position = 0, True
         target = TrajectorySetpoint()
-        target.timestamp = timestamp
+        target.timestamp = 0
         target.position = [float(value) for value in self._target["position"]]
         target.yaw = float(self._target["yaw"])
         target.velocity = [float("nan")] * 3
@@ -361,9 +339,8 @@ class PX4Backend:
         self, command: int, condition: Callable[[], bool], **params: float
     ) -> None:
         self.get_observation()
-        self._acks.pop(command, None)
         message = VehicleCommand()
-        message.timestamp = self.node.get_clock().now().nanoseconds // 1000
+        message.timestamp = 0  # Stamped on arrival by the PX4 bridge.
         message.command, message.from_external = command, True
         for key, value in params.items():
             setattr(message, key, value)
@@ -375,27 +352,19 @@ class PX4Backend:
             self.config.source_system,
             self.config.source_component,
         )
-        self._command_publisher.publish(message)
+        sent = -np.inf
 
-        def accepted() -> bool:
-            ack = self._acks.get(command)
-            if ack is None:
-                return False
-            if ack.result not in (
-                VehicleCommandAck.VEHICLE_CMD_RESULT_ACCEPTED,
-                VehicleCommandAck.VEHICLE_CMD_RESULT_IN_PROGRESS,
-            ):
-                raise RuntimeError(
-                    f"PX4 rejected command {command}: result={ack.result}"
-                )
-            return (
-                ack.result == VehicleCommandAck.VEHICLE_CMD_RESULT_ACCEPTED
-                and condition()
-            )
+        def confirmed() -> bool:
+            # Without ACKs, re-send the idempotent command in case Wi-Fi dropped it.
+            nonlocal sent
+            if condition():
+                return True
+            if time.monotonic() - sent >= 0.5:
+                self._command_publisher.publish(message)
+                sent = time.monotonic()
+            return False
 
-        self._wait(
-            accepted, f"PX4 command {command} acknowledgement and vehicle status"
-        )
+        self._wait(confirmed, f"PX4 command {command} vehicle status")
 
     def engage_offboard_mode(self) -> None:
         self.get_observation()
@@ -423,7 +392,7 @@ class PX4Backend:
     def disarm(self) -> None:
         self._command(
             VehicleCommand.VEHICLE_CMD_COMPONENT_ARM_DISARM,
-            lambda: self.status.arming_state == VehicleStatus.ARMING_STATE_DISARMED,
+            lambda: self.status.arming_state != VehicleStatus.ARMING_STATE_ARMED,
             param1=0.0,
         )
 

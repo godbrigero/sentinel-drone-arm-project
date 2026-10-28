@@ -56,8 +56,8 @@ initial penetrations, tests each position actuator under gravity, and drops a fr
 object onto the floor. It also drives the elbow into a nonadjacent self-contact and runs
 the two-arm motion with contacts enabled/disabled, requiring cross-arm forces and a
 changed trajectory. The vertex coverage test is a sampled check, not a global
-surface-error proof. The [simulation guide](../simulation.md) contains the complete API,
-local LeRobot dataset/ACT example and vector-environment usage.
+surface-error proof. The [simulation guide](../simulation.md) contains the complete API
+and vector-environment usage.
 
 ## Model files
 

@@ -130,6 +130,12 @@ class SimSystem[StateT: Mapping[str, Any], ControlsT: Mapping[str, Any]](ABC):
             raise RuntimeError(f"{self.name} already belongs to a driver")
         self._model, self._data = model, data
 
+    def link(self, systems: Mapping[str, SimSystem[Any, Any]]) -> None:
+        """Resolve named references to other systems bound to the same driver."""
+
+    def drive(self) -> None:
+        """Write linked systems' pending controls from fresh observations."""
+
     def validate_controls(self, controls: Mapping[str, Any] | None = None) -> Values:
         command = copy.deepcopy(dict(self.controls if controls is None else controls))
         space_values(self.action_space, command)

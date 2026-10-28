@@ -1,4 +1,4 @@
-"""Focused rclpy 7.1.12 overlay; see typings/README.md."""
+"""Focused rclpy 3.3.21 overlay; see typings/README.md."""
 from collections.abc import Callable
 from typing import TypeVar
 from .clock import Clock

@@ -29,6 +29,7 @@ def main() -> None:
         id=args.leader_id,
         hardware=args.leader_hardware,
         position=(-0.25, 0, 0),
+        follower="follower",
     )
     follower = SO101Follower(
         "follower",
@@ -59,12 +60,7 @@ def main() -> None:
         [leader, follower], render_mode="human" if args.render else None
     ) as driver:
         driver.reset()
-
-        def update() -> None:
-            follower.controls.update(leader.get_action())
-
         driver.run(
-            update=update,
             steps=math.ceil(args.seconds / driver.control_dt),
             realtime=True,
         )

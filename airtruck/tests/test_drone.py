@@ -31,8 +31,10 @@ def test_takeoff_position_yaw_hold_and_land_on_native_floor(drone_model: Path) -
         np.testing.assert_array_equal(driver.data.qpos, before)
         assert driver.data.time == 0
         assert drone.state["armed"] and drone.state["offboard"]
-        advance(driver, 5)
+        # The default position/velocity gains are underdamped; allow settling.
+        advance(driver, 10)
         np.testing.assert_allclose(drone.state["position"], [0.4, 0, -0.53], atol=0.03)
+        assert np.linalg.norm(drone.state["linear_velocity_m_s"]) < 0.01
         drone.controls.update(position=np.array([0.8, 0.2, -0.7]), yaw=0.6)
         advance(driver, 7)
         np.testing.assert_allclose(drone.state["position"], [0.8, 0.2, -0.7], atol=0.03)

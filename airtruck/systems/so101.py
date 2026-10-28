@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import logging
 from collections import OrderedDict
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +27,9 @@ JOINTS = (
     "gripper",
 )
 MODEL = ROOT / "models/so101/so101.xml"
+CONNECT_ATTEMPTS = 3
+"""Full connect sequences tried before a serial ConnectionError is raised."""
+LOGGER = logging.getLogger(__name__)
 
 
 def release(device: Any) -> None:
@@ -276,7 +281,26 @@ class SO101Arm(SimSystem[Values, Values]):
         self.close()
 
     def _connect_hardware(self) -> None:
-        self._connect_native(calibrate=getattr(self, "_calibrate_on_connect", False))
+        # LeRobot's startup writes (torque, mode, PID) have no retries, so one
+        # dropped packet aborts connect. Release and rerun the whole sequence,
+        # which re-reads and holds the measured pose. Calibration is interactive
+        # and is never repeated automatically.
+        calibrate = getattr(self, "_calibrate_on_connect", False)
+        for attempt in range(1, CONNECT_ATTEMPTS + 1):
+            try:
+                self._connect_native(calibrate=calibrate)
+                return
+            except ConnectionError as error:
+                if calibrate or attempt == CONNECT_ATTEMPTS:
+                    raise
+                LOGGER.warning(
+                    "%s connect failed (%s); retrying %d/%d",
+                    self.name,
+                    error,
+                    attempt + 1,
+                    CONNECT_ATTEMPTS,
+                )
+                release(self)
 
     def calibrate(self) -> None:
         if self.hardware:
@@ -359,7 +383,13 @@ class SO101Follower(SO101Arm, LeRobotSO101Follower):
 
 
 class SO101Leader(SO101Arm, LeRobotSO101Leader):
-    """Input-only leader; simulated controls pose its virtual input device."""
+    """Input-only leader; simulated controls pose its virtual input device.
+
+    `follower` is an `SO101Follower` in the same driver, given as the object or its
+    system name. Every driver step then
+    copies this leader's measured pose into that follower's controls, before the
+    `update` callback runs, like LeRobot's teleoperation loop.
+    """
 
     controllable = False
 
@@ -371,8 +401,11 @@ class SO101Leader(SO101Arm, LeRobotSO101Leader):
         port: str = "",
         id: str | None = None,
         config: SO101LeaderConfig | None = None,
+        follower: str | SO101Follower | None = None,
         **kwargs: Any,
     ) -> None:
+        if follower is not None and not isinstance(follower, (str, SO101Follower)):
+            raise TypeError("follower must be an SO101Follower or its system name")
         native = config or SO101LeaderConfig(
             port=port, id=id or name, use_degrees=False
         )
@@ -380,6 +413,31 @@ class SO101Leader(SO101Arm, LeRobotSO101Leader):
             raise ValueError("This bridge requires use_degrees=False")
         LeRobotSO101Leader.__init__(self, native)
         SO101Arm.__init__(self, name, hardware=hardware, **kwargs)
+        self.follower = follower
+        self._follower: SO101Follower | None = None
+
+    def link(self, systems: Mapping[str, SimSystem[Any, Any]]) -> None:
+        self._follower = None
+        if self.follower is None:
+            return
+        if isinstance(self.follower, SO101Follower):
+            if systems.get(self.follower.name) is not self.follower:
+                raise ValueError(
+                    f"{self.name}'s follower {self.follower.name!r} "
+                    "is not in this driver"
+                )
+            self._follower = self.follower
+            return
+        target = systems.get(self.follower)
+        if not isinstance(target, SO101Follower):
+            raise ValueError(
+                f"{self.name} needs an SO101Follower named {self.follower!r}"
+            )
+        self._follower = target
+
+    def drive(self) -> None:
+        if self._follower is not None:
+            self._follower.controls.update(self.state)
 
     def configure(self) -> None:
         if self.hardware or self._hardware_active:

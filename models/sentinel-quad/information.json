@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26",
+  "updated": "2026-10-27",
   "frame": {
     "name": "Onshape upright assembly world",
     "unit": "mm",
@@ -828,14 +828,14 @@
     ],
     "flange_top_z_mm": -1.5,
     "ground_plane_z_mm": -144.793,
-    "placement_verified": false,
-    "plate_hole_match_found": false,
+    "placement_verified": true,
+    "plate_hole_match_found": true,
     "legs": [
       {
         "location": "front_left",
         "flange_center_mm": [
-          96,
-          -110,
+          56.999,
+          -100.398,
           -1.5
         ],
         "outward_direction": [
@@ -844,16 +844,26 @@
           0
         ],
         "foot_center_mm": [
-          34.835,
-          -171.165,
-          -144.79
+          -4.166,
+          -161.563,
+          -144.793
+        ],
+        "screw_plate_holes_xy_mm": [
+          [
+            60.3974,
+            -111.0092
+          ],
+          [
+            46.3882,
+            -97.0
+          ]
         ]
       },
       {
         "location": "rear_left",
         "flange_center_mm": [
-          138,
-          -110,
+          140.001,
+          -100.398,
           -1.5
         ],
         "outward_direction": [
@@ -862,16 +872,26 @@
           0
         ],
         "foot_center_mm": [
-          199.165,
-          -171.165,
-          -144.79
+          201.166,
+          -161.563,
+          -144.793
+        ],
+        "screw_plate_holes_xy_mm": [
+          [
+            136.6026,
+            -111.0092
+          ],
+          [
+            150.6118,
+            -97.0
+          ]
         ]
       },
       {
         "location": "front_right",
         "flange_center_mm": [
-          96,
-          -8,
+          56.999,
+          -17.602,
           -1.5
         ],
         "outward_direction": [
@@ -880,16 +900,26 @@
           0
         ],
         "foot_center_mm": [
-          34.835,
-          53.165,
-          -144.79
+          -4.166,
+          43.563,
+          -144.793
+        ],
+        "screw_plate_holes_xy_mm": [
+          [
+            46.3882,
+            -21.0
+          ],
+          [
+            60.3974,
+            -6.9908
+          ]
         ]
       },
       {
         "location": "rear_right",
         "flange_center_mm": [
-          138,
-          -8,
+          140.001,
+          -17.602,
           -1.5
         ],
         "outward_direction": [
@@ -898,9 +928,19 @@
           0
         ],
         "foot_center_mm": [
-          199.165,
-          53.165,
-          -144.79
+          201.166,
+          43.563,
+          -144.793
+        ],
+        "screw_plate_holes_xy_mm": [
+          [
+            136.6026,
+            -6.9908
+          ],
+          [
+            150.6118,
+            -21.0
+          ]
         ]
       }
     ],
@@ -909,18 +949,34 @@
     "measured_mass_g": null,
     "source": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/1afc70e8648d8e79edcf13c1",
     "CAD_geometry_source": "https://cad.onshape.com/documents/4f17d27754cc97401d1a5981/v/a57a48a1cdeb26e86eab5a73/e/8cbafa1e4a39b948ef8ab07c",
-    "product_reference": "https://www.amazon.com/dp/B0776WLHX7"
+    "product_reference": "https://www.amazon.com/dp/B0776WLHX7",
+    "placement_source": "user underside photo IMG_6470 (2026-10-27)",
+    "mount": "under each arm root; flange outer 21 mm hole pair shares the two arm-standoff screws, inner pair empty",
+    "flange_outer_hole_spacing_CAD_mm": 21.0,
+    "standoff_hole_spacing_plate_mm": 19.812,
+    "RB5_gear_mounts_installed": true,
+    "RB5_gear_mounts_in_CAD": "suppressed",
+    "SpektrumRC_CAD_bounds_mm": [
+      43.9,
+      -113.4,
+      -8.8,
+      73.9,
+      -85.4,
+      -1.5
+    ],
+    "SpektrumRC_CAD_overlaps_front_left_flange": true,
+    "SpektrumRC_installed_at_CAD_position": false
   },
   "underbody_carrier": {
-    "interface": "two arms with pads under the F450 leg flanges, sharing the leg screws; tray bolted up through arm ledges into local bosses",
+    "interface": "two arms with U-shaped pads under the corner F450 leg flanges, sharing both standoff screws of each flange; tray bolted up through arm ledges into local bosses",
     "fastener_standard": "M2.5",
     "material": "PETG",
     "density_g_cm3": 1.27,
     "arm": {
       "quantity": 2,
-      "CAD_mass_g_each": 16.4,
-      "CAD_volume_mm3_each": 12913.1,
-      "second_instance": "rotated 180 deg about Z through [117,-59]",
+      "CAD_mass_g_each": 20.7,
+      "CAD_volume_mm3_each": 16298.7,
+      "second_instance": "rotated 180 deg about Z through [98.5,-59]",
       "pad_thickness_mm": 3,
       "pad_top_z_mm": -4.92,
       "web_thickness_mm": 3,
@@ -932,33 +988,34 @@
       "lattice_windows": 4,
       "shared_leg_flange_holes_xy_mm": [
         [
-          94.61,
-          -101.39
+          60.3974,
+          -111.0092
         ],
         [
-          84.97,
-          -106.18
+          46.3882,
+          -97.0
         ],
         [
-          149.03,
-          -106.18
+          136.6026,
+          -111.0092
         ],
         [
-          139.39,
-          -101.39
+          150.6118,
+          -97.0
         ]
       ],
       "tray_bolt_xy_mm": [
         [
-          105,
+          86.5,
           -110.5
         ],
         [
-          129,
+          110.5,
           -110.5
         ]
       ],
-      "top_plate": "single outline; leg-local flat-face region x 84-102.5, y 2-9 (y -1 beyond x 97); web blended with 2.5 mm concave fillets"
+      "top_plate": "U pad per flange (tines either side of leg neck and rib, slot leg-local y -12.2 to 2.2, bridged beyond flange end) plus chord X 72-125, Y -104 to -88; web blended with 2.5 mm concave fillets",
+      "flange_screw_length_increase_mm": 3
     },
     "tray": {
       "CAD_mass_g": 27.241,
@@ -980,7 +1037,7 @@
       "boss_count": 4,
       "boss_height_above_floor_mm": 3.3
     },
-    "printed_parts_CAD_mass_g": 60.041,
+    "printed_parts_CAD_mass_g": 68.64,
     "printed_mass_g": null,
     "payload_rating_g": null,
     "clash_checked": false,
@@ -988,7 +1045,37 @@
     "assembly": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/1600b2c66d3b102227c2adfb",
     "parts": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/cdbbc1a92d0491c119c32a75",
     "design": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/53e27d3cc51408c8d2c62832",
-    "verified_microversion": "a668233d1f67ae32dea9c710"
+    "verified_microversion": "cefda41a3e0a6cfd89ab777c",
+    "print_plate": {
+      "assembly": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/ef34cc5ab4fd198858371921",
+      "bed_mm": [
+        256,
+        256,
+        256
+      ],
+      "arm_orientation": "inverted, pad faces (Z -4.92) on bed",
+      "tray_orientation": "floor down",
+      "arm_bed_contact_mm2": 1392,
+      "arm_unsupported_overhang_mm2": 281,
+      "arm_print_height_mm": 120.28,
+      "bounds_xy_mm": [
+        8.63,
+        47.53,
+        247.37,
+        208.47
+      ],
+      "part_spacing_mm": 10
+    },
+    "CAD_clearance_checked_components": [
+      "F450 legs",
+      "ESC board",
+      "ESC spacers",
+      "RB5 mount envelope"
+    ],
+    "minimum_checked_CAD_clearance_mm": 1.7,
+    "CAD_overlap_components": [
+      "SpektrumRC"
+    ]
   },
   "simulation": {
     "model": "sentinel.xml",

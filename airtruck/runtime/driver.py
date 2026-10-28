@@ -93,6 +93,9 @@ class SystemDriver:
         try:
             for system in self.systems:
                 system.bind(self.model, self.data)
+            by_name = {system.name: system for system in self.systems}
+            for system in self.systems:
+                system.link(by_name)
         except BaseException:
             self.close()
             raise
@@ -166,6 +169,9 @@ class SystemDriver:
             for system in self.systems:
                 system.sync_hardware()
             self._observe()
+            # Linked inputs (a leader's follower) first; the callback may override.
+            for system in self.systems:
+                system.drive()
             if update is not None:
                 update()
             # Validate every snapshot before any system dispatches a command.
