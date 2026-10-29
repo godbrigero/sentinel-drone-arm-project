@@ -974,8 +974,8 @@
     "density_g_cm3": 1.27,
     "arm": {
       "quantity": 2,
-      "CAD_mass_g_each": 20.7,
-      "CAD_volume_mm3_each": 16298.7,
+      "CAD_mass_g_each": 20.562,
+      "CAD_volume_mm3_each": 16190.7,
       "second_instance": "rotated 180 deg about Z through [98.5,-59]",
       "pad_thickness_mm": 3,
       "pad_top_z_mm": -4.92,
@@ -1018,26 +1018,76 @@
       "flange_screw_length_increase_mm": 3
     },
     "tray": {
-      "CAD_mass_g": 27.241,
-      "CAD_volume_mm3": 21449.6,
-      "CAD_center_of_mass_mm": [
-        99.1,
+      "quantity": 2,
+      "second_instance": "rotated 180 deg about Z through [98.5,-59]",
+      "CAD_mass_g_each": 55.313,
+      "CAD_volume_mm3_each": 43553.2,
+      "CAD_center_of_mass_mm_each": [
+        200.71,
         -59.0,
-        -121.75
+        -121.52
       ],
-      "length_width_mm": [
+      "CAD_center_of_mass_mm_pair": [
+        98.5,
+        -59.0,
+        -121.52
+      ],
+      "center_section_length_width_mm": [
         140,
         112
       ],
+      "end_extension_mm": 115,
+      "neck_width_mm": 150,
+      "neck_end_x_mm": [
+        -13,
+        210
+      ],
+      "wing_width_mm": 255,
+      "wing_full_width_x_mm": [
+        -43,
+        240
+      ],
+      "half_bounds_mm": [
+        98.5,
+        -186.5,
+        -122.7,
+        283.5,
+        68.5,
+        -113.5
+      ],
+      "assembled_bounds_mm": [
+        -86.5,
+        -186.5,
+        -122.7,
+        283.5,
+        68.5,
+        -113.5
+      ],
+      "split_x_mm": 98.5,
+      "splice_flange_thickness_height_mm": [
+        4,
+        8
+      ],
+      "splice_screws": 4,
+      "splice_screw_y_mm": [
+        -101,
+        -79,
+        -39,
+        -17
+      ],
+      "splice_screw_z_mm": -117.0,
+      "leg_CAD_clearance_mm": 16.3,
+      "grid_hole_count_each": 58,
       "top_z_mm": -121.5,
       "drop_below_plate_mm": 120,
       "floor_thickness_mm": 1.2,
       "rim_thickness_mm": 1.2,
       "rim_height_mm": 4,
-      "boss_count": 4,
-      "boss_height_above_floor_mm": 3.3
+      "boss_count_each": 2,
+      "boss_height_above_floor_mm": 3.3,
+      "front_wing_tip_tracking_camera_off_axis_deg": 10.5
     },
-    "printed_parts_CAD_mass_g": 68.64,
+    "printed_parts_CAD_mass_g": 151.75,
     "printed_mass_g": null,
     "payload_rating_g": null,
     "clash_checked": false,
@@ -1045,7 +1095,7 @@
     "assembly": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/1600b2c66d3b102227c2adfb",
     "parts": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/cdbbc1a92d0491c119c32a75",
     "design": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/53e27d3cc51408c8d2c62832",
-    "verified_microversion": "cefda41a3e0a6cfd89ab777c",
+    "verified_microversion": "a191196372df6bba2f21ebea",
     "print_plate": {
       "assembly": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/w/367f46a9ca4ab2a8ba035e51/e/ef34cc5ab4fd198858371921",
       "bed_mm": [
@@ -1058,13 +1108,9 @@
       "arm_bed_contact_mm2": 1392,
       "arm_unsupported_overhang_mm2": 281,
       "arm_print_height_mm": 120.28,
-      "bounds_xy_mm": [
-        8.63,
-        47.53,
-        247.37,
-        208.47
-      ],
-      "part_spacing_mm": 10
+      "bounds_xy_mm": null,
+      "part_spacing_mm": 10,
+      "layout_valid": false
     },
     "CAD_clearance_checked_components": [
       "F450 legs",
