@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mujoco model="table_leader">
+  <include file="scene.xml" />
+  <asset>
+    <model name="so101" file="../../models/so101/so101.xml" />
+  </asset>
+  <worldbody>
+    <frame pos="-0.0497112936022 0.29481799887 0.686795064811" quat="0.976220355743 0.0122938923925 -0.00238382297072 -0.216418563508">
+      <attach model="so101" body="base" prefix="leader/" />
+    </frame>
+  </worldbody>
+</mujoco>

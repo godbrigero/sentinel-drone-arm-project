@@ -1,0 +1,12 @@
+<mujoco model="reconstructed_table_leader">
+  <include file="scene.xml" />
+  <asset>
+    <model name="so101" file="../so101/so101.xml" />
+  </asset>
+  <worldbody>
+    <frame pos="-0.159900031164359 0.274567986755066 0.689922030556598" quat="0.999948601971787 0.0101162034321822 -0.000675126756252596 -6.83007066092511e-06">
+      <attach model="so101" body="base" prefix="leader/" />
+    </frame>
+    <site name="leader_mount_reference" pos="-0.159999996 0.26699999 0.69016313" quat="0.999948601971787 0.0101162034321822 -0.000675126756252596 -6.83007066092511e-06" type="sphere" size=".004" rgba="1 .4 .05 0" group="4" />
+  </worldbody>
+</mujoco>

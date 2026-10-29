@@ -1,0 +1,210 @@
+<mujoco model="tabletop_reconstruction">
+  <compiler angle="radian" meshdir="meshes" texturedir="textures" inertiafromgeom="false" />
+  <option timestep="0.0005" integrator="implicitfast" gravity="0 0 -9.81" />
+  <size memory="32M" />
+  <visual>
+    <global offwidth="1600" offheight="1200" cameraid="0" />
+    <quality shadowsize="2048" />
+    <headlight ambient=".28 .28 .28" diffuse=".35 .35 .35" specular=".12 .12 .12" />
+  </visual>
+  <default>
+    <default class="tabletop_visual">
+      <geom type="mesh" contype="0" conaffinity="0" group="1" mass="0" />
+    </default>
+    <default class="tabletop_collision">
+      <geom contype="1" conaffinity="1" group="3" rgba="0 0 0 0" mass="0" friction=".7 .005 .0001" condim="3" solref=".004 1" />
+    </default>
+  </default>
+  <asset>
+    <texture name="tex_carpet" type="2d" file="carpet.png" colorspace="linear" />
+    <texture name="tex_screens" type="2d" file="screens.png" colorspace="linear" />
+    <texture name="tex_materials" type="2d" file="materials.png" colorspace="linear" />
+    <texture name="tex_tabletop" type="2d" file="tabletop.png" colorspace="linear" />
+    <material name="black_molded_polymer" specular="0.1" shininess="0.5200000107288361" rgba="0.142825678 0.155948851 0.164098325 1" />
+    <material name="bright_lime_folder" specular="0.1" shininess="0.3999999761581421" rgba="0.687217151 0.815250645 0.234795084 1" />
+    <material name="brown_cable_and_leather" specular="0.1" shininess="0.3999999761581421" rgba="0.395881258 0.287071558 0.20285092 1" />
+    <material name="cable_rubber" specular="0.1" shininess="0.3199999928474426" rgba="0.0784678451 0.0932018065 0.0998528213 1" />
+    <material name="dark_laptop_aluminum" specular="0.2624999940395355" shininess="0.6299999952316284" rgba="0.331830028 0.365564629 0.395881258 1" />
+    <material name="dull_gray_tubular_steel" specular="0.27499999701976774" shininess="0.5999999940395355" rgba="0.516881079 0.546854273 0.53709873 1" />
+    <material name="imagegen_brown_cardboard" specular="0.1" shininess="0.3500000238418579" texture="tex_materials" rgba="1 1 1 1" texuniform="false" />
+    <material name="imagegen_brown_desk_wood" specular="0.1" shininess="0.3500000238418579" texture="tex_materials" rgba="1 1 1 1" texuniform="false" />
+    <material name="imagegen_continuous_scanned_carpet_reconstruction" specular="0.1" shininess="0.050000011920928955" texture="tex_carpet" rgba="1 1 1 1" texuniform="false" />
+    <material name="imagegen_external_monitor_display_glass" specular="0.1" shininess="0.7199999988079071" texture="tex_screens" rgba="1 1 1 1" texuniform="false" emission=".2" />
+    <material name="imagegen_laptop_display_glass" specular="0.1" shininess="0.7199999988079071" texture="tex_screens" rgba="1 1 1 1" texuniform="false" emission=".2" />
+    <material name="imagegen_warm_gray_carpet" specular="0.1" shininess="0.3500000238418579" texture="tex_materials" rgba="1 1 1 1" texuniform="false" />
+    <material name="imagegen_warm_white_plaster" specular="0.1" shininess="0.3500000238418579" texture="tex_materials" rgba="1 1 1 1" texuniform="false" />
+    <material name="imagegen_white_folding_table_plastic" specular="0.1" shininess="0.3500000238418579" texture="tex_materials" rgba="1 1 1 1" texuniform="false" />
+    <material name="imagegen_worn_honey_plywood" specular="0.1" shininess="0.3500000238418579" texture="tex_materials" rgba="1 1 1 1" texuniform="false" />
+    <material name="packing_tape" specular="0.1" shininess="0.5999999940395355" rgba="0.626209676 0.53709873 0.395881258 1" />
+    <material name="safety_orange_grips" specular="0.1" shininess="0.3999999761581421" rgba="0.954687161 0.381091854 0.0932018065 1" />
+    <material name="scan_exact_plywood_marks_generated_missing_areas" specular="0.1" shininess="0.3500000238418579" texture="tex_tabletop" rgba="1 1 1 1" texuniform="false" />
+    <material name="turquoise_notes_and_small_packaging" specular="0.1" shininess="0.1600000262260437" rgba="0.234795084 0.679975719 0.649956451 1" />
+    <material name="white_rectangular_work_surface" specular="0.1" shininess="0.3100000023841858" rgba="0.916273553 0.916273553 0.896243869 1" />
+    <mesh name="high_dull_gray_tubular_steel" file="high_dull_gray_tubular_steel.obj" inertia="shell" />
+    <mesh name="high_imagegen_worn_honey_plywood" file="high_imagegen_worn_honey_plywood.obj" inertia="shell" />
+    <mesh name="high_scan_exact_plywood_marks_generated_missing_areas" file="high_scan_exact_plywood_marks_generated_missing_areas.obj" inertia="shell" />
+    <mesh name="high_white_rectangular_work_surface" file="high_white_rectangular_work_surface.obj" inertia="shell" />
+    <mesh name="low_black_molded_polymer" file="low_black_molded_polymer.obj" inertia="shell" />
+    <mesh name="low_bright_lime_folder" file="low_bright_lime_folder.obj" inertia="shell" />
+    <mesh name="low_brown_cable_and_leather" file="low_brown_cable_and_leather.obj" inertia="shell" />
+    <mesh name="low_cable_rubber" file="low_cable_rubber.obj" inertia="shell" />
+    <mesh name="low_dark_laptop_aluminum" file="low_dark_laptop_aluminum.obj" inertia="shell" />
+    <mesh name="low_dull_gray_tubular_steel" file="low_dull_gray_tubular_steel.obj" inertia="shell" />
+    <mesh name="low_imagegen_external_monitor_display_glass" file="low_imagegen_external_monitor_display_glass.obj" inertia="shell" />
+    <mesh name="low_imagegen_laptop_display_glass" file="low_imagegen_laptop_display_glass.obj" inertia="shell" />
+    <mesh name="low_imagegen_brown_cardboard" file="low_imagegen_brown_cardboard.obj" inertia="shell" />
+    <mesh name="low_imagegen_continuous_scanned_carpet_reconstruction" file="low_imagegen_continuous_scanned_carpet_reconstruction.obj" inertia="shell" />
+    <mesh name="low_imagegen_warm_white_plaster" file="low_imagegen_warm_white_plaster.obj" inertia="shell" />
+    <mesh name="low_imagegen_white_folding_table_plastic" file="low_imagegen_white_folding_table_plastic.obj" inertia="shell" />
+    <mesh name="low_imagegen_worn_honey_plywood" file="low_imagegen_worn_honey_plywood.obj" inertia="shell" />
+    <mesh name="low_packing_tape" file="low_packing_tape.obj" inertia="shell" />
+    <mesh name="low_safety_orange_grips" file="low_safety_orange_grips.obj" inertia="shell" />
+    <mesh name="low_turquoise_notes_and_small_packaging" file="low_turquoise_notes_and_small_packaging.obj" inertia="shell" />
+    <mesh name="low_white_rectangular_work_surface" file="low_white_rectangular_work_surface.obj" inertia="shell" />
+    <mesh name="medium_black_molded_polymer" file="medium_black_molded_polymer.obj" inertia="shell" />
+    <mesh name="medium_dull_gray_tubular_steel" file="medium_dull_gray_tubular_steel.obj" inertia="shell" />
+    <mesh name="medium_imagegen_brown_desk_wood" file="medium_imagegen_brown_desk_wood.obj" inertia="shell" />
+    <mesh name="medium_imagegen_white_folding_table_plastic" file="medium_imagegen_white_folding_table_plastic.obj" inertia="shell" />
+    <mesh name="medium_turquoise_notes_and_small_packaging" file="medium_turquoise_notes_and_small_packaging.obj" inertia="shell" />
+  </asset>
+  <worldbody>
+    <light name="ceiling" pos="-.3 -.45 2.4" dir="0 0 -1" diffuse=".7 .7 .7" specular=".15 .15 .15" directional="false" castshadow="true" />
+    <light name="fill" pos="1.3 -1.6 1.8" dir="-.3 1 -.6" diffuse=".35 .35 .35" specular=".1 .1 .1" castshadow="false" />
+    <body name="tabletop_environment">
+      <geom name="col_floor_planar_solid_slab" class="tabletop_collision" pos="0 -0.379999995 0.00499999989" quat="1 0 0 0" type="box" size="1.44000006 0.819999993 0.0149999997" />
+      <geom name="col_wall_straight_solid_plaster" class="tabletop_collision" pos="0 0.455000013 0.64200002" quat="1 0 0 0" type="box" size="1.44000006 0.0175000001 0.627499998" />
+      <geom name="col_baseboard" class="tabletop_collision" pos="0 0.428000003 0.061999999" quat="1 0 0 0" type="box" size="1.44000006 0.00600000005 0.0390000008" />
+      <geom name="col_rounded_rectangular_folding_tabletop" class="tabletop_collision" pos="-0.155000001 0.075000003 0.561999977" quat="1 0 0 0" type="box" size="0.529999971 0.280000001 0.0175000001" />
+      <geom name="col_folding_steel_leg" class="tabletop_collision" pos="-0.569999993 0.0399999991 0.292500019" quat="8.63545182e-08 -1.92949923e-08 0.322910756 0.946429372" type="cylinder" size="0.0120000001 0.319031745" />
+      <geom name="col_rubber_foot" class="tabletop_collision" pos="-0.569999993 -0.155000001 0.0399999991" quat="1 0 0 0" type="box" size="0.0189999994 0.0219999999 0.00949999969" />
+      <geom name="col_folding_steel_leg_001" class="tabletop_collision" pos="-0.569999993 0.109999999 0.292500019" quat="0.946429372 0.322910756 0 0" type="cylinder" size="0.0120000001 0.319031745" />
+      <geom name="col_rubber_foot_001" class="tabletop_collision" pos="-0.569999993 0.305000007 0.0399999991" quat="1 0 0 0" type="box" size="0.0189999994 0.0219999999 0.00949999969" />
+      <geom name="col_trestle_lower_crossbar" class="tabletop_collision" pos="-0.569999993 0.075000003 0.170000002" quat="1.06770138e-07 1.50728852e-14 0.707106888 0.70710665" type="cylinder" size="0.00899999961 0.170000002" />
+      <geom name="col_table_hinge" class="tabletop_collision" pos="-0.569999993 0.075000003 0.529999971" quat="0.5 0.5 0.5 0.5" type="cylinder" size="0.0179999992 0.02700001" />
+      <geom name="col_folding_steel_leg_002" class="tabletop_collision" pos="0.289999992 0.0399999991 0.292500019" quat="8.63545182e-08 -1.92949923e-08 0.322910756 0.946429372" type="cylinder" size="0.0120000001 0.319031745" />
+      <geom name="col_rubber_foot_002" class="tabletop_collision" pos="0.289999992 -0.155000001 0.0399999991" quat="1 0 0 0" type="box" size="0.0189999994 0.0219999999 0.00949999969" />
+      <geom name="col_folding_steel_leg_003" class="tabletop_collision" pos="0.289999992 0.109999999 0.292500019" quat="0.946429372 0.322910756 0 0" type="cylinder" size="0.0120000001 0.319031745" />
+      <geom name="col_rubber_foot_003" class="tabletop_collision" pos="0.289999992 0.305000007 0.0399999991" quat="1 0 0 0" type="box" size="0.0189999994 0.0219999999 0.00949999969" />
+      <geom name="col_trestle_lower_crossbar_001" class="tabletop_collision" pos="0.289999992 0.075000003 0.170000002" quat="1.06770138e-07 1.50728852e-14 0.707106888 0.70710665" type="cylinder" size="0.00899999961 0.170000002" />
+      <geom name="col_table_hinge_001" class="tabletop_collision" pos="0.290000021 0.075000003 0.529999971" quat="0.5 0.5 0.5 0.5" type="cylinder" size="0.0179999992 0.0269999951" />
+      <geom name="col_under_table_longitudinal_frame" class="tabletop_collision" pos="-0.140000001 -0.150000006 0.540000021" quat="0.5 0.5 0.5 0.5" type="cylinder" size="0.00999999978 0.470000029" />
+      <geom name="col_under_table_longitudinal_frame_001" class="tabletop_collision" pos="-0.140000001 0.300000012 0.540000021" quat="0.5 0.5 0.5 0.5" type="cylinder" size="0.00999999978 0.470000029" />
+      <geom name="col_folding_diagonal_brace" class="tabletop_collision" pos="-0.335000008 0.0649999976 0.370000005" quat="0.628980339 0.304563522 0.311728865 0.643777847" type="box" size="0.00449999981 0.00300000003 0.274135023" />
+      <geom name="col_folding_diagonal_brace_001" class="tabletop_collision" pos="0.0799999982 0.0649999976 0.370000005" quat="0.633710325 0.293112695 -0.300532013 -0.649751246" type="box" size="0.00449999981 0.00300000003 0.262535721" />
+      <geom name="col_plywood_top_measured_884_x_530_mm" class="tabletop_collision" pos="-0.0719999969 0.0299999993 0.674000025" quat="0.999948621 0.0101161944 -0.000675264979 6.83146345e-06" type="box" size="0.442000002 0.264999986 0.00899999961" />
+      <geom name="col_plywood_bottom_shelf" class="tabletop_collision" pos="-0.0719999969 0.0299999993 0.588" quat="1 0 0 0" type="box" size="0.442000002 0.264999986 0.00749999983" />
+      <geom name="col_plywood_vertical_divider" class="tabletop_collision" pos="-0.497000009 0.0299999993 0.629999995" quat="1 0 0 0" type="box" size="0.0164999999 0.261500001 0.0364999995" />
+      <geom name="col_plywood_vertical_divider_001" class="tabletop_collision" pos="-0.0719999969 0.0299999993 0.629999995" quat="1 0 0 0" type="box" size="0.0164999999 0.261500001 0.0364999995" />
+      <geom name="col_plywood_vertical_divider_002" class="tabletop_collision" pos="0.352999985 0.0299999993 0.629999995" quat="1 0 0 0" type="box" size="0.0164999999 0.261500001 0.0364999995" />
+      <geom name="col_plywood_rear_wall" class="tabletop_collision" pos="-0.0719999969 0.284000009 0.629999995" quat="1 0 0 0" type="box" size="0.42750001 0.00899999961 0.0364999995" />
+      <geom name="col_white_work_sheet_535_x_400_mm" class="tabletop_collision" pos="-0.162 0.0960000008 0.68599999" quat="0.999948621 0.0101161944 -0.000675264979 6.83146345e-06" type="box" size="0.267500013 0.200000003 0.000699999975" />
+      <geom name="col_adjacent_brown_desk_slab" class="tabletop_collision" pos="0.947000027 0.0469999984 0.644999981" quat="1 0 0 0" type="box" size="0.455000013 0.330000013 0.0135000004" />
+      <geom name="col_desk_round_steel_leg" class="tabletop_collision" pos="0.550000012 -0.219999999 0.335500002" quat="7.54979013e-08 0 0 1" type="cylinder" size="0.0170000009 0.29549998" />
+      <geom name="col_desk_black_foot" class="tabletop_collision" pos="0.550000012 -0.219999999 0.0364999995" quat="7.54979013e-08 0 0 1" type="cylinder" size="0.0189999994 0.0115" />
+      <geom name="col_desk_round_steel_leg_001" class="tabletop_collision" pos="0.550000012 0.310000002 0.335500002" quat="7.54979013e-08 0 0 1" type="cylinder" size="0.0170000009 0.29549998" />
+      <geom name="col_desk_black_foot_001" class="tabletop_collision" pos="0.550000012 0.310000002 0.0364999995" quat="7.54979013e-08 0 0 1" type="cylinder" size="0.0189999994 0.0115" />
+      <geom name="col_desk_round_steel_leg_002" class="tabletop_collision" pos="1.34000003 -0.219999999 0.335500002" quat="7.54979013e-08 0 0 1" type="cylinder" size="0.0170000009 0.29549998" />
+      <geom name="col_desk_black_foot_002" class="tabletop_collision" pos="1.34000003 -0.219999999 0.0364999995" quat="7.54979013e-08 0 0 1" type="cylinder" size="0.0189999994 0.0115" />
+      <geom name="col_desk_round_steel_leg_003" class="tabletop_collision" pos="1.34000003 0.310000002 0.335500002" quat="7.54979013e-08 0 0 1" type="cylinder" size="0.0170000009 0.29549998" />
+      <geom name="col_desk_black_foot_003" class="tabletop_collision" pos="1.34000003 0.310000002 0.0364999995" quat="7.54979013e-08 0 0 1" type="cylinder" size="0.0189999994 0.0115" />
+      <geom name="col_desk_rear_apron" class="tabletop_collision" pos="0.949999988 0.347000003 0.601000011" quat="1 0 0 0" type="box" size="0.425000012 0.00850000046 0.0324999988" />
+      <geom name="col_laptop_aluminum_base" class="tabletop_collision" pos="0.888000011 -0.213 0.676999986" quat="0.998622179 0 0 0.0524758883" type="box" size="0.165000007 0.128999993 0.00650000013" />
+      <geom name="col_laptop_display_housing" class="tabletop_collision" pos="0.870500028 -0.0225000009 0.801999986" quat="0.987088859 -0.151414245 -0.00792130455 0.0516399853" type="box" size="0.160337046 0.00449999981 0.118235111" />
+      <geom name="col_laptop_hinge" class="tabletop_collision" pos="0.88350004 -0.0540000014 0.691999972" quat="0.473440111 0.473440081 0.525218487 0.525218546" type="cylinder" size="0.00600000005 0.16438143" />
+      <geom name="col_external_monitor_bezel_and_body" class="tabletop_collision" pos="1 0.280499995 0.995499969" quat="0.997997463 -0.0632538125 0 0" type="box" size="0.273999989 0.0109999999 0.146500006" />
+      <geom name="col_monitor_stand_foot" class="tabletop_collision" pos="1 0.200000003 0.666999996" quat="1 0 0 0" type="box" size="0.115000002 0.0799999982 0.00549999997" />
+      <geom name="col_monitor_stand_upright" class="tabletop_collision" pos="1 0.269999981 0.800000012" quat="7.61534551e-08 -5.68982372e-09 0.0762504861 0.99708873" type="box" size="0.0179999992 0.0125000002 0.131529465" />
+      <geom name="col_fan_outer_housing" class="tabletop_collision" pos="0.611999989 0.244999975 0.834999979" quat="1.06770138e-07 1.50728852e-14 0.707106888 0.70710665" type="cylinder" size="0.112999998 0.0299999937" />
+      <geom name="col_fan_hub" class="tabletop_collision" pos="0.611999989 0.208999991 0.834999979" quat="1.06770138e-07 1.50728852e-14 0.707106888 0.70710665" type="cylinder" size="0.0250000004 0.00699999928" />
+      <geom name="col_fan_blade" class="tabletop_collision" pos="0.666000009 0.209999993 0.834999979" quat="1 0 0 0" type="box" size="0.0324999988 0.00249999994 0.0170000009" />
+      <geom name="col_fan_blade_001" class="tabletop_collision" pos="0.628686905 0.209999993 0.886357009" quat="0.809017003 0 -0.587785304 0" type="box" size="0.0324999988 0.00249999994 0.0170000009" />
+      <geom name="col_fan_blade_002" class="tabletop_collision" pos="0.568313062 0.209999993 0.866740406" quat="0.309016943 -0 -0.95105654 -0" type="box" size="0.0324999988 0.00249999994 0.0170000009" />
+      <geom name="col_fan_blade_003" class="tabletop_collision" pos="0.568313062 0.209999993 0.803259552" quat="0.309017062 0 0.95105648 0" type="box" size="0.0324999988 0.00249999994 0.0170000009" />
+      <geom name="col_fan_blade_004" class="tabletop_collision" pos="0.628686905 0.209999993 0.783642948" quat="0.809017062 0 0.587785184 0" type="box" size="0.0324999988 0.00249999994 0.0170000009" />
+      <geom name="col_fan_stem" class="tabletop_collision" pos="0.611999989 0.25 0.716499984" quat="7.54979013e-08 0 0 1" type="box" size="0.0149999997 0.0149999997 0.0534999967" />
+      <geom name="col_fan_base" class="tabletop_collision" pos="0.611999989 0.219999999 0.665000021" quat="1 0 0 0" type="box" size="0.0724999979 0.0584999993 0.00600000005" />
+      <geom name="col_stacked_paper_folder_00" class="tabletop_collision" pos="1.22300005 -0.159999996 0.66900003" quat="0.999800026 0 0 -0.0199986659" type="box" size="0.129999995 0.135000005 0.00249999994" />
+      <geom name="col_stacked_paper_folder_01" class="tabletop_collision" pos="1.22300005 -0.159999996 0.675999999" quat="0.999872029 0 0 -0.015999319" type="box" size="0.129999995 0.135000005 0.00249999994" />
+      <geom name="col_stacked_paper_folder_02" class="tabletop_collision" pos="1.22300005 -0.159999996 0.683000028" quat="0.999927998 0 0 -0.0119997142" type="box" size="0.129999995 0.135000005 0.00249999994" />
+      <geom name="col_stacked_paper_folder_03" class="tabletop_collision" pos="1.22300005 -0.159999996 0.689999998" quat="0.999967992 0 0 -0.00799991563" type="box" size="0.129999995 0.135000005 0.00249999994" />
+      <geom name="col_stacked_paper_folder_04" class="tabletop_collision" pos="1.22300005 -0.159999996 0.697000027" quat="0.999992013 0 0 -0.00399998948" type="box" size="0.129999995 0.135000005 0.00249999994" />
+      <geom name="col_stacked_paper_folder_05" class="tabletop_collision" pos="1.22300005 -0.159999996 0.703999996" quat="1 0 0 0" type="box" size="0.129999995 0.135000005 0.00249999994" />
+      <geom name="col_lime_green_folder_cover" class="tabletop_collision" pos="1.22500002 -0.159999996 0.713" quat="0.999800026 0 0 -0.0199986659" type="box" size="0.133000001 0.136500001 0.00200000009" />
+      <geom name="col_folder_spine" class="tabletop_collision" pos="1.10000002 -0.159999996 0.720000029" quat="0.999800026 0 0 -0.0199986659" type="box" size="0.00749999983 0.135000005 0.00999999978" />
+      <geom name="col_green_desk_cup" class="tabletop_collision" pos="1.09500003 0.129999995 0.702000022" quat="7.54979013e-08 0 0 1" type="cylinder" size="0.0340000018 0.0399999917" />
+      <geom name="col_turquoise_package" class="tabletop_collision" pos="1 0.0949999988 0.691999972" quat="0.990216017 0 0 0.139543116" type="box" size="0.0335000008 0.0274999999 0.0285" />
+      <geom name="col_laptop_power_adapter" class="tabletop_collision" pos="0.529999971 -0.00200000009 0.67900002" quat="0.998200536 0 0 -0.0599640049" type="box" size="0.0524999984 0.023 0.0149999997" />
+      <geom name="col_spring_clamp_black_jaw" class="tabletop_collision" pos="0.532000005 -0.245000005 0.680000007" quat="0.958243906 0 0 -0.28595221" type="box" size="0.00700000022 0.0324999988 0.00899999961" />
+      <geom name="col_spring_clamp_black_jaw_001" class="tabletop_collision" pos="0.547999978 -0.245000005 0.680000007" quat="0.999949992 0 0 -0.009999834" type="box" size="0.00700000022 0.0324999988 0.00899999961" />
+      <geom name="col_spring_clamp_black_jaw_002" class="tabletop_collision" pos="0.541999996 -0.208000004 0.680000007" quat="0.998200536 0 0 0.0599640049" type="box" size="0.00700000022 0.0324999988 0.00899999961" />
+      <geom name="col_spring_clamp_black_jaw_003" class="tabletop_collision" pos="0.558000028 -0.208000004 0.680000007" quat="0.942754686 0 0 0.333487093" type="box" size="0.00700000022 0.0324999988 0.00899999961" />
+      <geom name="col_spring_clamp_black_jaw_004" class="tabletop_collision" pos="0.751999974 0.0399999991 0.680000007" quat="0.999200106 0 0 -0.0399893299" type="box" size="0.00700000022 0.0324999988 0.00899999961" />
+      <geom name="col_spring_clamp_black_jaw_005" class="tabletop_collision" pos="0.768000007 0.0399999991 0.680000007" quat="0.971337974 0 0 0.237702623" type="box" size="0.00700000022 0.0324999988 0.00899999961" />
+      <geom name="col_long_orange_workshop_tool" class="tabletop_collision" pos="0.74000001 0.0600000024 0.684000015" quat="0.435162127 0.435162127 0.557345331 0.55734551" type="box" size="0.00899999961 0.00700000022 0.103077635" />
+      <geom name="col_dark_chair_seat" class="tabletop_collision" pos="1.14999998 -0.400000006 0.379999995" quat="1 0 0 0" type="box" size="0.180000007 0.150000006 0.0274999999" />
+      <geom name="col_dark_chair_back" class="tabletop_collision" pos="1.16999996 -0.560000002 0.569999993" quat="0.998200536 0.0599640049 0 0" type="box" size="0.170000002 0.0250000004 0.174999997" />
+      <geom name="col_chair_pedestal" class="tabletop_collision" pos="1.14999998 -0.370000005 0.215000004" quat="7.54979013e-08 0 0 1" type="cylinder" size="0.0240000002 0.145000011" />
+      <geom name="col_chair_base_spoke" class="tabletop_collision" pos="1.25999999 -0.370000005 0.0674999952" quat="0.470927298 0.527472675 0.527472734 0.470927447" type="cylinder" size="0.0120000001 0.110707961" />
+      <geom name="col_chair_caster" class="tabletop_collision" pos="1.37 -0.370000005 0.0399999991" quat="0.5 0.5 0.5 0.5" type="cylinder" size="0.0250000004 0.0119999647" />
+      <geom name="col_chair_base_spoke_001" class="tabletop_collision" pos="1.18399191 -0.26538378 0.0674999952" quat="0.104184099 0.116693728 0.736774981 0.657792449" type="cylinder" size="0.0120000001 0.110707946" />
+      <geom name="col_chair_caster_001" class="tabletop_collision" pos="1.21798372 -0.16076757 0.0399999991" quat="0.5 0.5 0.5 0.5" type="cylinder" size="0.0250000004 0.0119999647" />
+      <geom name="col_chair_base_spoke_002" class="tabletop_collision" pos="1.0610081 -0.305343628 0.0674999952" quat="0.302353859 0.338658303 -0.664654434 -0.593403101" type="cylinder" size="0.0120000001 0.110707931" />
+      <geom name="col_chair_caster_002" class="tabletop_collision" pos="0.972016215 -0.240687251 0.0399999991" quat="0.5 0.5 0.5 0.5" type="cylinder" size="0.0250000004 0.0119999945" />
+      <geom name="col_chair_base_spoke_003" class="tabletop_collision" pos="1.0610081 -0.434656382 0.0674999952" quat="0.593403161 0.664654374 -0.338658303 -0.302353948" type="cylinder" size="0.0120000001 0.110707931" />
+      <geom name="col_chair_caster_003" class="tabletop_collision" pos="0.972016215 -0.499312758 0.0399999991" quat="0.5 0.5 0.5 0.5" type="cylinder" size="0.0250000004 0.0119999945" />
+      <geom name="col_chair_base_spoke_004" class="tabletop_collision" pos="1.18399191 -0.47461623 0.0674999952" quat="0.65779233 0.7367751 0.116693757 0.104184128" type="cylinder" size="0.0120000001 0.110707961" />
+      <geom name="col_chair_caster_004" class="tabletop_collision" pos="1.21798372 -0.579232454 0.0399999991" quat="0.5 0.5 0.5 0.5" type="cylinder" size="0.0250000004 0.0119999647" />
+      <geom name="col_tall_cardboard_shipping_carton" class="tabletop_collision" pos="-1.24000001 0.254999995 0.5" quat="1 0 0 0" type="box" size="0.109999999 0.135000005 0.465000004" />
+      <geom name="col_tall_carton_open_top_flap" class="tabletop_collision" pos="-1.24000001 0.209999993 0.981999993" quat="0.99280864 0.119712196 0 0" type="box" size="0.109999999 0.109999999 0.00249999994" />
+      <geom name="col_open_cardboard_box_bottom" class="tabletop_collision" pos="-0.99000001 0.200000003 0.0399999991" quat="1 0 0 0" type="box" size="0.104999997 0.119999997 0.00899999961" />
+      <geom name="col_open_box_side" class="tabletop_collision" pos="-1.09200001 0.200000003 0.159999996" quat="1 0 0 0" type="box" size="0.00400000019 0.119999997 0.119999997" />
+      <geom name="col_open_box_side_001" class="tabletop_collision" pos="-0.888000011 0.200000003 0.159999996" quat="1 0 0 0" type="box" size="0.00400000019 0.119999997 0.119999997" />
+      <geom name="col_open_box_end" class="tabletop_collision" pos="-0.99000001 0.0839999989 0.159999996" quat="1 0 0 0" type="box" size="0.104999997 0.00400000019 0.119999997" />
+      <geom name="col_open_box_end_001" class="tabletop_collision" pos="-0.99000001 0.316000015 0.159999996" quat="1 0 0 0" type="box" size="0.104999997 0.00400000019 0.119999997" />
+      <geom name="col_open_box_outward_flap" class="tabletop_collision" pos="-0.99000001 0.0549999997 0.287" quat="0.982004225 -0.188858896 0 0" type="box" size="0.104999997 0.0500000007 0.00249999994" />
+      <geom name="col_open_box_rear_flap" class="tabletop_collision" pos="-0.99000001 0.344999999 0.287" quat="0.982004225 0.188858896 0 0" type="box" size="0.104999997 0.0500000007 0.00249999994" />
+      <geom name="col_packing_material_in_open_carton" class="tabletop_collision" pos="-0.99000001 0.200000003 0.189999998" quat="0.997483611 0.0226932801 0.0461626425 0.0487898774" type="box" size="0.075000003 0.0850000009 0.0799999982" />
+      <geom name="col_small_floor_parcel" class="tabletop_collision" pos="-0.790000021 0.170000002 0.0529999994" quat="0.998750269 0 0 -0.0499791726" type="box" size="0.0295000002 0.0335000008 0.0305000003" />
+      <geom name="col_timber_offcut" class="tabletop_collision" pos="-0.805000007 0.349999994 0.0799999982" quat="1 0 0 0" type="box" size="0.0274999999 0.0900000036 0.0274999999" />
+      <geom name="col_low_black_equipment_case" class="tabletop_collision" pos="-0.119999997 -0.180000007 0.063000001" quat="0.999200106 0 0 0.0399893299" type="box" size="0.125 0.0649999976 0.0274999999" />
+      <geom name="col_case_raised_lid" class="tabletop_collision" pos="-0.119999997 -0.180000007 0.0930000022" quat="0.999200106 0 0 0.0399893299" type="box" size="0.119999997 0.0599999987 0.00499999989" />
+      <geom name="col_case_metal_latch" class="tabletop_collision" pos="-0.219999999 -0.245000005 0.0780000016" quat="1 0 0 0" type="box" size="0.00800000038 0.00400000019 0.00600000005" />
+      <geom name="col_case_metal_latch_001" class="tabletop_collision" pos="-0.0199999996 -0.245000005 0.0780000016" quat="1 0 0 0" type="box" size="0.00800000038 0.00400000019 0.00600000005" />
+      <geom name="col_floor_soft_sided_black_bag" class="tabletop_collision" pos="0.289999992 -0.140000001 0.0829999968" quat="0.99256742 0.00698263338 0.0695934221 -0.0995889157" type="box" size="0.075000003 0.0649999976 0.0549999997" />
+      <geom name="col_long_floor_tool_shaft" class="tabletop_collision" pos="-0.149999991 -0.224999994 0.0474999994" quat="0.502542973 0.507803977 0.497335106 0.492182434" type="cylinder" size="0.00700000022 0.240065098" />
+      <geom name="col_floor_tool_padded_handle" class="tabletop_collision" pos="-0.339999974 -0.221000001 0.0494999997" quat="0.502443671 0.507492244 0.497443825 0.492495209" type="cylinder" size="0.0130000003 0.0500124954" />
+      <geom name="col_floor_tool_end_fitting" class="tabletop_collision" pos="0.0900000036 -0.230000004 0.0500000007" quat="1 0 0 0" type="box" size="0.00899999961 0.0399999991 0.0109999999" />
+      <geom name="vis_high_dull_gray_tubular_steel" mesh="high_dull_gray_tubular_steel" material="dull_gray_tubular_steel" class="tabletop_visual" />
+      <geom name="vis_high_imagegen_worn_honey_plywood" mesh="high_imagegen_worn_honey_plywood" material="imagegen_worn_honey_plywood" class="tabletop_visual" />
+      <geom name="vis_high_scan_exact_plywood_marks_generated_missing_areas" mesh="high_scan_exact_plywood_marks_generated_missing_areas" material="scan_exact_plywood_marks_generated_missing_areas" class="tabletop_visual" />
+      <geom name="vis_high_white_rectangular_work_surface" mesh="high_white_rectangular_work_surface" material="white_rectangular_work_surface" class="tabletop_visual" />
+      <geom name="vis_low_black_molded_polymer" mesh="low_black_molded_polymer" material="black_molded_polymer" class="tabletop_visual" />
+      <geom name="vis_low_bright_lime_folder" mesh="low_bright_lime_folder" material="bright_lime_folder" class="tabletop_visual" />
+      <geom name="vis_low_brown_cable_and_leather" mesh="low_brown_cable_and_leather" material="brown_cable_and_leather" class="tabletop_visual" />
+      <geom name="vis_low_cable_rubber" mesh="low_cable_rubber" material="cable_rubber" class="tabletop_visual" />
+      <geom name="vis_low_dark_laptop_aluminum" mesh="low_dark_laptop_aluminum" material="dark_laptop_aluminum" class="tabletop_visual" />
+      <geom name="vis_low_dull_gray_tubular_steel" mesh="low_dull_gray_tubular_steel" material="dull_gray_tubular_steel" class="tabletop_visual" />
+      <geom name="vis_low_imagegen_external_monitor_display_glass" mesh="low_imagegen_external_monitor_display_glass" material="imagegen_external_monitor_display_glass" class="tabletop_visual" />
+      <geom name="vis_low_imagegen_laptop_display_glass" mesh="low_imagegen_laptop_display_glass" material="imagegen_laptop_display_glass" class="tabletop_visual" />
+      <geom name="vis_low_imagegen_brown_cardboard" mesh="low_imagegen_brown_cardboard" material="imagegen_brown_cardboard" class="tabletop_visual" />
+      <geom name="vis_low_imagegen_continuous_scanned_carpet_reconstruction" mesh="low_imagegen_continuous_scanned_carpet_reconstruction" material="imagegen_continuous_scanned_carpet_reconstruction" class="tabletop_visual" />
+      <geom name="vis_low_imagegen_warm_white_plaster" mesh="low_imagegen_warm_white_plaster" material="imagegen_warm_white_plaster" class="tabletop_visual" />
+      <geom name="vis_low_imagegen_white_folding_table_plastic" mesh="low_imagegen_white_folding_table_plastic" material="imagegen_white_folding_table_plastic" class="tabletop_visual" />
+      <geom name="vis_low_imagegen_worn_honey_plywood" mesh="low_imagegen_worn_honey_plywood" material="imagegen_worn_honey_plywood" class="tabletop_visual" />
+      <geom name="vis_low_packing_tape" mesh="low_packing_tape" material="packing_tape" class="tabletop_visual" />
+      <geom name="vis_low_safety_orange_grips" mesh="low_safety_orange_grips" material="safety_orange_grips" class="tabletop_visual" />
+      <geom name="vis_low_turquoise_notes_and_small_packaging" mesh="low_turquoise_notes_and_small_packaging" material="turquoise_notes_and_small_packaging" class="tabletop_visual" />
+      <geom name="vis_low_white_rectangular_work_surface" mesh="low_white_rectangular_work_surface" material="white_rectangular_work_surface" class="tabletop_visual" />
+      <geom name="vis_medium_black_molded_polymer" mesh="medium_black_molded_polymer" material="black_molded_polymer" class="tabletop_visual" />
+      <geom name="vis_medium_dull_gray_tubular_steel" mesh="medium_dull_gray_tubular_steel" material="dull_gray_tubular_steel" class="tabletop_visual" />
+      <geom name="vis_medium_imagegen_brown_desk_wood" mesh="medium_imagegen_brown_desk_wood" material="imagegen_brown_desk_wood" class="tabletop_visual" />
+      <geom name="vis_medium_imagegen_white_folding_table_plastic" mesh="medium_imagegen_white_folding_table_plastic" material="imagegen_white_folding_table_plastic" class="tabletop_visual" />
+      <geom name="vis_medium_turquoise_notes_and_small_packaging" mesh="medium_turquoise_notes_and_small_packaging" material="turquoise_notes_and_small_packaging" class="tabletop_visual" />
+      <site name="removed_arm_mount" pos="-0.159999996 0.26699999 0.68900001" quat="1 0 0 0" type="sphere" size=".004" group="4" rgba="1 .3 .05 0" />
+      <site name="arm_support_surface" pos="-0.159999996 0.26699999 0.69016313" quat="0.999948621 0.0101161944 -0.000675264979 6.83146345e-06" type="sphere" size=".004" group="4" rgba="1 .3 .05 0" />
+    </body>
+    <camera name="overview" pos="2.3499999 -3.79999995 2.5999999" xyaxes="0.840126991 0.54238975 -4.57116158e-08 -0.227321088 0.352105886 0.907935321" projection="orthographic" fovy="2.566666603088379" />
+    <camera name="tabletop" pos="0.829999983 -1.27999997 1.44000006" xyaxes="0.812912822 0.582385421 -2.75509038e-09 -0.274271637 0.382837445 0.882162452" projection="orthographic" fovy="0.9933333396911621" />
+    <camera name="top" pos="0 0 4" xyaxes="1 0 0 0 1 0" projection="orthographic" fovy="2.1000000635782876" />
+  </worldbody>
+</mujoco>

@@ -1,0 +1,405 @@
+{
+  "table_scan": {
+    "source": {
+      "archive": "10_28_2026.zip",
+      "member": "10_28_2026.glb",
+      "member_sha256": "648804c5d4d11a17b2e6007807c2f9f66eb000fe9a586f56b340f66dbf6df7a4"
+    },
+    "model": "table-cleaned.glb",
+    "model_sha256": "ef79eaafd9f6ddb92cb5746c2570726908cdd857ef236bb0c4f0534ea88b42bc",
+    "frame": {
+      "name": "original glTF scene",
+      "unit": "m",
+      "up": [
+        0,
+        1,
+        0
+      ],
+      "physical_scale_verified": false,
+      "gltf_to_z_up_row_major": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "scan_bounds_m": [
+      [
+        -1.1424598693847656,
+        1.026712936891272e-08,
+        -0.9568531513214111
+      ],
+      [
+        1.1424598693847656,
+        1.233091950416565,
+        0.9568531513214111
+      ]
+    ],
+    "source_triangle_count": 99999,
+    "cleaned_triangle_count": 109868,
+    "reconstructed_triangle_count": 15264,
+    "adjacent_tabletop_plane_y_equals_ax_plus_bz_plus_c": [
+      0.009978655833575916,
+      -0.02297849600964827,
+      0.681225851
+    ],
+    "adjacent_tabletop_fit_rms_m": 0.0006333089851385141,
+    "support_surface_scan_height_m": 0.5764437913894653,
+    "physical_dimensions_m": null,
+    "mass_kg": null,
+    "center_of_mass_m": null,
+    "inertia_kg_m2": null
+  },
+  "removed_arm": {
+    "source": "10_28_2026.zip/10_28_2026.glb",
+    "model": null,
+    "reference_datum": "selected pedestal surface median projected onto fitted tabletop",
+    "estimated_base_position_gltf_m": [
+      -0.053,
+      0.687,
+      -0.288
+    ],
+    "estimated_base_position_z_up_m": [
+      -0.053,
+      0.288,
+      0.687
+    ],
+    "position_error_bound_m": null,
+    "orientation_xyzw": null,
+    "joint_angles_rad": null,
+    "pedestal_selection_bounds_gltf_m": [
+      [
+        -0.1,
+        0.71,
+        -0.34
+      ],
+      [
+        -0.01,
+        0.74,
+        -0.26
+      ]
+    ],
+    "pedestal_selection_vertex_count": 138,
+    "pedestal_surface_median_gltf_m": [
+      -0.05330628901720047,
+      0.724667489528656,
+      -0.2877284288406372
+    ]
+  },
+  "simulation": {
+    "source": "table-cleaned.glb",
+    "world": "../../worlds/table_top/scene.xml",
+    "standalone_leader_scene": "../../worlds/table_top/leader.xml",
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "leader": {
+      "model": "../so101/so101.xml",
+      "source": "../so101/source/cad-manifest.json",
+      "mount_reference_position_m": [
+        -0.053,
+        0.288,
+        0.687
+      ],
+      "model_mount_datum_m": [
+        -9.94325e-05,
+        -0.00756157,
+        0.000394295711
+      ],
+      "root_position_m": [
+        -0.04971129360217487,
+        0.2948179988700264,
+        0.686795064810509
+      ],
+      "quaternion_wxyz": [
+        0.9762203557430754,
+        0.012293892392490138,
+        -0.00238382297072425,
+        -0.21641856350773014
+      ],
+      "orientation_error_bound_rad": null,
+      "orientation_source": "user-directed away from scene.xml#col_wall_straight_solid_plaster, transformed by reconstruction.frame",
+      "initial_joint_positions_rad": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "forward_axis_world": [
+        -0.4224858011876737,
+        -0.9060237311581849,
+        -0.025034903095689367
+      ],
+      "wall_away_axis_world": [
+        -0.4226182591758708,
+        -0.9063077882326491,
+        0.0
+      ],
+      "yaw_rad": -0.43633231016860713
+    },
+    "tabletop_collision_proxy": {
+      "top_center_m": [
+        -0.04977000000000001,
+        0.060410000000000005,
+        0.6818025551515067
+      ],
+      "quaternion_wxyz": [
+        0.9781602409053187,
+        0.01227155948384566,
+        -0.0024962431669044416,
+        -0.20747462666537056
+      ],
+      "half_size_m": [
+        0.445,
+        0.265,
+        0.045
+      ],
+      "surface_normal": [
+        -0.009975526080020539,
+        -0.022971288923765876,
+        0.9996863551957723
+      ]
+    },
+    "floor_collision_proxy": {
+      "height_m": 0.03
+    },
+    "room_collision_geometry": null
+  },
+  "reconstruction": {
+    "source": {
+      "model": "tabletop.blend",
+      "derived_from": {
+        "model": "/Users/godbrigero/Documents/Tabletop-Reconstruction/Tabletop-Reconstruction.blend",
+        "sha256": "6e123540f6f5d3815d204a6752350ebe70202f43430f6b9e912097d9f29cc9f5",
+        "object": "Robot mounting foot"
+      },
+      "sha256": "0de012e77c386b5788926a2e979031180aad7638fe1c05d191598fbcdac13867"
+    },
+    "model": "scene.xml",
+    "frame": {
+      "up": [
+        0,
+        0,
+        1
+      ],
+      "unit": "m",
+      "gltf_to_reconstruction_row_major": [
+        0.90630779,
+        0,
+        0.42261826,
+        0,
+        0.42261826,
+        0,
+        -0.90630779,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "physical_scale_verified": false
+    },
+    "tabletop": {
+      "center_m": [
+        -0.072,
+        0.03,
+        0.67400002
+      ],
+      "dimensions_m": [
+        0.884,
+        0.52999997,
+        0.018
+      ],
+      "quaternion_wxyz": [
+        0.99994862,
+        0.01011619,
+        -0.00067526,
+        6.83e-06
+      ]
+    },
+    "spatial_detail": {
+      "low": {
+        "source_triangles": 46168,
+        "export_triangles": 6530,
+        "objects": 183
+      },
+      "medium": {
+        "source_triangles": 8908,
+        "export_triangles": 5004,
+        "objects": 29
+      },
+      "high": {
+        "source_triangles": 3572,
+        "export_triangles": 3572,
+        "objects": 19
+      }
+    },
+    "texture_dimensions_px": {
+      "carpet": [
+        768,
+        437
+      ],
+      "screens": [
+        768,
+        432
+      ],
+      "materials": [
+        1536,
+        1024
+      ],
+      "tabletop": [
+        768,
+        512
+      ]
+    },
+    "collision_primitive_count": 103,
+    "mass_kg": null,
+    "center_of_mass_m": null,
+    "inertia_kg_m2": null,
+    "visual_triangle_count": 15106,
+    "visual_mesh_count": 26,
+    "model_sha256": "96f201b3f4edadc32ed97181bc47edc68029f7001f525d01661a8ee42816309f",
+    "leader": {
+      "model": "../so101/so101.xml",
+      "scene": "leader.xml",
+      "source": "../so101/source/cad-manifest.json",
+      "model_mount_datum_m": [
+        -9.94325e-05,
+        -0.00756157,
+        0.000394295711
+      ],
+      "mount_reference_position_m": [
+        -0.159999996,
+        0.26699999,
+        0.69016313
+      ],
+      "root_position_m": [
+        -0.15990003116435947,
+        0.27456798675506644,
+        0.6899220305565975
+      ],
+      "quaternion_wxyz": [
+        0.9999486019717873,
+        0.010116203432182247,
+        -0.0006751267562525963,
+        -6.83007066092511e-06
+      ],
+      "model_forward_axis": [
+        0,
+        -1,
+        0
+      ],
+      "forward_axis_world": [
+        0.0,
+        -0.9997953247629376,
+        -0.02023137618087257
+      ],
+      "wall_outward_horizontal_axis": [
+        0,
+        -1,
+        0
+      ],
+      "surface_normal": [
+        -0.0013503223009055866,
+        -0.020231357736218765,
+        0.9997944132639632
+      ],
+      "initial_joint_positions_rad": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "physical_placement_error_bound_m": null,
+      "scene_sha256": "cff32b6b54d495396e7da6dda379e369ac6646bb988daac5d2f44c9c356eb1f2"
+    }
+  },
+  "removed_reconstructed_arm": {
+    "source": {
+      "model": "/Users/godbrigero/Documents/Tabletop-Reconstruction/Tabletop-Reconstruction.blend",
+      "sha256": "6e123540f6f5d3815d204a6752350ebe70202f43430f6b9e912097d9f29cc9f5",
+      "object": "Robot mounting foot"
+    },
+    "frame": "reconstruction Z-up; same as MJCF world",
+    "unit": "m",
+    "foot_center_position_m": [
+      -0.16,
+      0.26699999,
+      0.69700003
+    ],
+    "mount_bottom_position_m": [
+      -0.16,
+      0.26699999,
+      0.68900001
+    ],
+    "mount_quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "mount_foot_dimensions_m": [
+      0.068,
+      0.076,
+      0.016
+    ],
+    "support_surface_position_m": [
+      -0.16,
+      0.26699999,
+      0.69016313
+    ],
+    "support_surface_quaternion_wxyz": [
+      0.99994862,
+      0.01011619,
+      -0.00067526,
+      6.83e-06
+    ],
+    "physical_orientation_wxyz": null,
+    "physical_position_error_bound_m": null,
+    "joint_angles_rad": null,
+    "modeled_joint_centers_m": [
+      [
+        -0.161,
+        0.27200001,
+        0.75
+      ],
+      [
+        -0.273,
+        0.32499999,
+        0.85600001
+      ],
+      [
+        -0.32600001,
+        0.34299999,
+        0.74299997
+      ]
+    ],
+    "modeled_gripper_center_m": [
+      -0.347,
+      0.35,
+      0.699
+    ]
+  }
+}

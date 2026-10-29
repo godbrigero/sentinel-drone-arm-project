@@ -404,6 +404,118 @@ the interacting objects within one world are not separate workers. Async factori
 need the usual `if __name__ == "__main__":` entry point. One system instance cannot
 belong to two drivers.
 
+## Captured table scene
+
+`models/table-top/table-cleaned.glb` is the textured room/table scan with the
+captured arm removed. The supplied `10_28_2026.zip` remains unchanged as a local,
+Git-ignored source; its member hash is recorded, and the builder needs only the
+cleaned GLB. Small
+occluded sections of the white sheet, wall and underlying support surface are
+reconstructed from neighboring scan geometry and colors; those repairs are
+estimates. The rest of the scene retains the captured geometry and textures.
+The scan retains its open boundaries and imperfections. Its geometry supplies the
+visuals for `worlds/table_top/scene.xml`; contact uses a separate fitted tabletop
+box and a floor plane. The wall, room clutter, table legs and other scanned
+surfaces are visual only. Collision proxies and friction are approximate, not
+measurements of the furniture.
+
+The GLB preserves the original Y-up frame and nominal meter units. Its empty
+`removed_arm_base_reference_approximate` node records the estimated base position
+at `(-0.053, 0.687, -0.288)` m. Converting coordinates with
+`(x, y, z) -> (x, -z, y)` gives `(-0.053, 0.288, 0.687)` m in Z-up coordinates.
+This datum is the median of a manually selected pedestal surface region projected
+onto the adjacent fitted tabletop, not a calibrated robot/CAD origin. Marker
+axes belong to the scan frame; they do not establish the arm's orientation.
+The original scan origin is retained, so this position is not relative to the
+center of the table. Physical scale, calibrated base orientation, joint pose and
+placement error bounds are unverified. Numeric values, source hash, selection
+bounds and simulation assumptions are recorded in `models/table-top/information.json`.
+
+### Leader on the scanned table
+
+```sh
+uv run --locked python -m airtruck.examples.table_leader --seconds 2
+uv run --locked mjpython -m airtruck.examples.table_leader --render --seconds 300
+```
+
+The example creates only an `SO101Leader`, in simulation, with no serial connection
+or linked follower. Its mounting datum is fixed at the recorded Z-up position;
+the six arm joints remain movable through `leader.controls`. Base drift is
+prevented by the model's fixed root body, not by servo gains or repeated pose
+overwrites. The arm faces directly away from the straight rear wall, out over the
+table (−25° yaw in the scan world), as specified by the user. The wall's outward
+normal is taken from the solid reconstruction and transformed into the scan
+frame; the base's up axis follows the fitted tabletop normal. Rotating the CAD
+root preserves the recorded mounting datum at `(-0.053, 0.288, 0.687)` m.
+This is the requested simulation orientation, not a calibration of the physical
+mount or the captured shoulder-pan joint. Initial
+joint positions are the existing model's zero configuration, not a recovered
+capture pose. Both SO-101 roles currently share the existing follower CAD and
+servo model; this is not a separately identified leader mechanism.
+
+The world's invisible `leader_base` site stores the **CAD root** placement. The
+`leader_mount_reference` site stores the recorded scan location. They differ
+because the model datum is the shoulder-pan axis projected onto the base's
+bottom support plane. `table_leader()` reads the root site directly from MJCF;
+the engineering JSON is used only by the builder.
+
+```python
+from airtruck.examples.table_leader import WORLD, table_leader
+from airtruck.runtime.driver import SystemDriver
+
+leader = table_leader()
+with SystemDriver([leader], world=WORLD) as driver:
+    driver.reset()
+    leader.controls["wrist_roll.pos"] += 15
+    driver.run(steps=100, realtime=False)
+```
+
+`worlds/table_top/scene.xml` is the base world for `SystemDriver`.
+`worlds/table_top/leader.xml` is a standalone MJCF with the same fixed leader
+already attached, for direct MuJoCo loading; do not pass it to a driver that
+also attaches a leader. Regenerate both worlds and their assets with:
+
+```sh
+uv run --locked python scripts/table_top/build_world.py
+uv run --locked pytest -q airtruck/tests/test_table_world.py
+```
+
+The builder checks the cleaned GLB hash, converts Y-up to Z-up without rescaling,
+and retains all 109,868 triangles in native MSH files. The original base-color
+texture is decoded losslessly to PNG, and repaired vertex colors are baked into
+continuous texture charts. Normal/occlusion/PBR maps are not imported into the
+MuJoCo visualization. The required meshes and textures live under
+`models/table-top/assets/`; `table.xml` contains the environment geometry and
+placement sites. Changing a recorded placement or collision assumption requires
+rebuilding. Tests verify mesh coordinates/UVs, agreement between standalone and
+driver placements, unchanged base pose while joints move, and tabletop contact
+with a dropped object.
+
+### Solid Blender reconstruction
+
+`models/table-top/scene.xml` provides the separate arm-free reconstruction made
+from solid Blender objects. It retains full detail around the plywood platform
+and work sheet, reduces surrounding furniture detail, and supplies textured OBJ
+visuals plus 103 analytic collision shapes. The shelf openings remain clear.
+`models/table-top/tabletop.blend` is the editable source; usage, contact limits
+and export details are in the [model guide](../models/table-top/README.md).
+
+The reconstruction uses a Z-up frame rotated +25° around Z relative to the scan's
+Z-up frame. Its `removed_arm_mount` site is at (-0.160, 0.267, 0.689) m; this is the
+modeled mounting-foot underside. The work sheet directly below it is recorded
+separately at z = 0.69016313 m. These modeled datums and the original scan estimate
+are kept separately in `information.json`. Physical scale and arm calibration
+are unverified. Pass this scene as `world=` to use it as a static environment;
+no robot is included.
+
+`models/table-top/leader.xml` adds the articulated SO-101 to this reconstructed
+scene. Its mounting datum sits on the work sheet at (-0.160, 0.267, 0.69016313) m,
+with the CAD-root offset accounted for. Its forward axis points directly away
+from the wall (world -Y in horizontal projection), while its base normal follows
+the work sheet. The base is fixed and all six native joints remain movable.
+This user-selected orientation is separate from the captured arm's estimated
+yaw. Load `leader.xml` directly with MuJoCo; it already contains the arm.
+
 ## Rendering and contact fidelity
 
 `render_mode="human"` opens a passive MuJoCo viewer; on macOS use `mjpython`.

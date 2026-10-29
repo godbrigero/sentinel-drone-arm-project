@@ -16,6 +16,9 @@ build/
 *.jpeg
 *.html
 
+# Required MuJoCo texture assets generated from the user's table scan.
+!models/table-top/assets/*.png
+
 # Python tooling caches
 .ruff_cache/
 .mypy_cache/

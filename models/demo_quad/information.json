@@ -1,8 +1,0 @@
-{
-  "model": "Analytic gamepad demo quadrotor",
-  "assigned_simulation_mass_kg": 0.5,
-  "assigned_simulation_inertia_kg_m2": [0.006, 0.006, 0.011],
-  "CAD_mass_kg": null,
-  "measured_mass_kg": null,
-  "_sources": {"simulation_model": "quad.xml"}
-}
