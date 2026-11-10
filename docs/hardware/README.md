@@ -39,7 +39,8 @@ holds measured feedback. `send_action()` retains immediate target dispatch and
 returns LeRobot's accepted targets if relative-target limiting clips the request.
 It does not advance the simulation clock. `get_observation()` and leader
 `get_action()` work through the current backend. A real leader stays input-only in
-the driver loop. The bridge currently requires `use_degrees=False` and no cameras.
+the driver loop. The bridge currently requires `use_degrees=False` and no LeRobot
+robot cameras; `so101_policy` opens its cameras separately.
 Native config objects may be passed with `config=` for SDK options such as PID
 coefficients and `max_relative_target`.
 
@@ -104,6 +105,200 @@ Tests use fake buses while exercising native LeRobot connect/configure/read/writ
 methods. They do not open physical ports. Physical calibration, installed voltage,
 real timing, dynamics and motion remain unverified. Cleanup cannot guarantee an
 unreachable device is unpowered; errors remain visible.
+
+## SmolVLA yellow-cube policy on the follower
+
+Two examples run a fine-tuned SmolVLA `pretrained_model` folder (see
+[fine-tuning](../simulation.md#smolvla-fine-tuning)) on the
+physical follower. Checkpoint variants are configured in `so101_cameras.CHECKPOINTS`
+and the saved hardware configuration. `modified`
+(default, `~/Documents/smolvla-weight-edit-6000/export/smolvla_so101_pad0_deep8`)
+is step 6000 with baked-in weight edits: zeroed padding action inputs and a grasp
+about 8 mm deeper, calibrated in simulation. `unmodified`
+(`~/Documents/so101-smolvla-weights/run2_50ep_step_006000`) is the same fine-tune
+as trained. Both use identical normalization statistics. Run them from a terminal that macOS allows to use the camera
+(System Settings › Privacy & Security › Camera). On Linux, your user needs the `video`
+and `dialout` groups instead
+([Linux setup](../README.md#linux-and-nvidia-gpus)). Checkpoint folders are not in the
+repository; copy them to the Linux machine and pass `--<variant> PATH` to `so101_cameras`.
+
+```sh
+uv run --locked python -m airtruck.examples.so101_cameras            # --variant unmodified to default to it
+uv run --locked python -m airtruck.examples.so101_mirror      # torque off: check joint directions
+uv run --locked python -m airtruck.examples.so101_policy --dry-run
+uv run --locked python -m airtruck.examples.so101_policy
+uv run --locked python -m airtruck.examples.so101_policy --variant unmodified
+```
+
+Two additional variants select the requested comparison directly:
+
+```sh
+uv run --locked python -m airtruck.examples.so101_policy --variant step2000
+uv run --locked python -m airtruck.examples.so101_policy --variant manual_best5
+```
+
+`step2000` selects the unmodified `~/Documents/so101-smolvla-weights/step_002000`.
+`manual_best5` selects the exact `yaw_reach_head_balance` export under
+`~/Documents/yellow-cube-manual-weights-20261104/sparse-resume-20261105/checkpoints/`.
+The latter passed 5/10 simulation cases and changes 88,332 values from its original
+checkpoint. Its original is different from step 2000, so this is not a same-base
+before/after comparison. Each variant loads its own saved processors. Physical
+performance of `manual_best5` has not been verified. Existing variants and the
+saved default remain available unchanged.
+
+Three variants come from a separate fine-tune of `lerobot/smolvla_base` on the same
+simulation dataset and normalization (`~/Documents/hybrid-train-smolvla`, step 6000).
+Their copies are kept under `~/Documents/so101-smolvla-weights/hybrid-train/`:
+
+```sh
+uv run --locked python -m airtruck.examples.so101_policy --variant hybrid
+uv run --locked python -m airtruck.examples.so101_policy --variant hybrid_endedit
+uv run --locked python -m airtruck.examples.so101_policy --variant hybrid_control
+```
+
+- `hybrid` was hand-edited every 500 training steps.
+- `hybrid_control` is the same run without edits.
+- `hybrid_endedit` is `hybrid_control` with the same edit recipes applied once at the end.
+
+In the simulated main suite they reached 39, 37 and 60 of 80 cubes respectively, and
+picked 27, 27 and 40. None has been run on the physical arm.
+
+These variants are tuned for the real cameras, the colour front sensor and the 59° wrist
+view (see [measured cameras](../simulation.md#measured-cameras)), or for the real arm.
+All derive from p17gshr with weight edits only:
+
+```sh
+uv run --locked python -m airtruck.examples.so101_policy --variant cf1
+uv run --locked python -m airtruck.examples.so101_policy --variant cf1r4
+uv run --locked python -m airtruck.examples.so101_policy --variant cf3p25
+uv run --locked python -m airtruck.examples.so101_policy --variant cf1t5
+uv run --locked python -m airtruck.examples.so101_policy --variant cf3p25t5
+uv run --locked python -m airtruck.examples.so101_policy --variant cf3p25t5r15
+uv run --locked python -m airtruck.examples.so101_policy --variant cf3p25t5r28
+uv run --locked python -m airtruck.examples.so101_policy --variant sk5pt5
+uv run --locked python -m airtruck.examples.so101_policy --variant rt1
+```
+
+- `cf1` (`export/camfix_cf1`) adds camera-transfer maps on the action expert's attention
+  outputs, so the real views read like the training views. It has not yet run on the arm.
+- `cf1r4` (`export/camfix_cf1r4`) is `cf1` with the wrist-roll servo gain doubled. In simulation it scores about the same as `cf1`, slightly better beside the band. It has not yet run on the arm.
+- `cf3p25` (`export/camfix_cf3p25`) refits the camera-transfer maps on more scenes, including misaligned low hovers. It adds a height-gated pan servo that corrects sideways from the wrist view when low over the cube. It is the best variant in simulation, picking 29/36 beside the band and 23/27 inside it. It has not yet run on the arm.
+- `cf1t5` and `cf3p25t5` are `cf1` and `cf3p25` with an exact pan translation of −5 units. On the real arm the base sits about 2 cm from the scanned pose, so the policy turned about 5 units too far toward +pan. `cf1t5` picked the cube 10 cm left and 10 cm right of centre, where `cf1` missed both.
+- `cf3p25t5r15` and `cf3p25t5r28` are `cf3p25t5` with the same kind of reach pull-in as `rt1`, for the real arm's radial overshoot (jaws stopping on top of or past the cube). `r15` moves the grasp about 1.5 cm closer to the base and 0.3 cm lower; `r28` uses `rt1`'s full 2.8 cm and 0.5 cm. Neither has run on the arm yet.
+- `sk5p` is `cf3p25` with a "seek" circuit on two layer-15 expert neurons. While the cube is hidden or only partly in the wrist view and the jaws are above 3.5 cm, it turns the base toward where the front camera sees the cube, by 0.7 of the remaining angle per action chunk; it is idle once the cube is in view. In the measured-camera simulation it keeps `cf3p25`'s scores and recovers an under-turned first swing (22/24 reached vs 10/24). It does not extend the reach, so cubes far outside the trained area can still be missed short. `sk5pt5` adds the real-arm pan −5. Not yet run on the arm.
+- `rt1` adds an exact joint-space translation that grasps 2.8 cm closer to the base and 0.5 cm lower. It picked the cube 2/2 on the arm at the band centre.
+
+`so101_cameras.CHECKPOINTS` also lists preliminary simulation-only weight edits of
+step 6000 (`pan17` to `sp6_shpg3`), each commented with its simulation results.
+`best-thus-far` is a symlink to the best of them, re-pointed by
+`~/Documents/smolvla-weight-edit-6000/update_best.py` (history in that export's
+`BEST_THUS_FAR.md`). `so101_cameras` saves the symlink path itself, so a re-pointed
+symlink applies without re-running it.
+
+The RealSense notes below are macOS-specific. On Linux, the D435i registers several
+`/dev/video` nodes (depth, infrared and colour, each with a metadata node); OpenCV index N
+is `/dev/videoN`. `so101_cameras` prints each node's name and probes past the highest
+index, so choose the colour feed in its window. The colour bridge refuses to start on
+Linux.
+
+macOS's AVFoundation exposes only one of the D435i's video interfaces to OpenCV. It
+appears in `system_profiler SPCameraDataType` as "Depth Camera 435i RGB" (colour)
+or "… Depth". The Depth interface is the IR imager: grayscale with the projector's
+dots, unusable for this policy. On this machine the exposed interface changed between
+sessions for an unidentified reason, so check the device list `so101_cameras` prints.
+macOS's UVCAssistant claims all of the camera's video interfaces but presents only that one
+stream (also through CoreMediaIO), so no unprivileged setting selects colour. The camera has
+been seen at 480 Mb/s (USB 2) even on a direct USB-C port.
+
+The working colour path is `airtruck/examples/so101_realsense_bridge.py`. It uses Homebrew's
+librealsense 2.59.1 C API through ctypes, as root, and writes 640×480 RGB frames at 30 fps
+to `/tmp/airtruck-realsense-color.bin`. A front camera entry
+`{"type": "realsense_bridge", "width": 640, "height": 480, "fps": 30}` in
+`models/so101/hardware.json` reads it without root. Start the bridge in its own terminal
+before `so101_policy`. While it runs, the RealSense disappears from OpenCV, so check the wrist
+camera index with `so101_cameras --snapshot`:
+
+```sh
+sudo .venv/bin/python -B -m airtruck.examples.so101_realsense_bridge   # Ctrl+C stops
+```
+`so101_policy` refuses to start when a configured camera gives a grayscale frame (for example the Depth interface).
+A Continuity Camera iPhone also adds an OpenCV index, so re-run `so101_cameras` whenever the device list changes. The Python binding
+`pyrealsense2-macosx` 2.56.5 segfaults in `pipeline.start()` while it creates the
+D435i IMU HID device (`hid_open_path` → `IOHIDDeviceOpen` on a null device), with
+or without root; hence the bridge above uses Homebrew's library, colour stream only.
+
+The training front view has the depth camera's geometry (f ≈ 384 px at 640×480,
+63.97° vertical FOV). The colour sensor the policy now sees is narrower (42.63°
+vertical, factory calibration) and offset about 15 mm, and the wrist camera's real
+view is narrower than assumed. The simulator now defaults to these
+[measured cameras](../simulation.md#measured-cameras); every checkpoint was trained
+on the old views. With the colour front view, a real `best-thus-far` run approaches
+the cube and closes beside it; before, it wandered.
+
+`so101_cameras` opens every OpenCV index (on macOS, as many as `system_profiler`
+lists; on Linux, up to the highest `/dev/videoN`), preferring the 640×480 at 30 fps training mode. It does not probe
+librealsense. Hand-written `intelrealsense` camera entries are accepted where
+`pyrealsense2` works, for example on Linux.
+It shows the live feeds in a window. Select a feed with its digit or a click, then
+press F for the fixed table view or W for the gripper view, and Enter to save.
+`--snapshot DIR` saves one PNG per feed instead; `--front N --wrist M` then
+assigns them without a window. macOS device names are listed for orientation only,
+because they do not identify OpenCV indices; Linux names do. The follower port is found by
+reading each bus's EEPROM calibration (read-only: torque is not changed) and
+comparing it with the saved follower and leader records; `--port` skips this. A
+nonzero difference is reported, because normal connection will then be refused
+until the follower is recalibrated. The result is `models/so101/hardware.json`
+(Git-ignored, machine-local): `policy.variant`, the `policy.checkpoints` folders
+(`--<variant> PATH`, for example `--modified`, replaces a default; a missing
+unselected folder is omitted), task, port, LeRobot ID, rate and camera configs under the dataset keys
+`front` and `wrist`. `so101_policy --variant` overrides the saved variant for one run.
+
+`so101_mirror` opens the follower through LeRobot's leader role, which disables
+torque and only reads, using the follower's calibration file. Its window shows
+both live camera feeds as the policy receives them, the nearest training frames
+(`--no-reference` skips them) and an offscreen render of the simulated arm posed
+from the measured joints, with the normalized values; no MuJoCo viewer is opened.
+Move the real arm by hand: every joint must turn the same physical way and reach
+the same end stops as the simulated arm. Matching normalized ranges does not
+establish matching directions, and the policy's targets assume the simulated
+mapping. Support the arm before starting; it goes limp.
+
+`so101_policy` loads that file and uses `SO101Follower(hardware=True)` in a
+`SystemDriver` at 30 Hz. Its MuJoCo world only mirrors the measured pose (ten
+proxy substeps, contacts disabled). After connecting it runs one warm-up
+inference (on CUDA, then MPS, then CPU, unless `--device` is given), ramps over `--home-seconds` (default 4; 0 skips) to the
+simulated start pose `[0, 0.4, -0.8, 0.2, 0, -1.0]` rad. If any joint is then more than
+`--home-tolerance` (default 10) normalized units away, it holds and stops instead of
+starting the policy: a joint driven the wrong way, or blocked, stalls there because
+`max_relative_target` limits each command to `--max-step` beyond the measured position.
+Otherwise it runs the policy
+for `--seconds` (default 20). Every tick reads both cameras and the measured
+joints and calls LeRobot's `predict_action`, as `so101_pick_eval` does in
+simulation. Predicted targets are clipped to the joint ranges, and
+`--max-step` (default 5 normalized units per tick) is LeRobot's
+`max_relative_target`. Training actions changed by at most about 3 units per tick.
+Each motion phase asks for confirmation unless `--yes` is given; without a terminal
+the run exits at the first confirmation instead. `--dry-run` runs cameras and
+inference but holds the measured pose. A window, shown by default, has both camera
+frames exactly as given to the policy (640×480 each, unscaled; `--no-view` hides it);
+Esc stops. On completion, Ctrl+C or Esc the arm holds its pose. From a terminal it
+then waits for Enter, and exit releases torque. Without a terminal (only with `--yes`) it
+first returns to the pose where the gripper first closed, opens the gripper, ramps
+through the ready pose back to the pose measured at start (over `--home-seconds`, at
+least 3 s), then releases torque.
+
+`--record DIR` saves every policy tick's frames as given to the policy
+(`front_NNNNN.jpg`, `wrist_NNNNN.jpg`, JPEG quality 95) and `log.npz` with per-tick
+`t` (`time.perf_counter()` seconds at tick start), measured `state` and unclipped predicted `action`, plus
+`names`, `variant`, `checkpoint`, `fps` and the `cameras` configuration as JSON.
+Homing and warm-up are not recorded. The log is written however the run ends.
+
+Frames of another resolution are resized to 640×480. The ready pose and every
+policy target use the simulated normalized mapping. They match the physical arm only if its
+calibration matches the simulated joint zero and direction. The simulated
+images have no distortion or sensor noise. SmolVLA predicts 50-step chunks: in
+the MPS test each refill took about 0.35 s. The previous target is held during
+that tick, so ticks overrun once per chunk.
 
 ## PX4 drone
 

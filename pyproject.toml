@@ -6,7 +6,7 @@ dependencies = [
     "mujoco==3.16.0",
     "numpy==2.2.6",
     "gymnasium==1.4.0",
-    "lerobot[feetech,training]==0.6.1",
+    "lerobot[feetech,training,smolvla]==0.6.1",
     "pygame-ce==2.5.8",
     "opencv-python-headless==4.13.0.92",
 ]

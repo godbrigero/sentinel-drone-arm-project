@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-24",
+  "updated": "2026-11-09",
   "so101": {
     "model": "SO-101 follower",
     "frame": "Separate SO-101 assembly world, Z up",
@@ -213,7 +213,7 @@
       "measured_mass_g": null,
       "CAD_center_of_mass_mm": null,
       "CAD_inertia_kg_m2": null,
-      "camera_model": null,
+      "camera_model": "Seeed Studio ET-S231 V1",
       "camera_measured_dimensions_mm": null,
       "source_to_assembly_row_major_transform_m": [
         -0.9998477009189216,
@@ -232,7 +232,106 @@
         0,
         0,
         1
-      ]
+      ],
+      "camera_listing_diagonal_fov_deg": 120,
+      "camera_native_resolution_px": [
+        1920,
+        1080
+      ],
+      "camera_resolution_used_px": [
+        640,
+        480
+      ],
+      "camera_derived_center_crop_px": [
+        1440,
+        1080
+      ],
+      "camera_derived_fy_px": 282.6331216992827,
+      "camera_derived_vertical_fov_deg": 80.7,
+      "simulation_fy_px": 282.4981529010917,
+      "simulation_optical_center_hand_pos_m": [
+        0.0672937651704803,
+        0.003675130584940867,
+        0.007554264877013909
+      ],
+      "simulation_optical_center_hand_quat_wxyz": [
+        0.15170432251143784,
+        0.6842946211950709,
+        0.6963440014477901,
+        0.1543751974331375
+      ],
+      "simulation_assumed_lens_offset_m": 0.01,
+      "camera_measured_vertical_fov_deg": 59.29,
+      "camera_measured_hand_pos_m": [
+        0.07097162890844501,
+        0.0021435547483503337,
+        0.008019665173248959
+      ],
+      "camera_measured_hand_quat_wxyz": [
+        0.15679359677750138,
+        0.6830034810258508,
+        0.695008930067852,
+        0.16088691693883697
+      ],
+      "camera_measured_resolution_px": [
+        640,
+        480
+      ],
+      "camera_measured_fit_silhouette_iou": 0.865,
+      "derived_board_seat_source_center_m": [
+        -0.04757375357,
+        -0.03430890957,
+        0.0175
+      ],
+      "derived_board_seat_hand_center_m": [
+        0.07151929541495958,
+        0.0037488864009061554,
+        -0.0015088170619626034
+      ],
+      "derived_board_seat_hand_normal": [
+        -0.42255302444792747,
+        -0.007375581596528659,
+        0.9063081938976506
+      ],
+      "derived_board_seat_source_normal": [
+        0.42261826174069944,
+        0.9063077870366499,
+        0
+      ],
+      "derived_board_seat_source_hole_centers_mm": [
+        [
+          -59.80890878,
+          -28.60356299,
+          4
+        ],
+        [
+          -35.33859836,
+          -40.01425616,
+          4
+        ],
+        [
+          -35.33859836,
+          -40.01425616,
+          31
+        ],
+        [
+          -59.80890878,
+          -28.60356299,
+          31
+        ]
+      ],
+      "camera_measured_intrinsics": null,
+      "sources": {
+        "camera_listing": "https://openelab.io/products/seeed-studio-et-s231-120-degree-1080p-usb-camera-module",
+        "mount_mesh": "https://github.com/TheRobotStudio/SO-ARM100/raw/a758567c3978dfeefe282ede0500085a48fe8f78/Optional/SO101_Wrist_Cam_Hex-Nut_Mount_32x32_UVC_Module/stl/SO-ARM101_camera_wrist_mount.stl",
+        "hand_frame": "so101.xml#hand",
+        "assembly_transform": "source_to_assembly_row_major_transform_m",
+        "camera_measured": "2026-11-09 pinhole fit of pose and vertical FOV to real wrist-frame jaw silhouettes (gripper open and closed); airtruck/examples/so101_pick.py WRIST_MEASURED"
+      },
+      "simulation_projection": "pinhole",
+      "simulation_distortion_modeled": false,
+      "camera_measured_distortion_coefficients": null,
+      "source_mount_stl_sha256": "e17a626158951ac8cdf8d960962c1a3c8bf23b64635a02f88b62016fe895cef8"
     },
     "CAD_geometry_source": "https://cad.onshape.com/documents/31c7cfca8b01a8e37454827d/m/f3563d68a18cc6d16ae973b9/e/65a095efa0767c21c8f6caae"
   },

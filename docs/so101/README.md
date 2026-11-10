@@ -11,11 +11,19 @@ wrist-camera
 bracket](https://github.com/TheRobotStudio/SO-ARM100/tree/a758567c3978dfeefe282ede0500085a48fe8f78/Optional/SO101_Wrist_Cam_Hex-Nut_Mount_32x32_UVC_Module).
 The bracket attaches to the wrist-roll housing with 8.1 mm hole spacing and supports the
 published 32 × 32 mm UVC board with 27 × 27 mm camera mounting holes. The camera board
-and screws are not modeled, and its exact camera model and measured dimensions are
-unknown. CAD mass, COM and inertia remain unassigned.
+and screws are not modeled. The user identifies the camera as Seeed Studio ET-S231 V1;
+its pose and vertical FOV were fitted to real images, while measured dimensions,
+lens distortion and a full calibration remain unknown. CAD mass, COM and inertia
+remain unassigned.
 
 The simulation stays pinned to the earlier 257-part export. It does not include the
-newer bracket or a camera sensor. Rebuilding the XML does not fetch updated CAD. Onshape
+newer bracket. The pick collector attaches a pinhole wrist sensor at runtime with
+`CameraSpec`: by default at the pose and 59.29° vertical FOV fitted to real images,
+otherwise at the pose derived from the official bracket mesh and recorded assembly
+transform with the assumed 80.7° FOV. See the
+[dataset guide](../simulation.md#scripted-yellow-cube-dataset-simulation-only) and
+[measured cameras](../simulation.md#measured-cameras); distortion is not modeled.
+Rebuilding the XML does not fetch updated CAD. Onshape
 remains the source of truth; source links and numeric records are in
 `models/so101/information.json`. This migration preserves the exported visual geometry
 and reference link inertias.

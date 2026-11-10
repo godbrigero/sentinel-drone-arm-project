@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import math
 from collections.abc import Sequence
+from dataclasses import dataclass
 
+import mujoco
 import numpy as np
 from numpy.typing import NDArray
 
@@ -74,3 +76,61 @@ class Camera:
             self.rotation @ np.asarray(optical_point, dtype=np.float64)
             + self.position_m
         )
+
+
+@dataclass(frozen=True)
+class CameraSpec:
+    """Pinhole pose in body coordinates: meters, wxyz, -Z forward, +Y up.
+
+    `fovy` alone gives a centred symmetric pinhole. `focal_px` (fx, fy) and
+    `principal_px` (cx, cy, OpenCV pixel convention) instead give measured
+    intrinsics at `width` x `height`; `fovy` is then ignored by MuJoCo.
+    """
+
+    name: str
+    body: str
+    pos: tuple[float, float, float]
+    quat: tuple[float, float, float, float]
+    width: int = 640
+    height: int = 480
+    fovy: float = 80.7
+    focal_px: tuple[float, float] | None = None
+    principal_px: tuple[float, float] | None = None
+
+    PIXEL_PITCH = 1e-5
+    """Nominal sensor pixel size (m); only the focal/pitch ratio matters."""
+
+    def __post_init__(self) -> None:
+        if not self.name or not self.body:
+            raise ValueError("Camera name and body must be nonempty")
+        if self.width < 1 or self.height < 1 or not 0 < self.fovy < 180:
+            raise ValueError("Invalid camera resolution or FOV")
+        if not np.isfinite((*self.pos, *self.quat)).all():
+            raise ValueError("Camera pose must be finite")
+        if not np.isclose(np.linalg.norm(self.quat), 1):
+            raise ValueError("Camera quaternion must be unit length")
+        if (self.focal_px is None) != (self.principal_px is None):
+            raise ValueError("Give both focal_px and principal_px, or neither")
+        if self.focal_px is not None and not min(self.focal_px) > 0:
+            raise ValueError("Focal lengths must be positive")
+
+    def attach(self, spec: mujoco.MjSpec) -> None:
+        """Attach before compilation; names are local to the containing spec."""
+        body = spec.worldbody if self.body == "world" else spec.body(self.body)
+        if body is None:
+            raise ValueError(f"Unknown camera body: {self.body}")
+        if any(camera.name == self.name for camera in spec.cameras):
+            raise ValueError(f"Duplicate camera name: {self.name}")
+        camera = body.add_camera(name=self.name, pos=self.pos, quat=self.quat, fovy=self.fovy)
+        if self.focal_px is not None and self.principal_px is not None:
+            pitch = self.PIXEL_PITCH
+            # MuJoCo stores these spec fields as int32/float32 pairs.
+            camera.resolution = np.array([self.width, self.height], dtype=np.int32)
+            camera.sensor_size = np.array([self.width, self.height], dtype=np.float32) * np.float32(pitch)
+            camera.focal_length = np.array(self.focal_px, dtype=np.float32) * np.float32(pitch)
+            # MuJoCo's principal offset is measured from the image centre with the opposite sign.
+            camera.principal_length = np.array(
+                [((self.width - 1) / 2 - self.principal_px[0]) * pitch,
+                 ((self.height - 1) / 2 - self.principal_px[1]) * pitch],
+                dtype=np.float32,
+            )

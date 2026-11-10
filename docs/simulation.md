@@ -87,7 +87,9 @@ system and rendering resource, including after partial connection failures.
 `SO101Arm` contains the arm mapping. `SO101Follower` and `SO101Leader` inherit it
 and the corresponding LeRobot classes. The SDK still owns motor communication,
 calibration and hardware configuration. The bridge currently supports joint-state
-observations, `use_degrees=False`, and no cameras.
+observations, `use_degrees=False`, and no LeRobot robot cameras. Simulated pinhole
+cameras can be attached with `camera_specs` and rendered separately
+(see the [yellow-cube dataset](#scripted-yellow-cube-dataset-simulation-only)).
 
 Local keys are LeRobot keys such as `shoulder_pan.pos` and `gripper.pos`. Five body
 channels use [-100,100]; the gripper uses [0,100]. The model's actuator `user` fields
@@ -382,7 +384,9 @@ LeRobot's dataset statistics still own policy normalization.
 
 The adapter remains available for policy integrations. The former ACT
 record/train/rollout and gamepad example modules have been removed; this checkout
-has no bundled dataset/checkpoint round-trip example. LeRobot still owns native
+now includes the simulation-only yellow-cube dataset collector below, its
+closed-loop simulation evaluation and a [hardware policy runner](hardware/README.md#smolvla-yellow-cube-policy-on-the-follower).
+Training uses LeRobot's own CLI. LeRobot still owns native
 arm communication, calibration and policy-training APIs.
 
 ```python
@@ -535,3 +539,259 @@ simulation results, not physical force measurements.
 On macOS, LeRobot's video/OpenCV dependencies can emit duplicate FFmpeg Objective-C
 class warnings. They are not suppressed. Camera/video workflows are not validated
 by this joint-state example.
+
+## Scripted yellow-cube dataset (simulation only)
+
+```sh
+uv run --locked python -m airtruck.examples.so101_pick --collect
+uv run --locked python -m airtruck.examples.so101_pick --verify
+
+# Robust dataset (separate output; original remains untouched):
+uv run --locked python -m airtruck.examples.so101_pick --collect --robust --episodes 50 --noise 4 --repo-id local/so101_sim_yellow_cube_pick_50
+uv run --locked python -m airtruck.examples.so101_pick --verify --repo-id local/so101_sim_yellow_cube_pick_50
+```
+
+The collector uses `SO101Follower` and `SystemDriver`; it has no hardware option.
+It regenerates `worlds/so101_pick/scene.xml` and ignored textured scan assets under
+`models/so101-workstation/assets/` from
+`~/Documents/so101-workstation/table-scaled.glb` and `constants.py`. The original
+scaled glTF is required. The scan is visual-only; the fitted table rectangle has
+a 30 mm thick analytic collision box. Source hash, SI dimensions and poses are
+recorded in `models/so101-workstation/information.json`.
+
+The transformation from glTF to MuJoCo is `(x, y, z) → (x, -z, y)`. The training
+front camera (`FRONT_TRAINING`) uses the exact transformed
+`SCAN_REFINED_T_SCALED_MODEL_FROM_CAMERA`, with 640×480 RGB and a 63.97° vertical
+FOV (about 79.5° horizontal). This is the RealSense depth origin, with color aligned
+to depth. Camera-frame vertex extents in `scan-cleaned.glb` give fx ≈384.8 px and
+fy ≈384.3 px; MuJoCo uses square pixels and the specified vertical FOV
+(f ≈384.35 px). The default front view is the colour sensor instead; see
+[measured cameras](#measured-cameras).
+The pan axis is projected from its CAD pivot to the CAD mounting plane before
+placing that intersection at `ARM_BASE_POSITION_ZUP`; subtracting the entire
+64.5 mm pivot height would bury the base. The corrected framing includes the
+sheet, plywood edges, wall and arm near the top-center, with the grasp region visible.
+
+The expert solves bounded numerical inverse kinematics in a separate scratch
+`MjData`, then sends smooth cubic joint targets through the follower. Recording
+never writes simulated joint/object positions: pose assignment happens only at
+reset. Physics runs at 1/3000 s, with 100 substeps per 30 Hz frame. Existing arm
+geometry, position gains and force limits are unchanged. Hand and jaw contact
+friction is assumed `[2.5, .02, .002]` with six-dimensional contacts.
+
+The default legacy trajectory lasts 10 s (300 frames): reach for 2 s while opening the gripper,
+descend for 2.5 s, close for 1.5 s, lift for 2.5 s, and hold for 1.5 s.
+Every episode starts from the cube-independent ready pose
+`[0, 0.4, -0.8, 0.2, 0, -1.0]` radians in JOINTS order (pan, lift, elbow,
+wrist flex, wrist roll, gripper), with seeded ±2.5° jitter on the first five
+joints. The nominal gripper tip is 28.6 cm above the mounting plane.
+Ten deterministically permuted strata (placement seed 42) span X ±70 mm,
+Y −280 to −160 mm forward of the base, and yaw ±60°, including the boundaries.
+Equivalent 180° grasp orientations are solved first; among solutions with less
+than 5 mm combined position/orientation residual, the smallest wrist roll is
+selected. Failures retry the same placement with a new ready-pose jitter seed;
+collection aborts after ten times the requested episode count in attempts.
+
+`--episodes N` selects the number of deterministic, independently permuted strata
+per axis (seed 42, including the same boundaries). `--repo-id` selects the dataset
+identity and cache path; `--root PATH` overrides that path. Existing roots are
+refused before preparation. Without `--collect`, the requested trials run physics
+without recording. Defaults preserve the original ten placements and trajectory.
+
+`--robust` uses 375 frames (12.5 s): 2 s reach to a pre-grasp, 1 s
+horizontal correction, 1 s coarse descent, 2.5 s final 46 mm descent, 0.5 s
+pause, 1.5 s close, 2.5 s lift and 1.5 s hold. The approach gripper target is
+95/100 (0.07854 rad), versus approximately 60/100 in the legacy trajectory.
+For three episodes in each ten, the initial pre-grasp misses horizontally by
+a seeded 10–20 mm and then corrects at 100 mm above the cube center. Those
+waypoints are expert targets and remain in the action labels.
+
+Four episodes in each five receive DART-style disturbances on joints 0–4:
+the mean of two seeded sinusoids per joint at 0.18–0.45 Hz, bounded by
+`--noise` normalized units (default 4). The envelope rises smoothly over 0.5 s
+and fades over 4.5–6 s, leaving the final 0.5 s descent and pause unperturbed.
+Commands are clipped to actuator limits. Recorded actions are the clean expert
+targets; observations and both cameras reflect the perturbed executed state.
+Gripper commands receive no noise. Thus the 50-episode recipe has 40 noisy,
+10 clean and 15 offset/correction episodes. This supplies corrective labels;
+closed-loop learned-policy robustness still requires a new training evaluation.
+
+The yellow object's box collision approximation measures 34.925×28.575×34.925 mm; its assumed
+mass is 0.02 kg, with measured mass unknown. The visual mesh has assumed 0.8 mm
+rounded edges and glossy plastic material; collision remains a box.
+The training wrist view (`WRIST_TRAINING`) simulates the user-confirmed Seeed Studio
+ET-S231 V1 at 640×480. The listing's 120° diagonal FOV over 1920×1080 gives
+f ≈635.9 px; assuming a 1440×1080 center crop resized to 640×480 gives fy ≈282.6 px.
+The specified rounded vertical FOV is 80.7° (MuJoCo fy ≈282.5 px). The real
+640×480 view is narrower: 59.29° vertical ([measured cameras](#measured-cameras)).
+Both wrist views are ideal pinholes without distortion, manual-focus effects or
+sensor noise.
+
+The official mount STL has four 2 mm holes on a 27×27 mm pattern.
+Their seat-side centers average to (-47.573754, -34.308910, 17.5) mm
+in the source frame, with outward normal (sin 25°, cos 25°, 0).
+Applying the recorded source-to-assembly transform and inverse compiled
+zero-pose hand transform gives the hand-frame seat. The optical center is
+10 mm outward (assumed board/lens stack), at
+(0.06729377, 0.00367513, 0.00755426) m; quaternion wxyz is
+(0.15170432, 0.68429462, 0.69634400, 0.15437520).
+Camera +Y follows the board's in-plane (-cos 25°, sin 25°, 0) direction:
+the jaw tips project below the optical axis. The silhouette fit under
+[measured cameras](#measured-cameras) agrees with this pose and roll within
+4 mm and 1°. The pinned arm still omits
+the bracket/board geometry; the sensor adds no mass, inertia or contacts.
+Rest looks away from the table; the cube enters view during approach.
+
+Reusable `CameraSpec(name, body, pos, quat, width, height, fovy, focal_px,
+principal_px)` lives in `airtruck.systems.camera`. Poses use meters and MuJoCo wxyz
+rotation (+X right, +Y up, -Z viewing direction). `fovy` alone gives a centred
+pinhole with square pixels. Measured intrinsics go in `focal_px` (fx, fy) and
+`principal_px` (cx, cy, OpenCV pixel convention), both or neither. MuJoCo then
+ignores `fovy` and uses `sensor_size`, `focal_length` and `principal_length` at a
+nominal 10 µm pixel pitch. MuJoCo measures the principal offset from the image
+centre with the opposite sign, so `attach()` stores ((width−1)/2 − cx,
+(height−1)/2 − cy) times the pitch. Pass `camera_specs=(spec,)` to an
+SO-101 arm; its `make_spec()` attaches the cameras before driver namespacing
+(e.g. `arm/wrist`). `spec.attach(world_spec)` also supports a world camera.
+The collector's `CAMERAS` tuple, chosen from `CAMERA_SETS` by `SO101_SIM_CAMERAS`,
+drives image features and one renderer per camera resolution. Edit `CAMERA_SETS`
+to swap a model/pose/intrinsics; add arm-mounted specs to `camera_specs` too.
+The collector itself never opens
+physical cameras; [hardware policy runs](hardware/README.md#smolvla-yellow-cube-policy-on-the-follower)
+read the physical front and wrist feeds through LeRobot cameras or the RealSense bridge.
+
+Only episodes ending with the cube at least 50 mm clear of the table, contacting
+both fixed and moving jaws and without table contact are saved. Failed buffers
+are discarded. By default ten successes are finalized in
+`~/.cache/huggingface/lerobot/local/so101_sim_yellow_cube_pick`; existing output is
+never overwritten. `collection_results.json` records all attempted seeds and
+placements, initial/grasp joints, frame counts, saved episode indices and
+end-state evidence, noise bounds, actual applied noise peaks, recovery offsets,
+and any hand/jaw contacts with cube/table before closing. No Hub upload or training is performed.
+
+LeRobot's standard feature/frame helpers produce `observation.state` and `action`
+(six normalized `.pos` channels: five in −100…100, gripper in 0…100), plus
+`observation.images.front` and `observation.images.wrist` videos. Every frame has task “Pick up the yellow cube.”
+The installed LeRobot API accepts the task as the frame's `task` key. These are
+standard fine-tuning inputs for `lerobot/smolvla_base`; configure both image
+mappings when training. Simulation success does not establish hardware transfer.
+The verifier reloads all state/action rows, checks counts against saved collection
+metadata, normalization ranges, fps and camera features, and decodes seven samples
+from both cameras of every episode. It reports within-episode maximum per-step
+action changes. The sheet alternates front/wrist rows for three noisy episodes
+and one clean episode at start, mid-reach, missed pre-grasp, corrected
+pre-grasp, final descent, closed grasp and lifted hold
+(or up to four legacy episodes). It writes
+`verification.json` and `verification.png` inside the dataset directory. Collection
+creates no debug PNGs or temporary preview files.
+
+The 50-episode robust collection completed in 50 attempts (18,750 frames).
+All final cube clearances were 77.3–103.8 mm, with both jaw bodies contacting
+and no final table contact. No hand/jaw table contact was detected before
+closing; seven episodes had cube contact during descent. A detailed first-episode
+check found fixed-jaw contact at 5.17 s and moving-jaw contact at 8.03 s, during
+closing. Contact auditing samples at the 30 Hz control boundary.
+The maximum within-episode action step was 3.001 normalized units (gripper);
+the maximum across joints 0–4 was 2.514. Both camera streams decoded at seven
+sample times in every episode. The saved sheet shows three noisy recovery episodes
+and one clean episode.
+
+### Measured cameras
+
+`so101_pick` defines two camera sets; `so101_pick_eval` imports the same `CAMERAS`.
+The default `measured` set (`FRONT_MEASURED`, `WRIST_MEASURED`) matches the physical
+cameras. `SO101_SIM_CAMERAS=training` restores `FRONT_TRAINING` and `WRIST_TRAINING`,
+the views of both datasets above and of every checkpoint trained on them. Any other
+value raises `ValueError`.
+
+```sh
+SO101_SIM_CAMERAS=training uv run --locked python -m airtruck.examples.so101_pick_eval \
+  path/to/pretrained_model --episodes 20 --seconds 18 --out /tmp/so101_eval
+```
+
+The physical front feed is the D435i colour sensor (through the
+[RealSense bridge](hardware/README.md#smolvla-yellow-cube-policy-on-the-follower)), not
+the depth origin of the training view. Its factory calibration, read with
+`rs-enumerate-devices -c`, gives fx, fy = 614.418, 614.862 px and principal point
+cx, cy = 328.009, 228.644 px at 640×480: a 55.02° × 42.63° FOV. `FRONT_MEASURED`
+uses these intrinsics through `focal_px`/`principal_px`. Its pose is the
+scan-refined depth pose with the factory depth-to-colour extrinsic applied:
+translation (0.014605, 0.000223, 0.000328) m and a rotation of about 0.76°. A final
+static-edge refinement then moved it 5.6 mm along the optical axis and about 0.1°: it
+minimized the distance from the rendered table and board edges (arm masked out) to real
+colour-frame edges. Hence the stored pose is 15.7 mm and 0.81° from the depth pose rather
+than 14.6 mm. Static table and board edges in a render agree with a real colour frame
+within a few pixels.
+
+The wrist pose and vertical FOV were fitted to the real jaw silhouettes in wrist
+frames of a recorded hardware run, with the gripper open and closed (IoU 0.865).
+`WRIST_MEASURED` is at (0.070972, 0.002144, 0.008020) m in the hand frame, with
+quaternion wxyz (0.156794, 0.683003, 0.695009, 0.160887) and a 59.29° vertical FOV.
+The pose is within 4 mm and 1° of the mount-derived training pose; the assumed
+80.7° FOV was the real error. A distortion-free pinhole matched the silhouettes, so
+distortion is not modelled. Both values are also in the numeric records
+(`models/so101-workstation/information.json`, `models/so101/information.json`).
+
+All existing checkpoints were trained on the training views and see shifted,
+zoomed-in images under the measured set: the front view is about 21° narrower
+vertically and offset to the colour sensor; the wrist view is about 21° narrower.
+The closed-loop results below used the training views; re-run with
+`SO101_SIM_CAMERAS=training` to reproduce them. `--collect` now records measured
+views unless the variable is set, so new datasets differ from the existing ones.
+
+### SmolVLA fine-tuning
+
+Fine-tune `lerobot/smolvla_base` (the `smolvla` extra is in `pyproject.toml`)
+from the repository root, with `DEVICE=mps` on Apple silicon or `DEVICE=cuda` on
+Linux with an NVIDIA GPU ([setup](README.md#linux-and-nvidia-gpus)). The MPS
+fallback variable has no effect on CUDA. The base checkpoint expects
+`camera1`–`camera3`, so map the dataset cameras; the unused third view is
+skipped:
+
+```sh
+DEVICE=mps  # or cuda
+PYTORCH_ENABLE_MPS_FALLBACK=1 uv run --locked lerobot-train \
+  --policy.path=lerobot/smolvla_base --policy.device=$DEVICE --policy.push_to_hub=false \
+  --dataset.repo_id=local/so101_sim_yellow_cube_pick_50 \
+  --dataset.root=$HOME/.cache/huggingface/lerobot/local/so101_sim_yellow_cube_pick_50 \
+  --dataset.video_backend=pyav --dataset.image_transforms.enable=true \
+  --rename_map='{"observation.images.front":"observation.images.camera1","observation.images.wrist":"observation.images.camera2"}' \
+  --batch_size=32 --steps=6000 --save_freq=1000 --wandb.enable=false \
+  --output_dir=$HOME/.cache/huggingface/lerobot/train/smolvla_so101_sim_yellow_cube_50
+```
+
+`pyav` is required because torchcodec cannot load without a system FFmpeg.
+On an M3 Max this ran at about 4.3 s/step (7.2 h; final loss 0.017). CUDA training
+has not been profiled here. If batch 32 does not fit in an 11 GB RTX 2080 Ti, halve
+`--batch_size` until it does; a smaller batch changes the optimisation, so results are
+not directly comparable with this run. Each
+checkpoint is about 0.9 GB of weights plus 0.4 GB of optimizer state.
+The saved preprocessor applies the camera renaming, so inference passes
+`observation.images.front`/`wrist` unchanged. Clip predicted actions to
+−100…100 (gripper 0…100): the policy occasionally exceeds the joint range.
+
+Evaluate a saved `pretrained_model` folder closed-loop in the same world:
+
+```sh
+PYTORCH_ENABLE_MPS_FALLBACK=1 uv run --locked python -m airtruck.examples.so101_pick_eval \
+  path/to/pretrained_model --episodes 20 --seconds 18 --videos 3 --out /tmp/so101_eval
+```
+
+`--out` must be writable and is created if needed; choose a location outside the repository.
+`--device` selects the torch device (default CUDA, then MPS, then CPU). Headless Linux
+rendering needs `MUJOCO_GL=egl`.
+It writes `eval.json` and H.264 front|wrist videos (`rollout_N.mp4`,
+`rollouts.mp4`). `--train-placements` reuses the collector's stratified placements.
+Each rollout reports holding for at least 1 s, holding at 12.5 s, and holding at the end.
+
+Closed-loop evaluation used the training camera views, fresh uniformly sampled
+placements in the same region, the same rest-pose jitter and success test, and 18 s
+rollouts.
+Step 6000 picked and held the cube at least 1 s in 10/20 rollouts, also
+10/20 at 12.5 s (the demonstration length); step 5000 achieved 8/20.
+After 12.5 s, states are outside the demonstrations and held cubes are often released.
+The 10-episode dataset fitted its demonstrations offline yet failed closed-loop
+(0/5, including its own placements). Replaying demonstrations with σ = 2
+normalized-unit joint offsets succeeded only 6/10, so recovery data and the
+wider grasp were added. The main remaining failure is closing about 8–14 mm
+before full descent. These are simulation results only.

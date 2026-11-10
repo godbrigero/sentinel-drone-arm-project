@@ -1,0 +1,180 @@
+{
+  "source": "/Users/godbrigero/Documents/so101-workstation/table-scaled.glb",
+  "sha256": "d45aa83fcabb0d5401118ccd61354e66c4bc5f962631e114c8aff7d6989cd7ac",
+  "gltf_to_zup": [
+    [
+      1,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      -1
+    ],
+    [
+      0,
+      1,
+      0
+    ]
+  ],
+  "table_size_m": [
+    1.035,
+    0.629
+  ],
+  "table_back_left_zup_m": [
+    -0.390267,
+    0.57845,
+    0.795352
+  ],
+  "arm_axis_table_position_m": [
+    -0.061994,
+    0.38135,
+    0.796327
+  ],
+  "arm_quaternion_wxyz": [
+    0.975763105,
+    0.005666765,
+    -0.003220449,
+    -0.218732438
+  ],
+  "camera_position_m": [
+    -0.461005774,
+    0.115033289,
+    1.295217244
+  ],
+  "camera_quaternion_wxyz": [
+    0.86290120071715,
+    0.21434568970257845,
+    -0.23091551507020733,
+    -0.3951398081776721
+  ],
+  "camera_resolution_px": [
+    640,
+    480
+  ],
+  "constants_source": "/Users/godbrigero/Documents/so101-workstation/constants.py",
+  "finger_assumed_friction": [
+    2.5,
+    0.02,
+    0.002
+  ],
+  "finger_contact_dimensions": 6,
+  "cube_xy_base_ranges_m": [
+    [
+      -0.07,
+      0.07
+    ],
+    [
+      -0.28,
+      -0.16
+    ]
+  ],
+  "cube_yaw_range_rad": [
+    -1.0471975511965976,
+    1.0471975511965976
+  ],
+  "camera_vertical_fov_deg": 63.97,
+  "camera_fx_px": 384.8,
+  "camera_fy_px": 384.3,
+  "camera_intrinsics_source": "/Users/godbrigero/Documents/so101-workstation/scan-cleaned.glb vertex extents",
+  "camera_colour_measured": {
+    "sensor": "Intel RealSense D435i colour",
+    "resolution_px": [
+      640,
+      480
+    ],
+    "fx_fy_px": [
+      614.418029785156,
+      614.862365722656
+    ],
+    "cx_cy_px": [
+      328.009460449219,
+      228.643646240234
+    ],
+    "fov_deg": [
+      55.02,
+      42.63
+    ],
+    "depth_to_colour_translation_m": [
+      0.014605,
+      0.000223,
+      0.000328
+    ],
+    "depth_to_colour_rotation_deg": 0.76,
+    "simulation_position_m": [
+      -0.47261803416567516,
+      0.12552003689651586,
+      1.296870892357662
+    ],
+    "simulation_quaternion_wxyz": [
+      0.8602191550772257,
+      0.2188226393598528,
+      -0.22907297291081824,
+      -0.3995813194127214
+    ],
+    "source": "Factory calibration read with rs-enumerate-devices -c, 2026-11-09; extrinsic applied to the scan-refined depth pose (camera_position_m, camera_quaternion_wxyz) in airtruck/examples/so101_pick.py FRONT_MEASURED"
+  },
+  "rest_joint_rad": [
+    0.0,
+    0.4,
+    -0.8,
+    0.2,
+    0.0,
+    -1.0
+  ],
+  "rest_jitter_deg": 2.5,
+  "robust_pick": {
+    "source": "airtruck/examples/so101_pick.py",
+    "placement_seed": 42,
+    "placement_strata": 50,
+    "fps": 30,
+    "frames_per_episode": 375,
+    "rest_jitter_deg": 2.5,
+    "noise_bound_normalized": 4.0,
+    "noise_frequency_hz": [
+      0.18,
+      0.45
+    ],
+    "noise_fade_interval_s": [
+      4.5,
+      6.0
+    ],
+    "noise_joint_indices": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "noisy_episodes": 40,
+    "clean_episodes": 10,
+    "recovery_episodes": 15,
+    "recovery_offset_range_m": [
+      0.01,
+      0.02
+    ],
+    "gripper_open_normalized": 95.0,
+    "gripper_open_rad": 0.07853981633974483,
+    "final_descent_m": 0.046,
+    "final_descent_s": 2.5,
+    "preclose_pause_s": 0.5,
+    "verified_attempts": 50,
+    "verified_successes": 50,
+    "verified_total_frames": 18750,
+    "verified_final_clearance_range_m": [
+      0.07732958933693909,
+      0.10376226741595168
+    ],
+    "verified_preclose_table_contact_episodes": 0,
+    "verified_preclose_cube_contact_episodes": 7,
+    "verified_max_action_step_normalized": [
+      0.5585498809814453,
+      2.5134334564208984,
+      2.4246745109558105,
+      2.2581138610839844,
+      1.1334209442138672,
+      3.000659942626953
+    ]
+  }
+}

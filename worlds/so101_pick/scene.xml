@@ -1,0 +1,42 @@
+<mujoco model="so101_workstation_pick">
+  <compiler angle="radian" />
+  <option timestep="0.0003333333333333333" integrator="implicitfast" />
+  <size memory="128M" />
+  <visual>
+    <global offwidth="640" offheight="480" />
+    <headlight ambient=".2 .2 .2" diffuse=".4 .4 .4" />
+  </visual>
+  <asset>
+    <mesh name="scan0" file="../../models/so101-workstation/assets/scan_0.obj" inertia="shell" />
+    <texture name="tex0" type="2d" file="../../models/so101-workstation/assets/scan_0.png" />
+    <material name="mat0" texture="tex0" />
+    <mesh name="scan1" file="../../models/so101-workstation/assets/scan_1.obj" inertia="shell" />
+    <texture name="tex1" type="2d" file="../../models/so101-workstation/assets/scan_1.png" />
+    <material name="mat1" texture="tex1" />
+    <mesh name="scan2" file="../../models/so101-workstation/assets/scan_2.obj" inertia="shell" />
+    <texture name="tex2" type="2d" file="../../models/so101-workstation/assets/scan_2.png" />
+    <material name="mat2" texture="tex2" />
+    <mesh name="scan3" file="../../models/so101-workstation/assets/scan_3.obj" inertia="shell" />
+    <texture name="tex3" type="2d" file="../../models/so101-workstation/assets/scan_3.png" />
+    <material name="mat3" texture="tex3" />
+    <mesh name="scan4" file="../../models/so101-workstation/assets/scan_4.obj" inertia="shell" />
+    <texture name="tex4" type="2d" file="../../models/so101-workstation/assets/scan_4.png" />
+    <material name="mat4" texture="tex4" />
+    <mesh name="yellow_visual" file="../../models/so101-workstation/assets/yellow_cube.obj" />
+    <material name="yellow_plastic" rgba=".98 .85 .05 1" specular=".5" shininess=".5" />
+  </asset>
+  <worldbody>
+    <geom type="mesh" mesh="scan0" material="mat0" contype="0" conaffinity="0" group="2" />
+    <geom type="mesh" mesh="scan1" material="mat1" contype="0" conaffinity="0" group="2" />
+    <geom type="mesh" mesh="scan2" material="mat2" contype="0" conaffinity="0" group="2" />
+    <geom type="mesh" mesh="scan3" material="mat3" contype="0" conaffinity="0" group="2" />
+    <geom type="mesh" mesh="scan4" material="mat4" contype="0" conaffinity="0" group="2" />
+    <geom name="table" type="box" pos="-0.0564013394863635 0.07328873123714208 0.7784016822539263" quat="0.975763105 0.005666765 -0.003220449 -0.218732438" size="0.5175 0.3145 0.015" rgba="0 0 0 0" friction="1 .005 .0001" />
+    <light pos="-.3 -.2 2" diffuse=".4 .4 .4" />
+    <body name="cube" pos="-0.1560486669463686 0.18224692308032792 0.8110451280391505">
+      <freejoint name="cube_free" />
+      <geom type="mesh" mesh="yellow_visual" material="yellow_plastic" contype="0" conaffinity="0" mass="0" />
+      <geom name="cube" type="box" size="0.0174625 0.0142875 0.0174625" mass=".02" rgba="0 0 0 0" friction="1.5 .01 .001" condim="6" solref=".005 1" />
+    </body>
+  </worldbody>
+</mujoco>

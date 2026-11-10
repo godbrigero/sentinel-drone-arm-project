@@ -17,6 +17,7 @@ from lerobot.teleoperators.so_leader import SO101Leader as LeRobotSO101Leader
 from lerobot.teleoperators.so_leader import SO101LeaderConfig
 
 from airtruck.systems.base import ROOT, SimSystem, Values, space_values
+from airtruck.systems.camera import CameraSpec
 
 JOINTS = (
     "shoulder_pan",
@@ -76,6 +77,7 @@ class SO101Arm(SimSystem[Values, Values]):
         position: tuple[float, float, float] = (0, 0, 0),
         quaternion: tuple[float, float, float, float] = (1, 0, 0, 0),
         initial_qpos: dict[str, float] | None = None,
+        camera_specs: tuple[CameraSpec, ...] = (),
     ) -> None:
         SimSystem.__init__(
             self,
@@ -86,6 +88,7 @@ class SO101Arm(SimSystem[Values, Values]):
             position=position,
             quaternion=quaternion,
         )
+        self.camera_specs = camera_specs
         self.initial_qpos = dict(initial_qpos or {})
         if set(self.initial_qpos) - set(JOINTS):
             raise ValueError("Unknown initial SO-101 joint")
@@ -132,6 +135,8 @@ class SO101Arm(SimSystem[Values, Values]):
 
     def make_spec(self) -> mujoco.MjSpec:
         spec = super().make_spec()
+        for camera in self.camera_specs:
+            camera.attach(spec)
         for joint in JOINTS:
             spec.add_equality(
                 name=f"hardware_{joint}",
