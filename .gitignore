@@ -18,6 +18,7 @@ build/
 
 # Required MuJoCo texture assets generated from the user's table scan.
 !models/table-top/assets/*.png
+!models/so101-workstation/assets/*.png
 
 # Python tooling caches
 .ruff_cache/
@@ -25,9 +26,6 @@ build/
 
 # Generated MuJoCo diagnostics (inspect warnings before cleanup)
 MUJOCO_LOG.TXT
-
-# Regenerable scaled workstation scan
-models/so101-workstation/assets/
 
 # Machine-local SO-101 camera indices and serial port (so101_cameras output)
 models/so101/hardware.json

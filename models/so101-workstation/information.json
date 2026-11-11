@@ -1,5 +1,5 @@
 {
-  "source": "/Users/godbrigero/Documents/so101-workstation/table-scaled.glb",
+  "source": "models/so101-workstation/source/table-scaled.glb",
   "sha256": "d45aa83fcabb0d5401118ccd61354e66c4bc5f962631e114c8aff7d6989cd7ac",
   "gltf_to_zup": [
     [
@@ -53,7 +53,7 @@
     640,
     480
   ],
-  "constants_source": "/Users/godbrigero/Documents/so101-workstation/constants.py",
+  "constants_source": "models/so101-workstation/source/registration.json",
   "finger_assumed_friction": [
     2.5,
     0.02,
@@ -77,7 +77,7 @@
   "camera_vertical_fov_deg": 63.97,
   "camera_fx_px": 384.8,
   "camera_fy_px": 384.3,
-  "camera_intrinsics_source": "/Users/godbrigero/Documents/so101-workstation/scan-cleaned.glb vertex extents",
+  "camera_intrinsics_source": "models/so101-workstation/source/scan-cleaned.glb vertex extents",
   "camera_colour_measured": {
     "sensor": "Intel RealSense D435i colour",
     "resolution_px": [

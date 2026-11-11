@@ -1,0 +1,132 @@
+{
+  "frame": "table-scaled.glb model frame (glTF, Y up), metres; 4x4 transforms row-major, p_model = T @ [p_camera, 1]; *_ZUP values are MuJoCo Z-up (x, -z, y)",
+  "table_corners": "Back = wall side; left/right seen from in front of the table facing the wall",
+  "arm_base": "Shoulder-pan axis on the table top, 15 in right of the back-left corner along the back edge and 1.5 in in from it; base +Z = table normal, arm forward = base -Y",
+  "registration": "Rigid, scan scale 1, registered with the SO-101 arm and on-table objects excluded",
+  "SCAN_REFINED_T_SCALED_MODEL_FROM_CAMERA": [
+    [
+      0.581085114,
+      0.582941739,
+      -0.56790758,
+      -0.461005774
+    ],
+    [
+      0.229121521,
+      0.552406131,
+      0.801467901,
+      1.295217244
+    ],
+    [
+      0.78092472,
+      -0.595840914,
+      0.187430481,
+      -0.115033289
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "SCAN_REFINED_CAMERA_POSITION": [
+    -0.461005774,
+    1.295217244,
+    -0.115033289
+  ],
+  "SCAN_REFINED_CAMERA_FORWARD": [
+    0.56790758,
+    -0.801467901,
+    -0.187430481
+  ],
+  "SCAN_REFINED_CAMERA_UP": [
+    0.582941739,
+    0.552406131,
+    -0.595840914
+  ],
+  "SCAN_REFINED_BLENDER_MATRIX_WORLD": [
+    [
+      0.581085114,
+      0.582941739,
+      -0.56790758,
+      -0.461005774
+    ],
+    [
+      -0.78092472,
+      0.595840914,
+      -0.187430481,
+      0.115033289
+    ],
+    [
+      0.229121521,
+      0.552406131,
+      0.801467901,
+      1.295217244
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "TABLE_BACK_LEFT_CORNER_MODEL": [
+    -0.390267,
+    0.795352,
+    -0.57845
+  ],
+  "TABLE_BACK_RIGHT_CORNER_MODEL": [
+    0.54543,
+    0.79929,
+    -0.136726
+  ],
+  "TABLE_SIZE_M": [
+    1.035,
+    0.629
+  ],
+  "ARM_BASE_POSITION_MODEL": [
+    -0.061994,
+    0.796327,
+    -0.38135
+  ],
+  "ARM_BASE_ROTATION_MODEL": [
+    [
+      0.904291498,
+      0.426825587,
+      -0.008763801
+    ],
+    [
+      0.00380578,
+      0.012467673,
+      0.999915033
+    ],
+    [
+      0.426898585,
+      -0.904248016,
+      0.009650007
+    ]
+  ],
+  "ARM_BASE_QUAT_WXYZ_MODEL": [
+    0.693975716,
+    -0.685961701,
+    -0.156944392,
+    -0.152389989
+  ],
+  "ARM_FORWARD_MODEL": [
+    -0.426826,
+    -0.012468,
+    0.904248
+  ],
+  "ARM_BASE_POSITION_ZUP": [
+    -0.061994,
+    0.38135,
+    0.796327
+  ],
+  "ARM_BASE_QUAT_WXYZ_ZUP": [
+    0.975763105,
+    0.005666765,
+    -0.003220449,
+    -0.218732438
+  ],
+  "ARM_BASE_YAW_DEG_ZUP": -25.2711
+}

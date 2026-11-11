@@ -7,7 +7,6 @@ import hashlib
 import itertools
 import json
 import os
-import runpy
 from typing import Any, cast
 from numpy.typing import NDArray, ArrayLike
 from pathlib import Path
@@ -28,11 +27,12 @@ from airtruck.systems.base import ROOT
 from airtruck.systems.so101 import SO101Follower, JOINTS
 from airtruck.runtime.driver import SystemDriver
 
-SOURCE = Path.home() / "Documents/so101-workstation"
 MODEL = ROOT / "models/so101-workstation"
+SOURCE = MODEL / "source"
+"""Scaled workstation scan, camera-frame scan and registration (all in the repository)."""
 WORLD = ROOT / "worlds/so101_pick/scene.xml"
 DATASET = Path.home() / ".cache/huggingface/lerobot/local/so101_sim_yellow_cube_pick"
-C = runpy.run_path(str(SOURCE / "constants.py"))
+C: dict[str, Any] = json.loads((SOURCE / "registration.json").read_text())
 R = Rotation.from_quat(C["ARM_BASE_QUAT_WXYZ_ZUP"], scalar_first=True).as_matrix()
 BASE = np.array(C["ARM_BASE_POSITION_ZUP"])
 CONVERT = np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]])
@@ -83,6 +83,11 @@ FRONT, WRIST = CAMERA_SETS[CAMERA_SET]
 CAMERAS = (FRONT, WRIST)
 
 
+def write_obj(path: Path, text: str) -> None:
+    """Write OBJ text ending in exactly one newline (trimesh appends a blank line)."""
+    path.write_text(text.rstrip("\n") + "\n")
+
+
 def numbers(a: ArrayLike) -> str:
     return " ".join(str(float(x)) for x in np.ravel(a))
 
@@ -98,7 +103,7 @@ def update_record(path: Path, values: dict[str, Any]) -> None:
 
 
 def prepare() -> None:
-    """Regenerate ignored textured meshes from the user's original scaled scan."""
+    """Regenerate the textured scan meshes, world and records from the in-repository scan."""
     assets = MODEL / "assets"
     assets.mkdir(parents=True, exist_ok=True)
     source_hash = hashlib.sha256((SOURCE / "table-scaled.glb").read_bytes()).hexdigest()
@@ -128,7 +133,7 @@ def prepare() -> None:
         obj = assets / f"scan_{i}.obj"
         tex = assets / f"scan_{i}.png"
         if not obj.exists():
-            obj.write_text(export_obj(mesh, include_texture=True))
+            write_obj(obj, export_obj(mesh, include_texture=True))
         if not tex.exists():
             texture = mesh.visual.material.baseColorTexture
             if texture is None:
@@ -186,7 +191,7 @@ def prepare() -> None:
         ]
     )
     rounded = trimesh.convex.convex_hull(vertices)
-    rounded.export(assets / "yellow_cube.obj")
+    write_obj(assets / "yellow_cube.obj", export_obj(rounded))
     ET.SubElement(
         asset,
         "mesh",
@@ -233,12 +238,12 @@ def prepare() -> None:
     ET.indent(root)
     ET.ElementTree(root).write(WORLD, encoding="unicode")
     record = {
-        "constants_source": str(SOURCE / "constants.py"),
+        "constants_source": (SOURCE / "registration.json").relative_to(ROOT).as_posix(),
         "finger_assumed_friction": [2.5, 0.02, 0.002],
         "finger_contact_dimensions": 6,
         "cube_xy_base_ranges_m": [[-0.07, 0.07], [-0.28, -0.16]],
         "cube_yaw_range_rad": [-float(np.pi / 3), float(np.pi / 3)],
-        "source": str(SOURCE / "table-scaled.glb"),
+        "source": (SOURCE / "table-scaled.glb").relative_to(ROOT).as_posix(),
         "sha256": hashlib.sha256(
             (SOURCE / "table-scaled.glb").read_bytes()
         ).hexdigest(),
@@ -255,7 +260,7 @@ def prepare() -> None:
         "camera_vertical_fov_deg": 63.97,
         "camera_fx_px": 384.8,
         "camera_fy_px": 384.3,
-        "camera_intrinsics_source": str(SOURCE / "scan-cleaned.glb") + " vertex extents",
+        "camera_intrinsics_source": (SOURCE / "scan-cleaned.glb").relative_to(ROOT).as_posix() + " vertex extents",
         "rest_joint_rad": REST.tolist(),
         "rest_jitter_deg": 2.5,
     }
@@ -289,7 +294,7 @@ def make_driver() -> tuple[SystemDriver, SO101Follower]:
     arm = PickFollower(
         "arm",
         position=tuple(BASE - R @ mounting),
-        quaternion=C["ARM_BASE_QUAT_WXYZ_ZUP"],
+        quaternion=tuple(C["ARM_BASE_QUAT_WXYZ_ZUP"]),
         camera_specs=(WRIST,),
     )
     world = mujoco.MjSpec.from_file(str(WORLD))

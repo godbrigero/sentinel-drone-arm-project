@@ -552,16 +552,22 @@ uv run --locked python -m airtruck.examples.so101_pick --verify --repo-id local/
 ```
 
 The collector uses `SO101Follower` and `SystemDriver`; it has no hardware option.
-It regenerates `worlds/so101_pick/scene.xml` and ignored textured scan assets under
-`models/so101-workstation/assets/` from
-`~/Documents/so101-workstation/table-scaled.glb` and `constants.py`. The original
-scaled glTF is required. The scan is visual-only; the fitted table rectangle has
-a 30 mm thick analytic collision box. Source hash, SI dimensions and poses are
-recorded in `models/so101-workstation/information.json`.
+The workstation is self-contained in the repository. `models/so101-workstation/source/`
+holds the scaled scan `table-scaled.glb`, the camera-frame scan `scan-cleaned.glb`
+(the source of the training front-camera intrinsics) and `registration.json`: the
+scan-refined camera pose, fitted table corners and arm base pose in the scan's glTF
+frame, plus their Z-up conversions. The collector regenerates
+`worlds/so101_pick/scene.xml`, the tracked textured meshes under
+`models/so101-workstation/assets/` and the numeric records from these files; with
+unchanged inputs the output is byte-identical, so a fresh clone needs no regeneration.
+The scan is visual-only; the fitted table rectangle has a 30 mm thick analytic
+collision box. Source hash, SI dimensions and poses are recorded in
+`models/so101-workstation/information.json`. The scan capture and registration tools
+that produced these inputs are not part of the project.
 
 The transformation from glTF to MuJoCo is `(x, y, z) → (x, -z, y)`. The training
 front camera (`FRONT_TRAINING`) uses the exact transformed
-`SCAN_REFINED_T_SCALED_MODEL_FROM_CAMERA`, with 640×480 RGB and a 63.97° vertical
+`SCAN_REFINED_T_SCALED_MODEL_FROM_CAMERA` from `registration.json`, with 640×480 RGB and a 63.97° vertical
 FOV (about 79.5° horizontal). This is the RealSense depth origin, with color aligned
 to depth. Camera-frame vertex extents in `scan-cleaned.glb` give fx ≈384.8 px and
 fy ≈384.3 px; MuJoCo uses square pixels and the specified vertical FOV
